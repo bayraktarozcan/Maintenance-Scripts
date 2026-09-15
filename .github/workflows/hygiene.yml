@@ -1,0 +1,29 @@
+# Automation Scripts - Hygiene
+# Lints workflow files with actionlint. Fails only in Actions tab.
+# Note: codespell was evaluated and rejected - it flags correct Turkish words
+# and splits non-ASCII words into false fragments.
+
+name: "Hygiene"
+
+on:
+  schedule:
+    - cron: "45 6 * * 1"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    name: Lint Workflows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Run actionlint
+        uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
+        with:
+          fail-on-error: true

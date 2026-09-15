@@ -23,3 +23,4 @@ Logs/**/*.txt
 # [EN] Script scratch files.
 # [TR] Betik gecici dosyalari.
 *.tmp
+*.zip
