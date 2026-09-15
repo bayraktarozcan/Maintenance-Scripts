@@ -7,6 +7,7 @@ Kişisel Windows bakım betikleri — sade, izlenebilir, Türkçe ve İngilizce.
 [![License](https://img.shields.io/badge/License-MIT-22C55E?style=flat-square)](LICENSE)
 [![Validate](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Automation-Scripts/validate.yml?branch=main&label=Validate&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Automation-Scripts/actions/workflows/validate.yml)
 [![Secret Scan](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Automation-Scripts/secret-scan.yml?branch=main&label=Secret%20Scan&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Automation-Scripts/actions/workflows/secret-scan.yml)
+[![Quality](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Automation-Scripts/quality.yml?branch=main&label=Quality&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Automation-Scripts/actions/workflows/quality.yml)
 
 > **Language / Dil:** [English](#english) · [Türkçe](#türkçe)
 

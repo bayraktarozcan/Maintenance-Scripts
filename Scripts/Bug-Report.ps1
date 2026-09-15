@@ -225,29 +225,41 @@ function Clean-OldReports {
     }
 }
 
+function Get-ReportConfig {
+    param(
+        [ValidateSet('Daily', 'Weekly', 'Monthly')]
+        [string]$Period,
+        [datetime]$Until
+    )
+    if ($Period -eq 'Weekly') {
+        $Since = $Until.AddDays(-7)
+        return @{
+            Days = 7; Folder = 'Weekly'; Prefix = 'Bug-Report-Weekly'; Keep = 4
+            Title = "HAFTALIK RAPOR - HATA KAYITLARI"
+            Subtitle = ("Aralık: {0} - {1}" -f $Since.ToString('yyyy-MM-dd'), $Until.ToString('yyyy-MM-dd'))
+            Window = "Son 7 gün"
+        }
+    }
+    if ($Period -eq 'Monthly') {
+        return @{
+            Days = 30; Folder = 'Monthly'; Prefix = 'Bug-Report-Monthly'; Keep = 3
+            Title = "AYLIK RAPOR - HATA KAYITLARI"
+            Subtitle = ("Ay: {0}" -f $Until.ToString('yyyy-MM'))
+            Window = "Son 30 gün"
+        }
+    }
+    return @{
+        Days = 1; Folder = 'Daily'; Prefix = 'Bug-Report-Daily'; Keep = 30
+        Title = "GÜNLÜK RAPOR - HATA KAYITLARI"
+        Subtitle = ("Tarih: {0}" -f $Until.ToString('yyyy-MM-dd'))
+        Window = "Son 24 saat"
+    }
+}
+
 try {
     $Until = Get-Date
-    $Cfg = @{
-        Daily   = @{ Days = 1;  Folder = 'Daily';   Prefix = 'Bug-Report-Daily';   Keep = 30 }
-        Weekly  = @{ Days = 7;  Folder = 'Weekly';  Prefix = 'Bug-Report-Weekly';  Keep = 4 }
-        Monthly = @{ Days = 30; Folder = 'Monthly'; Prefix = 'Bug-Report-Monthly'; Keep = 3 }
-    }[$Period]
-    $Until = Get-Date
+    $Cfg = Get-ReportConfig -Period $Period -Until $Until
     $Since = $Until.AddDays(-$Cfg.Days)
-
-    if ($Period -eq 'Weekly') {
-        $Title      = "HAFTALIK RAPOR - HATA KAYITLARI"
-        $Subtitle   = ("Aralık: {0} - {1}" -f $Since.ToString('yyyy-MM-dd'), $Until.ToString('yyyy-MM-dd'))
-        $Window     = "Son 7 gün"
-    } elseif ($Period -eq 'Monthly') {
-        $Title      = "AYLIK RAPOR - HATA KAYITLARI"
-        $Subtitle   = ("Ay: {0}" -f $Until.ToString('yyyy-MM'))
-        $Window     = "Son 30 gün"
-    } else {
-        $Title      = "GÜNLÜK RAPOR - HATA KAYITLARI"
-        $Subtitle   = ("Tarih: {0}" -f $Until.ToString('yyyy-MM-dd'))
-        $Window     = "Son 24 saat"
-    }
 
     $OutPath = Join-Path $BasePath $Cfg.Folder
     $null = New-Item -ItemType Directory -Force -Path $OutPath
@@ -267,9 +279,9 @@ try {
     Write-Host ("[*] {0} olay bulundu" -f $Total) -ForegroundColor Cyan
 
     $html = New-DarkHtmlReport `
-        -Title $Title `
-        -Subtitle $Subtitle `
-        -Window $Window `
+        -Title $Cfg.Title `
+        -Subtitle $Cfg.Subtitle `
+        -Window $Cfg.Window `
         -TotalEvents $Total `
         -Events $Events `
         -GroupedByLog       ($Events | Group-Object LogName       | Sort-Object Count -Descending) `

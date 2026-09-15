@@ -16,6 +16,7 @@
 
 - For `.ps1`: must pass parser syntax check.
 - For `.bat`: must pass an end-to-end dry run on a harmless copy.
+- Run `Invoke-Pester ./Tests` — all tests must pass.
 - Keep the log naming rule: `<Name>_<yyyyMMdd_HHmmss>.<ext>`.
 - When adding files, check `.gitignore` scope (logs/shortcuts must stay out).
 
@@ -48,6 +49,7 @@ Add dry-run mode to cleanup script
 
 - `.ps1` için: sözdizimi ayrıştırması hatasız olmalı.
 - `.bat` için: zararsız bir kopyada uçtan uca kuru koşu yapılmalı.
+- `Invoke-Pester ./Tests` koşulmalı — tüm testler geçmeli.
 - Log adlandırma kuralı korunmalı: `<Ad>_<yyyyMMdd_HHmmss>.<uzantı>`.
 - Yeni dosya ekleniyorsa `.gitignore` kapsamı kontrol edilmeli (günlük/kısayol repoya girmemeli).
 

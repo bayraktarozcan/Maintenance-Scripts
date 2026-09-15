@@ -33,7 +33,7 @@ jobs:
 
       - name: Trailing whitespace in added lines
         run: |
-          if git show --format= --unified=0 HEAD | grep -nE '^\+.*[ \t]+$'; then
+          if git show --format= --unified=0 HEAD | grep -nE '^\+.*[[:blank:]]+$'; then
             echo "Trailing whitespace found above."
             exit 1
           fi
