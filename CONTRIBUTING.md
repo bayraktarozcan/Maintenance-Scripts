@@ -22,10 +22,10 @@
 
 ### Commit message
 
-English, imperative mood, short subject + bullet body:
+English, imperative mood, [Conventional Commits](https://www.conventionalcommits.org/) type prefix, short subject + bullet body. Every commit must have both a subject line and bullet details, no empty commits. Types: `feat:` (feature), `fix:` (bug fix), `docs:` (docs only), `style:` (formatting), `refactor:` (no behavior change), `perf:` (performance), `test:` (tests), `build:` (build/deps), `ci:` (CI), `chore:` (maintenance), `revert:` (revert):
 
 ```text
-Add dry-run mode to cleanup script
+feat: add dry-run mode to cleanup script
 
 - Simulate every step with zero system changes
 - Mark log name and content as dry-run
@@ -55,10 +55,10 @@ Add dry-run mode to cleanup script
 
 ### Commit mesajı
 
-İngilizce, emir kipi, kısa başlık + madde açıklamalar:
+İngilizce, emir kipi, [Conventional Commits](https://www.conventionalcommits.org/) tür öneki, kısa başlık + madde açıklamalar. Her committe başlık ve madde açıklama zorunludur, boş commit olmaz. Türler: `feat:` (özellik), `fix:` (hata düzeltme), `docs:` (yalnızca belge), `style:` (biçim), `refactor:` (davranışsız değişiklik), `perf:` (performans), `test:` (test), `build:` (derleme/bağımlılık), `ci:` (CI), `chore:` (bakım), `revert:` (geri alma):
 
 ```text
-Add dry-run mode to cleanup script
+feat: add dry-run mode to cleanup script
 
 - Simulate every step with zero system changes
 - Mark log name and content as dry-run
