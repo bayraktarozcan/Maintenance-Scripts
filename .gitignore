@@ -1,0 +1,25 @@
+# ============================================================
+# Betikler - yalnizca Scripts/ izlenir / Only Scripts/ is tracked
+# ============================================================
+
+# 1. IDE AYARLARI / IDE SETTINGS
+# [EN] Local editor state, never shared.
+# [TR] Yerel duzenleyici durumu, paylasilmaz.
+.idea/
+
+# 2. KISAYOLLAR / SHORTCUTS
+# [EN] Generated locally per machine; targets are absolute paths.
+# [TR] Makine basina uretilir; hedefler mutlak yoldur.
+Shortcuts/
+*.lnk
+
+# 3. LOGLAR / LOGS
+# [EN] Runtime output may contain machine data; structure is kept via .gitkeep.
+# [TR] Calisma ciktisi makine verisi icerebilir; yapi .gitkeep ile korunur.
+Logs/
+Logs/**/*.txt
+
+# 4. GECICI DOSYALAR / TEMP FILES
+# [EN] Script scratch files.
+# [TR] Betik gecici dosyalari.
+*.tmp

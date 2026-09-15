@@ -1,0 +1,7 @@
+# Betikler - satir sonu guvencesi / line-ending guarantee
+# [EN] Batch and PowerShell files must stay CRLF for cmd.exe reliability.
+# [TR] Batch ve PowerShell dosyalari cmd.exe guvenilirligi icin CRLF kalir.
+* text=auto
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.lnk binary
