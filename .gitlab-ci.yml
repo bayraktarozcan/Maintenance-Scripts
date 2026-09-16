@@ -1,0 +1,80 @@
+# Maintenance Scripts - GitLab CI
+# Mirror of the GitHub quality gates: validate, quality, hygiene, link check, secret scan.
+# Images and tools are pinned for reproducible runs.
+
+stages:
+  - validate
+  - quality
+  - hygiene
+  - linkcheck
+  - secret
+
+variables:
+  GIT_DEPTH: 0
+
+.ps_base: &ps_base
+  image:
+    name: mcr.microsoft.com/powershell:7.4.6-ubuntu-22.04
+    entrypoint: [""]
+
+validate:
+  <<: *ps_base
+  stage: validate
+  before_script:
+    - apt-get update >/dev/null && apt-get install -y --no-install-recommends git >/dev/null
+  script:
+    - |
+      pwsh -NoProfile -Command '
+        $errs = $null
+        Get-ChildItem -Recurse -Filter *.ps1 . | ForEach-Object {
+          $toks = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$toks, [ref]$errs)
+        }
+        if ($errs.Count -gt 0) { $errs | ForEach-Object { Write-Output $_.Message }; exit 1 }
+      '
+    - |
+      if git show --format= --unified=0 HEAD | grep -nE '^\+.*[[:blank:]]+$'; then
+        echo "Trailing whitespace found above."
+        exit 1
+      fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+quality:
+  <<: *ps_base
+  stage: quality
+  script:
+    - pwsh -NoProfile -Command "Install-Module Pester -RequiredVersion 5.7.1 -Force -SkipPublisherCheck -Scope CurrentUser"
+    - |
+      pwsh -NoProfile -Command '
+        $cfg = New-PesterConfiguration
+        $cfg.Run.Path = "./Tests"
+        $cfg.Output.Verbosity = "Detailed"
+        Invoke-Pester -Configuration $cfg
+      '
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+hygiene:
+  stage: hygiene
+  image: rhysd/actionlint:1.7.12
+  script:
+    - actionlint -color "path:*"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+linkcheck:
+  stage: linkcheck
+  image: lycheeverse/lychee:0.18.0
+  script:
+    - lychee --no-progress --max-retries 2 './**/*.md'
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+secret_scan:
+  stage: secret
+  image: zricethezav/gitleaks:v8.30.1
+  script:
+    - gitleaks git --redact --exit-code 1
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
