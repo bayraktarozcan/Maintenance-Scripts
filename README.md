@@ -8,6 +8,8 @@ Kişisel Windows bakım betikleri — sade, izlenebilir, Türkçe ve İngilizce.
 [![Validate](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Maintenance-Scripts/validate.yml?branch=main&label=Validate&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Maintenance-Scripts/actions/workflows/validate.yml)
 [![Secret Scan](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Maintenance-Scripts/secret-scan.yml?branch=main&label=Secret%20Scan&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Maintenance-Scripts/actions/workflows/secret-scan.yml)
 [![Quality](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Maintenance-Scripts/quality.yml?branch=main&label=Quality&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Maintenance-Scripts/actions/workflows/quality.yml)
+[![Hygiene](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Maintenance-Scripts/hygiene.yml?branch=main&label=Hygiene&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Maintenance-Scripts/actions/workflows/hygiene.yml)
+[![Link Check](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Maintenance-Scripts/link-check.yml?branch=main&label=Link%20Check&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Maintenance-Scripts/actions/workflows/link-check.yml)
 
 > **Language / Dil:** [English](#en) · [Türkçe](#tr)
 
