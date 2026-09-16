@@ -22,7 +22,7 @@ Only the latest commit on the `main` branch is supported. Older commits and fork
 
 If you find a security issue, do not open a public issue:
 
-- Report privately via [GitHub Security Advisory](https://github.com/bayraktarozcan/Automation-Scripts/security/advisories/new).
+- Report privately via [GitHub Security Advisory](https://github.com/bayraktarozcan/Maintenance-Scripts/security/advisories/new).
 - For non-critical concerns you may open an issue with the `security` label.
 
 Target: first response within 48 hours, fix or statement within 14 days.
@@ -52,7 +52,7 @@ Yalnızca `main` dalındaki en güncel commit desteklenir. Eski commitler ve ça
 
 Güvenlik sorunu bulursanız herkese açık issue açmayın:
 
-- [GitHub Security Advisory](https://github.com/bayraktarozcan/Automation-Scripts/security/advisories/new) üzerinden gizli bildirin.
+- [GitHub Security Advisory](https://github.com/bayraktarozcan/Maintenance-Scripts/security/advisories/new) üzerinden gizli bildirin.
 - Kritik olmayan konular için `security` etiketli issue açabilirsiniz.
 
 Hedef: 48 saat içinde ilk yanıt, 14 gün içinde düzeltme veya açıklama.
