@@ -1,8 +1,10 @@
 # Security Policy / Güvenlik Politikası
 
-> **Language / Dil:** [English](#english) · [Türkçe](#türkçe)
+> **Language / Dil:** [English](#en) · [Türkçe](#tr)
 
 ---
+
+<a id="en"></a>
 
 ## English
 
@@ -31,6 +33,8 @@ Target: first response within 48 hours, fix or statement within 14 days.
 - Attacks requiring physical access.
 
 ---
+
+<a id="tr"></a>
 
 ## Türkçe
 

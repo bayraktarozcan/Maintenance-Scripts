@@ -1,8 +1,10 @@
 # Changelog / Değişiklik Günlüğü
 
-> **Language / Dil:** [English](#english) · [Türkçe](#türkçe)
+> **Language / Dil:** [English](#en) · [Türkçe](#tr)
 
 ---
+
+<a id="en"></a>
 
 ## English
 
@@ -20,9 +22,11 @@ First release: personal Windows maintenance script collection.
 **Infrastructure:**
 - Each script creates its own `Logs/<Name>/` folder and keeps an `index.txt` run ledger.
 - Console and log output are identical; logs are written as UTF-8 with BOM.
-- `Shortcuts/`, `Logs/`, `.idea/` stay out of version control.
+- `Logs/` contents stay out of version control.
 
 ---
+
+<a id="tr"></a>
 
 ## Türkçe
 
@@ -40,4 +44,4 @@ First release: personal Windows maintenance script collection.
 **Altyapı:**
 - Her betik kendi `Logs/<Ad>/` klasörünü açar, `index.txt` koşu dökümü tutar.
 - Konsol ve günlük çıktısı birebir aynıdır; günlükler BOM'lu UTF-8 yazılır.
-- `Shortcuts/`, `Logs/`, `.idea/` repoya girmez.
+- `Logs/` içerikleri repoya girmez.

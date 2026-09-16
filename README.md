@@ -9,9 +9,11 @@ Kişisel Windows bakım betikleri — sade, izlenebilir, Türkçe ve İngilizce.
 [![Secret Scan](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Automation-Scripts/secret-scan.yml?branch=main&label=Secret%20Scan&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Automation-Scripts/actions/workflows/secret-scan.yml)
 [![Quality](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Automation-Scripts/quality.yml?branch=main&label=Quality&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Automation-Scripts/actions/workflows/quality.yml)
 
-> **Language / Dil:** [English](#english) · [Türkçe](#türkçe)
+> **Language / Dil:** [English](#en) · [Türkçe](#tr)
 
 ---
+
+<a id="en"></a>
 
 ## English
 
@@ -31,18 +33,20 @@ Each script does one job: it runs commands in order and writes output both to th
 
 ### Usage
 
-1. Run from a shortcut in `Shortcuts/` (requires administrator rights).
+1. Run `Scripts/<name>.bat` as administrator (right-click → Run as administrator).
 2. Each script logs under `Logs/<Script-Name>/`; every folder keeps an `index.txt` run ledger.
 3. `Bug-Report.ps1` runs on a schedule:
    `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
 
 ### Rules
 
-- Everything outside `Scripts/` is local (shortcuts, logs, IDE settings).
+- Everything outside `Scripts/` is local (see `.gitignore`); scripts create and use their `Logs/` folder at runtime.
 - Console and log output are identical.
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for contributions and [SECURITY.md](SECURITY.md) for security.
 
 ---
+
+<a id="tr"></a>
 
 ## Türkçe
 
@@ -62,13 +66,13 @@ Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ek
 
 ### Kullanım
 
-1. `Shortcuts/` klasöründeki kısayoldan çalıştırın (yönetici hakkı ister).
+1. `Scripts/` klasöründeki betiği yönetici olarak çalıştırın (sağ tık → Yönetici olarak çalıştır).
 2. Her betik günlüğünü `Logs/<Betik-Adı>/` altına yazar; her klasörde `index.txt` koşu dökümünü tutar.
 3. `Bug-Report.ps1` Zamanlayıcı ile koşar:
    `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
 
 ### Kurallar
 
-- `Scripts/` dışındaki her şey yereldir (kısayol, günlük, IDE ayarları).
+- `Scripts/` dışındaki her şey yereldir (ayrıntı `.gitignore`); betikler `Logs/` klasörünü çalışırken kendileri açar ve kullanır.
 - Çıktı hem ekranda hem günlükte birebir aynıdır.
 - Katkı için [CONTRIBUTING.md](CONTRIBUTING.md), güvenlik için [SECURITY.md](SECURITY.md) dosyasına bakın.

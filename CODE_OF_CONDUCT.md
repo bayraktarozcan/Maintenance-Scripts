@@ -1,8 +1,10 @@
 # Code of Conduct / Davranış Kuralları
 
-> **Language / Dil:** [English](#english) · [Türkçe](#türkçe)
+> **Language / Dil:** [English](#en) · [Türkçe](#tr)
 
 ---
+
+<a id="en"></a>
 
 ## English
 
@@ -16,6 +18,8 @@ Report violations privately via [Security Advisory](https://github.com/bayraktar
 *Adapted from [Contributor Covenant](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) 2.1.*
 
 ---
+
+<a id="tr"></a>
 
 ## Türkçe
 

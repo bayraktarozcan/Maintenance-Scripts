@@ -14,10 +14,9 @@ Shortcuts/
 *.lnk
 
 # 3. LOGLAR / LOGS
-# [EN] Runtime output may contain machine data; structure is kept via .gitkeep.
-# [TR] Calisma ciktisi makine verisi icerebilir; yapi .gitkeep ile korunur.
+# [EN] Runtime output stays out entirely; each script recreates its folder.
+# [TR] Calisma ciktisi tamamen disarida kalir; her betik klasorunu kendi acar.
 Logs/
-Logs/**/*.txt
 
 # 4. GECICI DOSYALAR / TEMP FILES
 # [EN] Script scratch files.

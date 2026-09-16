@@ -1,8 +1,10 @@
 # Contributing / Katkı Rehberi
 
-> **Language / Dil:** [English](#english) · [Türkçe](#türkçe)
+> **Language / Dil:** [English](#en) · [Türkçe](#tr)
 
 ---
+
+<a id="en"></a>
 
 ## English
 
@@ -18,7 +20,7 @@
 - For `.bat`: must pass an end-to-end dry run on a harmless copy.
 - Run `Invoke-Pester ./Tests` — all tests must pass.
 - Keep the log naming rule: `<Name>_<yyyyMMdd_HHmmss>.<ext>`.
-- When adding files, check `.gitignore` scope (logs/shortcuts must stay out).
+- When adding files, check `.gitignore` scope (log contents must stay out).
 
 ### Commit message
 
@@ -37,6 +39,8 @@ feat: add dry-run mode to cleanup script
 
 ---
 
+<a id="tr"></a>
+
 ## Türkçe
 
 ### İş akışı
@@ -51,7 +55,7 @@ feat: add dry-run mode to cleanup script
 - `.bat` için: zararsız bir kopyada uçtan uca kuru koşu yapılmalı.
 - `Invoke-Pester ./Tests` koşulmalı — tüm testler geçmeli.
 - Log adlandırma kuralı korunmalı: `<Ad>_<yyyyMMdd_HHmmss>.<uzantı>`.
-- Yeni dosya ekleniyorsa `.gitignore` kapsamı kontrol edilmeli (günlük/kısayol repoya girmemeli).
+- Yeni dosya ekleniyorsa `.gitignore` kapsamı kontrol edilmeli (günlük içerikleri repoya girmemeli).
 
 ### Commit mesajı
 
