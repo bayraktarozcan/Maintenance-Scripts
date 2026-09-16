@@ -14,7 +14,7 @@ variables:
 
 .ps_base: &ps_base
   image:
-    name: mcr.microsoft.com/powershell:7.4.6-ubuntu-22.04
+    name: mcr.microsoft.com/powershell:7.5-ubuntu-22.04@sha256:a3affe99603400235501b8da8be5f9e40152d4db6557f698a91da0280f9e1469
     entrypoint: [""]
 
 validate:
@@ -65,7 +65,7 @@ hygiene:
 
 linkcheck:
   stage: linkcheck
-  image: lycheeverse/lychee:0.18.0
+  image: lycheeverse/lychee:alpine@sha256:001cb2f8f6a96c87c238ba8c0e48f33f6a4a39141de37523bcbba039b2052337
   script:
     - lychee --no-progress --max-retries 2 './**/*.md'
   rules:
