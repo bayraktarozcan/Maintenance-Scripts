@@ -1,0 +1,65 @@
+# Notice / Bildirim
+
+> **Language / Dil:** [English](#en) · [Türkçe](#tr)
+
+---
+
+<a id="en"></a>
+
+## English
+
+### Third-party components
+
+This repository contains no third-party source code. All scripts and
+documentation are original works authored for this project.
+
+The scripts invoke operating-system tools provided by Microsoft that are
+already part of Windows (`DISM`, `SFC`, `ipconfig`, `winget`, PowerShell).
+These tools are used and distributed by Microsoft under their own terms; this
+project does not redistribute them and assumes no responsibility for them.
+
+The test suite runs on [Pester](https://github.com/pester/Pester)
+(community-maintained testing framework). It is a development-time dependency
+only and is not part of the delivered scripts.
+
+### Trademarks
+
+Windows, DISM, SFC, winget, and PowerShell are trademarks or registered
+trademarks of Microsoft Corporation or its affiliates. Their use here is
+nominative and describes interoperability only.
+
+### Copyright attribution
+
+Copyright (c) 2026 bayraktarozcan. Licensed under the MIT License
+(see [LICENSE](LICENSE)).
+
+---
+
+<a id="tr"></a>
+
+## Türkçe
+
+### Üçüncü taraf bileşenler
+
+Bu depo hiçbir üçüncü taraf kaynak kodu içermez. Tüm betikler ve belgeler bu
+proje için yazılmış özgün çalışmalardır.
+
+Betikler, Windows'un zaten parçası olan ve Microsoft tarafından sağlanan
+işletim sistemi araçlarını çalıştırır (`DISM`, `SFC`, `ipconfig`, `winget`,
+PowerShell). Bu araçlar kendi koşullarıyla Microsoft tarafından kullanılır ve
+dağıtılır; bu proje bunları yeniden dağıtmaz ve onlardan sorumlu değildir.
+
+Test paketi, topluluk tarafından bakımı yapılan
+[Pester](https://github.com/pester/Pester) üzerinde koşar. Yalnızca geliştirme
+zamanı bağımlılığıdır ve teslim edilen betiklerin parçası değildir.
+
+### Ticari markalar
+
+Windows, DISM, SFC, winget ve PowerShell, Microsoft Corporation veya
+bağlı kuruluşlarının ticari markaları veya tescilli ticari markalarıdır.
+Buradaki kullanımları, yalnızca birlikte çalışabilirliği tanımlayan adlandırmadır.
+
+### Telif bildirimi
+
+Telif hakkı (c) 2026 bayraktarozcan. MIT Lisansı ile lisanslanmıştır
+(bkz. [LICENSE](LICENSE)).

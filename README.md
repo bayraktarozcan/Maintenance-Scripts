@@ -44,7 +44,7 @@ Each script does one job: it runs commands in order and writes output both to th
 
 - Everything outside `Scripts/` is local (see `.gitignore`); scripts create and use their `Logs/` folder at runtime.
 - Console and log output are identical.
-- See [CONTRIBUTING.md](CONTRIBUTING.md) for contributions and [SECURITY.md](SECURITY.md) for security.
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for contributions, [SUPPORT.md](SUPPORT.md) for help, [PRIVACY.md](PRIVACY.md) for data handling, and [SECURITY.md](SECURITY.md) for security.
 
 ---
 
@@ -77,4 +77,4 @@ Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ek
 
 - `Scripts/` dışındaki her şey yereldir (ayrıntı `.gitignore`); betikler `Logs/` klasörünü çalışırken kendileri açar ve kullanır.
 - Çıktı hem ekranda hem günlükte birebir aynıdır.
-- Katkı için [CONTRIBUTING.md](CONTRIBUTING.md), güvenlik için [SECURITY.md](SECURITY.md) dosyasına bakın.
+- Katkı için [CONTRIBUTING.md](CONTRIBUTING.md), destek için [SUPPORT.md](SUPPORT.md), gizlilik için [PRIVACY.md](PRIVACY.md) ve güvenlik için [SECURITY.md](SECURITY.md) dosyasına bakın.
