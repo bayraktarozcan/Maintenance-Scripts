@@ -43,6 +43,6 @@ quoted paths and `%ERRORLEVEL%` handling.
 
 - `.gitattributes` enforces `eol=crlf` for `.bat`/`.ps1` and `eol=lf` for `.yml`.
 - `.editorconfig` mirrors those line-ending rules plus indentation.
-- `.gitlab-ci.yml` is a mirror of the GitHub quality gates but the project's
-  GitLab CI is disabled (builds access off); pipeline status badges do not
-  resolve. Do not re-enable it or create pipelines without being asked.
+- `.gitlab-ci.yml` mirrors the GitHub quality gates and runs on GitLab CI.
+  Pipelines trigger on pushes to `main`; the pipeline badge in `README.md`
+  resolves to https://gitlab.com/bayraktarozcan/Maintenance-Scripts/-/pipelines.
