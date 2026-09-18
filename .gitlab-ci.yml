@@ -82,7 +82,7 @@ linkcheck:
 
 secret_scan:
   <<: *golang_base
-  stage: secret_scan
+  stage: secret
   script:
     - apk add --no-cache git
     - go install github.com/zricethezav/gitleaks/v8@v8.30.1
