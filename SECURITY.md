@@ -14,7 +14,7 @@ Only the latest commit on the `main` branch is supported. Older commits and fork
 
 ### Security posture
 
-- Scripts make **no network calls**, download **no external files**, and write **no registry keys**.
+- Scripts never upload or transmit data and write **no registry keys**. Only `WinGet-Upgrade.bat` triggers network activity: it delegates package upgrades to `winget`, which queries configured sources and downloads packages. The other scripts make **no network calls** and download **no external files**.
 - `Repair-Windows.bat` and `Reset-Windows-Update.bat` **require administrator rights** (they run system commands); elevation is never persisted.
 - Logs are written to local disk only and never transmitted.
 
@@ -44,7 +44,7 @@ Yalnızca `main` dalındaki en güncel commit desteklenir. Eski commitler ve ça
 
 ### Güvenlik duruşu
 
-- Betikler **ağ çağrısı yapmaz**, harici dosya **indirmez**, kayıt defterine **yazmaz**.
+- Betikler asla veri yüklemez veya aktarmaz ve kayıt defterine **yazmaz**. Ağ etkinliğini tetikleyen tek betik `WinGet-Upgrade.bat`'tir: paket yükseltmelerini `winget`'e delege eder; winget yapılandırılmış kaynakları sorgular ve paket indirir. Diğer betikler **ağ çağrısı yapmaz** ve harici dosya **indirmez**.
 - `Repair-Windows.bat` ve `Reset-Windows-Update.bat` **yönetici hakkı** ister (sistem komutları çalıştırdıkları için); yetki kalıcı hale getirilmez.
 - Günlükler yalnızca yerel diske yazılır, dışarı gönderilmez.
 

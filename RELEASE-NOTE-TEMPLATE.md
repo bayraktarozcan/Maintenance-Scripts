@@ -81,7 +81,7 @@ Yeni sürümlerde aşağıdaki şablonu kopyalayıp yer tutucuları doldurun.
 
 ## Example / Örnek: v0.1.0.0
 
-#<a id="en"></a>
+<a id="en"></a>
 
 ## English
 
@@ -104,7 +104,7 @@ First public release of the personal Windows maintenance collection.
 - Dry runs and live runs on Windows 11 25H2; parser-clean PowerShell.
 ```
 
-#<a id="tr"></a>
+<a id="tr"></a>
 
 ## Türkçe
 
