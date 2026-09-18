@@ -59,7 +59,7 @@ hygiene:
   stage: hygiene
   image: rhysd/actionlint:1.7.12
   script:
-    - actionlint -color "path:*"
+    - actionlint -color
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
