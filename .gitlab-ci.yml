@@ -57,9 +57,12 @@ quality:
 
 hygiene:
   stage: hygiene
-  image: rhysd/actionlint:1.7.12
+  image:
+    name: golang:1.23-alpine@sha256:383395b794dffa5b53012a212365d40c8e37109a626ca30d6151c8348d380b5f
+    entrypoint: [""]
   script:
-    - actionlint -color
+    - go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+    - "$(go env GOPATH)/bin/actionlint -color"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
