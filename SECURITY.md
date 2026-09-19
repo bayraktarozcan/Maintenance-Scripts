@@ -10,7 +10,10 @@
 
 ### Supported versions
 
-Only the latest commit on the `main` branch is supported. Older commits and forks are not supported.
+Only the latest **release** is supported. When a new release is published, the
+previous releases are **deprecated** and no longer supported; each deprecated
+release's title carries a `[DEPRECATED]` prefix. Older commits, branches, and
+forks are not supported.
 
 ### Security posture
 
@@ -40,7 +43,10 @@ Target: first response within 48 hours, fix or statement within 14 days.
 
 ### Desteklenen sürümler
 
-Yalnızca `main` dalındaki en güncel commit desteklenir. Eski commitler ve çatallar desteklenmez.
+Yalnızca en son **sürüm** desteklenir. Yeni bir sürüm yayımlandığında önceki
+sürümler **kullanımdan kaldırılır** ve artık desteklenmez; kullanımdan
+kaldırılan her sürümün başlığında `[DEPRECATED]` ön eki bulunur. Eski
+commitler, dallar ve çatallar desteklenmez.
 
 ### Güvenlik duruşu
 
