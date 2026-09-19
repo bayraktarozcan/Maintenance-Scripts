@@ -21,7 +21,7 @@ scripts. Support is best-effort, provided by the author of the repository.
 
 ### Before you ask
 
-- Run each script **as administrator** (right-click -> Run as administrator).
+- Run each script **as administrator** (right-click -> Run as administrator); required for `Repair-Windows.bat` and `Reset-Windows-Update.bat`.
 - Check the log folder `Logs/<Script-Name>/` for your run; it shows exactly
   what the script did and failed on.
 - Confirm which script you ran and the exact error text you saw.
@@ -67,7 +67,7 @@ bir destektir.
 
 ### Sormadan önce
 
-- Betikleri **yönetici olarak** çalıştırın (sağ tık -> Yönetici olarak çalıştır).
+- Betikleri **yönetici olarak** çalıştırın (sağ tık -> Yönetici olarak çalıştır); bunu yalnızca `Repair-Windows.bat` ve `Reset-Windows-Update.bat` gerektirir.
 - Koşunuzun günlüğüne `Logs/<Betik-Adı>/` klasöründen bakın; betiğin ne yaptığını
   ve nerede hata verdiğini aynen gösterir.
 - Hangi betiği çalıştırdığınızı ve gördüğünüz hata metnini olduğu gibi belirtin.

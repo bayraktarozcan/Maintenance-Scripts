@@ -81,9 +81,7 @@ Yeni sürümlerde aşağıdaki şablonu kopyalayıp yer tutucuları doldurun.
 
 ## Example / Örnek: v0.1.0.0
 
-<a id="en"></a>
-
-## English
+### English
 
 ```markdown
 ## v0.1.0.0 - Initial Collection
@@ -104,9 +102,7 @@ First public release of the personal Windows maintenance collection.
 - Dry runs and live runs on Windows 11 25H2; parser-clean PowerShell.
 ```
 
-<a id="tr"></a>
-
-## Türkçe
+### Türkçe
 
 ```markdown
 ## v0.1.0.0 - İlk Koleksiyon

@@ -36,14 +36,14 @@ Each script does one job: it runs commands in order and writes output both to th
 
 ### Usage
 
-1. Run `Scripts/<name>.bat` as administrator (right-click → Run as administrator).
+1. Run `Scripts/<name>.bat` as administrator (right-click → Run as administrator); only `Repair-Windows.bat` and `Reset-Windows-Update.bat` require it.
 2. Each script logs under `Logs/<Script-Name>/`; every folder keeps an `index.txt` run ledger.
 3. `Bug-Report.ps1` runs on a schedule:
    `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
 
 ### Rules
 
-- Everything outside `Scripts/` is local (see `.gitignore`); scripts create and use their `Logs/` folder at runtime.
+- Runtime artifacts are excluded from version control (see `.gitignore`); scripts create and use their `Logs/` folder at runtime.
 - Console and log output are identical.
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for contributions, [SUPPORT.md](SUPPORT.md) for help, [PRIVACY.md](PRIVACY.md) for data handling, and [SECURITY.md](SECURITY.md) for security.
 
@@ -69,13 +69,13 @@ Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ek
 
 ### Kullanım
 
-1. `Scripts/` klasöründeki betiği yönetici olarak çalıştırın (sağ tık → Yönetici olarak çalıştır).
+1. `Scripts/` klasöründeki betiği yönetici olarak çalıştırın (sağ tık → Yönetici olarak çalıştır); bunu yalnızca `Repair-Windows.bat` ve `Reset-Windows-Update.bat` gerektirir.
 2. Her betik günlüğünü `Logs/<Betik-Adı>/` altına yazar; her klasörde `index.txt` koşu dökümünü tutar.
 3. `Bug-Report.ps1` Zamanlayıcı ile koşar:
    `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
 
 ### Kurallar
 
-- `Scripts/` dışındaki her şey yereldir (ayrıntı `.gitignore`); betikler `Logs/` klasörünü çalışırken kendileri açar ve kullanır.
+- Çalışma zamanı yapıları sürüm kontrolünün dışındadır (ayrıntı `.gitignore`); betikler `Logs/` klasörünü çalışırken kendileri açar ve kullanır.
 - Çıktı hem ekranda hem günlükte birebir aynıdır.
 - Katkı için [CONTRIBUTING.md](CONTRIBUTING.md), destek için [SUPPORT.md](SUPPORT.md), gizlilik için [PRIVACY.md](PRIVACY.md) ve güvenlik için [SECURITY.md](SECURITY.md) dosyasına bakın.

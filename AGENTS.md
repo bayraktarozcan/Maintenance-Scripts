@@ -7,8 +7,10 @@ Guidance for AI coding agents working in this repository.
 Personal Windows maintenance script collection: four `.bat` launchers plus a
 PowerShell HTML report engine. `Bug-Report.ps1` is the only PowerShell logic;
 the `.bat` files are thin wrappers around system tools (`DISM`, `SFC`,
-`ipconfig`, `winget`). The `.bat` launchers pass `-NoProfile -ExecutionPolicy
-Bypass` and call the scripts directly.
+`ipconfig`, `winget`). The `.bat` launchers run the tools inline and never pass
+`-ExecutionPolicy Bypass`; they only invoke `powershell -NoProfile` to build
+log timestamps. `Bug-Report.ps1` is called separately (e.g. scheduled task)
+with `-NoProfile -ExecutionPolicy Bypass -File`.
 
 ## Ground rules
 
@@ -33,7 +35,7 @@ powershell -NoProfile -Command "Invoke-Pester -Path ./Tests -Output Detailed"
 powershell -NoProfile -Command "[void][System.Management.Automation.Language.Parser]::ParseFile('Scripts/Bug-Report.ps1', [ref]$null, [ref]$errors); $errors"
 
 # Trailing-whitespace scan (matches the CI gate)
-git show --format= --unified=0 HEAD | Select-String -Pattern '^\+.*\s$'
+git show --format= --unified=0 HEAD | Select-String -Pattern '^\+.*[ \t]+$'
 ```
 
 `.bat` files are not covered by Pester; verify them with a dry review of
