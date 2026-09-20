@@ -109,22 +109,24 @@ if ($Files -or $Path.Count -gt 0) {
         }
     }
     foreach ($item in $paths) {
+        $item = $item.TrimEnd("`r", "`n")
         if (-not $item) { continue }
         $full = if ([System.IO.Path]::IsPathRooted($item)) { $item } else { Join-Path $Root $item }
         $label = if ([System.IO.Path]::IsPathRooted($item)) { $full } else { $item }
-        if (Test-Path -LiteralPath $full) {
+        # .NET existence checks bypass pwsh provider quirks (Test-Path/Get-Item
+        # disagree on leading-dot filenames under pwsh on Linux).
+        if ([System.IO.Directory]::Exists($full)) {
+            $found = @()
             try {
-                if ((Get-Item -LiteralPath $full).PSIsContainer) {
-                    $found = @(Get-ChildItem -LiteralPath $full -Recurse -File -Force |
-                        Where-Object { $_.FullName -notmatch '[\\/]\.git($|[\\/])' })
-                    foreach ($f in $found) { Read-TextFile -Path $f.FullName -Label $f.FullName }
-                } else {
-                    Read-TextFile -Path $full -Label $label
-                }
+                $found = @([System.IO.Directory]::EnumerateFiles($full, '*', [System.IO.SearchOption]::AllDirectories) |
+                    Where-Object { $_ -notmatch '[\\/]\.git($|[\\/])' })
             } catch {
-                Write-Output ("MISSING {0}" -f $full)
+                Write-Output ("UNREADABLE {0}" -f $full)
                 $script:Findings++
             }
+            foreach ($f in $found) { Read-TextFile -Path $f -Label $f }
+        } elseif ([System.IO.File]::Exists($full)) {
+            Read-TextFile -Path $full -Label $label
         } else {
             Write-Output ("MISSING {0}" -f $full)
             $script:Findings++
@@ -151,7 +153,7 @@ if ($Commits) {
 
 if ($Message) {
     $msgPath = if ([System.IO.Path]::IsPathRooted($Message)) { $Message } else { Join-Path $Root $Message }
-    if (Test-Path -LiteralPath $msgPath) {
+    if ([System.IO.File]::Exists($msgPath)) {
         $bytes = [System.IO.File]::ReadAllBytes($msgPath)
         try {
             Test-String -Source 'commit-msg' -Text ($script:Strict.GetString($bytes))
@@ -188,7 +190,7 @@ function Walk-Json {
 
 if ($JsonFile) {
     $jsonPath = if ([System.IO.Path]::IsPathRooted($JsonFile)) { $JsonFile } else { Join-Path $Root $JsonFile }
-    if (Test-Path -LiteralPath $jsonPath) {
+    if ([System.IO.File]::Exists($jsonPath)) {
         $bytes = [System.IO.File]::ReadAllBytes($jsonPath)
         try {
             $text = $script:Strict.GetString($bytes)
