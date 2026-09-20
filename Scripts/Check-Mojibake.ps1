@@ -25,6 +25,15 @@ param(
 
 Set-StrictMode -Version 2.0
 
+# Normalize Root to an absolute path so '.'-relative joins never reach
+# filenames (pwsh on Linux mishandles '.editorconfig'-style joins).
+if (-not $Root) { $Root = '.' }
+try {
+    $Root = [System.IO.Path]::GetFullPath((Join-Path $Root '.'))
+} catch {
+    $Root = [System.IO.Path]::GetFullPath((Join-Path (Get-Location) $Root))
+}
+
 if (-not ($Files -or $Commits -or $Message -or $JsonFile -or $Path.Count -gt 0)) {
     $Files = $true
 }
@@ -104,12 +113,17 @@ if ($Files -or $Path.Count -gt 0) {
         $full = if ([System.IO.Path]::IsPathRooted($item)) { $item } else { Join-Path $Root $item }
         $label = if ([System.IO.Path]::IsPathRooted($item)) { $full } else { $item }
         if (Test-Path -LiteralPath $full) {
-            if ((Get-Item -LiteralPath $full).PSIsContainer) {
-                $found = @(Get-ChildItem -LiteralPath $full -Recurse -File -Force |
-                    Where-Object { $_.FullName -notmatch '[\\/]\.git($|[\\/])' })
-                foreach ($f in $found) { Read-TextFile -Path $f.FullName -Label $f.FullName }
-            } else {
-                Read-TextFile -Path $full -Label $label
+            try {
+                if ((Get-Item -LiteralPath $full).PSIsContainer) {
+                    $found = @(Get-ChildItem -LiteralPath $full -Recurse -File -Force |
+                        Where-Object { $_.FullName -notmatch '[\\/]\.git($|[\\/])' })
+                    foreach ($f in $found) { Read-TextFile -Path $f.FullName -Label $f.FullName }
+                } else {
+                    Read-TextFile -Path $full -Label $label
+                }
+            } catch {
+                Write-Output ("MISSING {0}" -f $full)
+                $script:Findings++
             }
         } else {
             Write-Output ("MISSING {0}" -f $full)
@@ -136,15 +150,16 @@ if ($Commits) {
 }
 
 if ($Message) {
-    if (Test-Path -LiteralPath $Message) {
-        $bytes = [System.IO.File]::ReadAllBytes($Message)
+    $msgPath = if ([System.IO.Path]::IsPathRooted($Message)) { $Message } else { Join-Path $Root $Message }
+    if (Test-Path -LiteralPath $msgPath) {
+        $bytes = [System.IO.File]::ReadAllBytes($msgPath)
         try {
             Test-String -Source 'commit-msg' -Text ($script:Strict.GetString($bytes))
         } catch {
             Add-Finding -Source 'commit-msg' -Match $null -Text ''
         }
     } else {
-        Write-Output ("MISSING message file {0}" -f $Message)
+        Write-Output ("MISSING message file {0}" -f $msgPath)
         $script:Findings++
     }
 }
@@ -172,17 +187,18 @@ function Walk-Json {
 }
 
 if ($JsonFile) {
-    if (Test-Path -LiteralPath $JsonFile) {
-        $bytes = [System.IO.File]::ReadAllBytes($JsonFile)
+    $jsonPath = if ([System.IO.Path]::IsPathRooted($JsonFile)) { $JsonFile } else { Join-Path $Root $JsonFile }
+    if (Test-Path -LiteralPath $jsonPath) {
+        $bytes = [System.IO.File]::ReadAllBytes($jsonPath)
         try {
             $text = $script:Strict.GetString($bytes)
             $obj = $text | ConvertFrom-Json
-            Walk-Json -Node $obj -Prefix ("JSON {0}" -f $JsonFile)
+            Walk-Json -Node $obj -Prefix ("JSON {0}" -f $jsonPath)
         } catch {
-            Add-Finding -Source ("JSON {0}" -f $JsonFile) -Match $null -Text '' -Label 'JSON-PARSE'
+            Add-Finding -Source ("JSON {0}" -f $jsonPath) -Match $null -Text '' -Label 'JSON-PARSE'
         }
     } else {
-        Write-Output ("MISSING JSON file {0}" -f $JsonFile)
+        Write-Output ("MISSING JSON file {0}" -f $jsonPath)
         $script:Findings++
     }
 }
