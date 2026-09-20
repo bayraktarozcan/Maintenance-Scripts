@@ -13,7 +13,7 @@ Guidance for AI coding agents working in this repository.
 ### Project
 
 Personal Windows maintenance script collection: four `.bat` launchers plus a
-PowerShell HTML report engine. `Bug-Report.ps1` is the only PowerShell logic;
+PowerShell HTML report engine. `Bug-Report.ps1` is the only runtime PowerShell logic; `Scripts/Check-Mojibake.ps1` is a developer-side encoding gate;
 the `.bat` files are thin wrappers around system tools (`DISM`, `SFC`,
 `ipconfig`, `winget`). The `.bat` launchers run the tools inline and never pass
 `-ExecutionPolicy Bypass`; they only invoke `powershell -NoProfile` to build
@@ -27,6 +27,11 @@ with `-NoProfile -ExecutionPolicy Bypass -File`.
 - Logs live under `Logs/<Name>/` and are git-ignored; never commit log output.
 - Do not add scripts that make network calls or persist elevated privileges.
   `WinGet-Upgrade.bat` is the sole exception (delegates to `winget`).
+- `Scripts/Check-Mojibake.ps1` is the mojibake/encoding gate: it rejects
+  double-encoded text and invalid UTF-8 in files, commit messages and JSON
+  payloads, and never makes network calls. Enable the bundled hooks with
+  `git config core.hooksPath .githooks`; the GitHub/GitLab validate gates run
+  it per push, and a weekly text audit scans the platforms' public fields.
 - Commit message style: English, imperative, with a `type:` prefix
   (`fix:`, `docs:`, `chore:`, `test:`). Match the existing Conventional
   Commits history.
@@ -44,6 +49,12 @@ powershell -NoProfile -Command "[void][System.Management.Automation.Language.Par
 
 # Trailing-whitespace scan (matches the CI gate)
 git show --format= --unified=0 HEAD | Select-String -Pattern '^\+.*[ \t]+$'
+
+# Mojibake / encoding gate (tracked files; also covered by Pester)
+powershell -NoProfile -File Scripts/Check-Mojibake.ps1 -Files
+
+# Enable the bundled local hooks
+git config core.hooksPath .githooks
 ```
 
 `.bat` files are not covered by Pester; verify them with a dry review of
@@ -68,7 +79,7 @@ Bu depoda çalışan AI kodlama ajanları için rehber.
 ### Proje
 
 Kişisel Windows bakım betikleri koleksiyonu: dört `.bat` başlatıcı artı bir
-PowerShell HTML rapor motoru. `Bug-Report.ps1` tek PowerShell mantığıdır;
+PowerShell HTML rapor motoru. `Bug-Report.ps1` tek çalışma zamanı PowerShell mantığıdır; `Scripts/Check-Mojibake.ps1` geliştirici tarafı bir kodlama gate'idir;
 `.bat` dosyaları sistem araçlarının (`DISM`, `SFC`, `ipconfig`, `winget`)
 ince sarmalayıcılarıdır. `.bat` başlatıcıları araçları satır içinde çalıştırır ve
 `-ExecutionPolicy Bypass` hiç geçirmez; yalnızca günlük zaman damgaları için
@@ -82,6 +93,11 @@ görev): `-NoProfile -ExecutionPolicy Bypass -File`.
 - Günlükler `Logs/<Ad>/` altında yaşar ve git-ignored'dır; günlük çıktısını asla commit'lemeyin.
 - Ağ çağrısı yapan ya da kalıcı ayrıcalık sürdüren betikler eklemeyin.
   `WinGet-Upgrade.bat` tek istisnadır (`winget`'e iletir).
+- `Scripts/Check-Mojibake.ps1` mojibake/kodlama gate'idir: dosyalarda, commit
+  mesajlarında ve JSON yüklerinde çift kodlanmış metni ve geçersiz UTF-8'i
+  reddeder; asla ağ çağrısı yapmaz. Yerleşik hook'ları şununla etkinleştirin:
+  `git config core.hooksPath .githooks`; GitHub/GitLab validate gate'leri her
+  itmede koşar, haftalık metin denetimi platformların açık alanlarını tarar.
 - Commit mesajı stili: İngilizce, emir kipi, `type:` önekiyle
   (`fix:`, `docs:`, `chore:`, `test:`). Mevcut Conventional Commits
   geçmişiyle uyumlu olsun.
@@ -99,6 +115,12 @@ powershell -NoProfile -Command "[void][System.Management.Automation.Language.Par
 
 # Sondaki boşluk taraması (CI gate ile aynı)
 git show --format= --unified=0 HEAD | Select-String -Pattern '^\+.*[ \t]+$'
+
+# Mojibake / kodlama gate'i (izlenen dosyalar; Pester kapsamında da var)
+powershell -NoProfile -File Scripts/Check-Mojibake.ps1 -Files
+
+# Yerleşik yerel hook'ları etkinleştir
+git config core.hooksPath .githooks
 ```
 
 `.bat` dosyaları Pester kapsamında değildir; tırnaklı yolları ve

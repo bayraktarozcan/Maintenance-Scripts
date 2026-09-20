@@ -1,0 +1,42 @@
+# Maintenance Scripts - Text Audit
+# Weekly sweep of the platforms' public text fields (repos metadata, topics,
+# release notes) for mojibake / invalid UTF-8. Dumps each API payload to a
+# JSON file and lets Check-Mojibake.ps1 do the scanning (script never goes
+# on the network itself). Mirrored by the GitLab text_audit job.
+
+name: "Text Audit"
+
+on:
+  schedule:
+    - cron: "15 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  text_audit:
+    name: Scan platform text fields for mojibake
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Fetch GitHub metadata and releases
+        run: |
+          gh api repos/bayraktarozcan/Maintenance-Scripts \
+            --jq '{ name, description, homepage, default_branch, topics }' > /tmp/gh-meta.json
+          gh api repos/bayraktarozcan/Maintenance-Scripts/releases \
+            --jq '[.[] | { name, tag_name, body }]' > /tmp/gh-releases.json
+
+      - name: Fetch GitLab metadata and releases
+        run: |
+          curl -fsSL "https://gitlab.com/api/v4/projects/bayraktarozcan%2FMaintenance-Scripts" -o /tmp/gl-meta.json
+          curl -fsSL "https://gitlab.com/api/v4/projects/bayraktarozcan%2FMaintenance-Scripts/releases" -o /tmp/gl-releases.json
+
+      - name: Scan payloads for mojibake
+        shell: pwsh
+        run: |
+          foreach ($f in '/tmp/gh-meta.json','/tmp/gh-releases.json','/tmp/gl-meta.json','/tmp/gl-releases.json') {
+            & ./Scripts/Check-Mojibake.ps1 -JsonFile $f
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }

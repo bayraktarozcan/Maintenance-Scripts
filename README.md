@@ -10,6 +10,7 @@ Kişisel Windows bakım betikleri — sade, izlenebilir, Türkçe ve İngilizce.
 [![Quality](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Maintenance-Scripts/quality.yml?branch=main&label=Quality&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Maintenance-Scripts/actions/workflows/quality.yml)
 [![Hygiene](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Maintenance-Scripts/hygiene.yml?branch=main&label=Hygiene&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Maintenance-Scripts/actions/workflows/hygiene.yml)
 [![Link Check](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Maintenance-Scripts/link-check.yml?branch=main&label=Link%20Check&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Maintenance-Scripts/actions/workflows/link-check.yml)
+[![Text Audit](https://img.shields.io/github/actions/workflow/status/bayraktarozcan/Maintenance-Scripts/text-audit.yml?branch=main&label=Text%20Audit&style=flat-square&logo=github)](https://github.com/bayraktarozcan/Maintenance-Scripts/actions/workflows/text-audit.yml)
 [![GitLab CI](https://img.shields.io/gitlab/pipeline/bayraktarozcan/Maintenance-Scripts/main?branch=main&style=flat-square&logo=gitlab&label=GitLab%20CI)](https://gitlab.com/bayraktarozcan/Maintenance-Scripts/-/pipelines)
 
 > **Language / Dil:** [English](#en) · [Türkçe](#tr)
@@ -45,6 +46,7 @@ Each script does one job: it runs commands in order and writes output both to th
 
 - Runtime artifacts are excluded from version control (see `.gitignore`); scripts create and use their `Logs/` folder at runtime.
 - Console and log output are identical.
+- A mojibake/encoding gate (`Scripts/Check-Mojibake.ps1`) blocks double-encoded text and invalid UTF-8 in files, commits, and release text; run `git config core.hooksPath .githooks` to arm the bundled local hooks.
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for contributions, [SUPPORT.md](SUPPORT.md) for help, [PRIVACY.md](PRIVACY.md) for data handling, and [SECURITY.md](SECURITY.md) for security.
 
 ---

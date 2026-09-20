@@ -8,6 +8,7 @@ stages:
   - hygiene
   - linkcheck
   - secret
+  - textaudit
 
 variables:
   GIT_DEPTH: 0
@@ -37,6 +38,10 @@ validate:
         echo "Trailing whitespace found above."
         exit 1
       fi
+    - |
+      pwsh -NoProfile -File ./Scripts/Check-Mojibake.ps1 -Files
+    - |
+      pwsh -NoProfile -File ./Scripts/Check-Mojibake.ps1 -Commits -CommitRange "$CI_COMMIT_BEFORE_SHA..$CI_COMMIT_SHA"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
@@ -89,3 +94,23 @@ secret_scan:
     - $(go env GOPATH)/bin/gitleaks git --redact --exit-code 1
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Weekly sweep of the platforms' public text fields (mirrors GitHub
+# text-audit.yml). Requires a pipeline schedule on GitLab to run.
+text_audit:
+  <<: *ps_base
+  stage: textaudit
+  before_script:
+    - apt-get update >/dev/null && apt-get install -y --no-install-recommends curl >/dev/null
+  script:
+    - |
+      curl -fsSL "https://api.github.com/repos/bayraktarozcan/Maintenance-Scripts" -o /tmp/gh-meta.json
+      curl -fsSL "https://api.github.com/repos/bayraktarozcan/Maintenance-Scripts/releases" -o /tmp/gh-releases.json
+      curl -fsSL "https://gitlab.com/api/v4/projects/bayraktarozcan%2FMaintenance-Scripts" -o /tmp/gl-meta.json
+      curl -fsSL "https://gitlab.com/api/v4/projects/bayraktarozcan%2FMaintenance-Scripts/releases" -o /tmp/gl-releases.json
+    - |
+      for f in /tmp/gh-meta.json /tmp/gh-releases.json /tmp/gl-meta.json /tmp/gl-releases.json; do
+        pwsh -NoProfile -File ./Scripts/Check-Mojibake.ps1 -JsonFile "$f" || exit 1
+      done
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'

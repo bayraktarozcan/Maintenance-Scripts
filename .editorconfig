@@ -16,6 +16,9 @@ indent_style = space
 indent_size = 4
 max_line_length = 160
 
+[.githooks/*]
+end_of_line = lf
+
 [*.bat]
 end_of_line = crlf
 

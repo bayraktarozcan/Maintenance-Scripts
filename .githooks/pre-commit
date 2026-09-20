@@ -1,0 +1,20 @@
+#!/bin/sh
+# Pre-commit hook: reject staged content carrying mojibake or invalid UTF-8.
+# Uses PowerShell 7 when available, otherwise Windows PowerShell 5.1.
+
+set -eu
+
+root=$(git rev-parse --show-toplevel)
+
+if command -v pwsh >/dev/null 2>&1; then
+  PS=pwsh
+else
+  PS=powershell
+fi
+
+if ! "$PS" -NoProfile -File "$root/Scripts/Check-Mojibake.ps1" -Files -Staged; then
+  echo "pre-commit: mojibake check failed (staged files). Run the script with -Files to inspect all tracked files." >&2
+  exit 1
+fi
+
+exit 0
