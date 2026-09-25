@@ -1,12 +1,4 @@
-# AGENTS / AJANLAR
-
-> **Language / Dil:** [English](#en) · [Türkçe](#tr)
-
----
-
-<a id="en"></a>
-
-## English
+# AGENTS
 
 Guidance for AI coding agents working in this repository.
 
@@ -68,69 +60,12 @@ quoted paths and `%ERRORLEVEL%` handling.
   Pipelines trigger on pushes to `main`; the pipeline badge in `README.md`
   resolves to https://gitlab.com/bayraktarozcan/Maintenance-Scripts/-/pipelines.
 
----
+### Local / Yerel Yansıma
 
-<a id="tr"></a>
+`AGENTS-TR.md` next to this file is a Turkish mirror kept only for local human
+review; it is git-ignored and never committed. Whenever this file changes,
+regenerate `AGENTS-TR.md` in the same session so the `sync-sha` value matches
+across both files. Rule: "Bu dosya her değiştiğinde AGENTS-TR.md de aynı
+oturumda yenilenmeli (sync-sha eşleşmeli)."
 
-## Türkçe
-
-Bu depoda çalışan AI kodlama ajanları için rehber.
-
-### Proje
-
-Kişisel Windows bakım betikleri koleksiyonu: dört `.bat` başlatıcı artı bir
-PowerShell HTML rapor motoru. `Bug-Report.ps1` tek çalışma zamanı PowerShell mantığıdır; `Scripts/Check-Mojibake.ps1` geliştirici tarafı bir kodlama gate'idir;
-`.bat` dosyaları sistem araçlarının (`DISM`, `SFC`, `ipconfig`, `winget`)
-ince sarmalayıcılarıdır. `.bat` başlatıcıları araçları satır içinde çalıştırır ve
-`-ExecutionPolicy Bypass` hiç geçirmez; yalnızca günlük zaman damgaları için
-`powershell -NoProfile` çağırır. `Bug-Report.ps1` ayrı çağrılır (örn. zamanlanmış
-görev): `-NoProfile -ExecutionPolicy Bypass -File`.
-
-### Temel kurallar
-
-- Betikler **Windows PowerShell 5.1** üzerinde çalışabilir kalmalıdır (PowerShell 7'ye özgü sözdizimi yok).
-- `Bug-Report.ps1` çıktıyı UTF-8 **BOM ile** yazar; kodlamaları değiştirmeyin.
-- Günlükler `Logs/<Ad>/` altında yaşar ve git-ignored'dır; günlük çıktısını asla commit'lemeyin.
-- Ağ çağrısı yapan ya da kalıcı ayrıcalık sürdüren betikler eklemeyin.
-  `WinGet-Upgrade.bat` tek istisnadır (`winget`'e iletir).
-- `Scripts/Check-Mojibake.ps1` mojibake/kodlama gate'idir: dosyalarda, commit
-  mesajlarında ve JSON yüklerinde çift kodlanmış metni ve geçersiz UTF-8'i
-  reddeder; asla ağ çağrısı yapmaz. Yerleşik hook'ları şununla etkinleştirin:
-  `git config core.hooksPath .githooks`; GitHub/GitLab validate gate'leri her
-  itmede koşar, haftalık metin denetimi platformların açık alanlarını tarar.
-- Commit mesajı stili: İngilizce, emir kipi, `type:` önekiyle
-  (`fix:`, `docs:`, `chore:`, `test:`). Mevcut Conventional Commits
-  geçmişiyle uyumlu olsun.
-
-### Komutlar
-
-Windows PowerShell 5.1 üzerinde doğrulama (Pester 5.7.1 kurulu):
-
-```powershell
-# Regression testleri
-powershell -NoProfile -Command "Invoke-Pester -Path ./Tests -Output Detailed"
-
-# Tüm PowerShell kaynaklarının sözdizimi denetimi
-powershell -NoProfile -Command "[void][System.Management.Automation.Language.Parser]::ParseFile('Scripts/Bug-Report.ps1', [ref]$null, [ref]$errors); $errors"
-
-# Sondaki boşluk taraması (CI gate ile aynı)
-git show --format= --unified=0 HEAD | Select-String -Pattern '^\+.*[ \t]+$'
-
-# Mojibake / kodlama gate'i (izlenen dosyalar; Pester kapsamında da var)
-powershell -NoProfile -File Scripts/Check-Mojibake.ps1 -Files
-
-# Yerleşik yerel hook'ları etkinleştir
-git config core.hooksPath .githooks
-```
-
-`.bat` dosyaları Pester kapsamında değildir; tırnaklı yolları ve
-`%ERRORLEVEL%` kullanımını kuru bir incelemeyle doğrulayın.
-
-### Yapılandırma dosyaları
-
-- `.gitattributes`, `.bat`/`.ps1` için `eol=crlf`, `.yml` için `eol=lf` zorunlu kılar.
-- `.editorconfig` bu satır sonu kurallarını ve girintilemeyi yansıtır.
-- `.gitlab-ci.yml`, GitHub kalite gate'lerini yansıtır ve GitLab CI'da koşar.
-  Pipeline'lar `main`'e yapılan itmelerde tetiklenir; `README.md`'deki pipeline
-  rozeti https://gitlab.com/bayraktarozcan/Maintenance-Scripts/-/pipelines
-  adresine çözümlenir.
+<!-- mirror-sync: sync-sha=7f49eff5ab8ce29290a7ebed1bd217a92844be67 -->

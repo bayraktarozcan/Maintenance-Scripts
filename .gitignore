@@ -23,3 +23,8 @@ Logs/
 # [TR] Betik gecici dosyalari.
 *.tmp
 *.zip
+
+# 5. YANSIMALAR / MIRRORS
+# [EN] Local Turkish mirror of AGENTS.md; human review only, never committed.
+# [TR] AGENTS.md'nin yerel Turkce yansimasi; yalnizca insan denetimi icin, asla commit edilmez.
+AGENTS-TR.md
