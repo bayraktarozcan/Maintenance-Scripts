@@ -5,7 +5,7 @@ Guidance for AI coding agents working in this repository.
 ### Project
 
 Personal Windows maintenance script collection: four `.bat` launchers plus a
-PowerShell HTML report engine. `Bug-Report.ps1` is the only runtime PowerShell logic; `Scripts/Check-Mojibake.ps1` is a developer-side encoding gate;
+PowerShell HTML report engine. `Bug-Report.ps1` is the only runtime PowerShell logic; `Tools/Check-Mojibake.ps1` is a developer-side encoding gate;
 the `.bat` files are thin wrappers around system tools (`DISM`, `SFC`,
 `ipconfig`, `winget`). The `.bat` launchers run the tools inline and never pass
 `-ExecutionPolicy Bypass`; they only invoke `powershell -NoProfile` to build
@@ -19,7 +19,7 @@ with `-NoProfile -ExecutionPolicy Bypass -File`.
 - Logs live under `Logs/<Name>/` and are git-ignored; never commit log output.
 - Do not add scripts that make network calls or persist elevated privileges.
   `WinGet-Upgrade.bat` is the sole exception (delegates to `winget`).
-- `Scripts/Check-Mojibake.ps1` is the mojibake/encoding gate: it rejects
+- `Tools/Check-Mojibake.ps1` is the mojibake/encoding gate: it rejects
   double-encoded text and invalid UTF-8 in files, commit messages and JSON
   payloads, and never makes network calls. Enable the bundled hooks with
   `git config core.hooksPath .githooks`; the GitHub/GitLab validate gates run
@@ -43,7 +43,7 @@ powershell -NoProfile -Command "[void][System.Management.Automation.Language.Par
 git show --format= --unified=0 HEAD | Select-String -Pattern '^\+.*[ \t]+$'
 
 # Mojibake / encoding gate (tracked files; also covered by Pester)
-powershell -NoProfile -File Scripts/Check-Mojibake.ps1 -Files
+powershell -NoProfile -File Tools/Check-Mojibake.ps1 -Files
 
 # Enable the bundled local hooks
 git config core.hooksPath .githooks

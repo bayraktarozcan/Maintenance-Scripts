@@ -1,4 +1,4 @@
-﻿# Pester 5 tests for Scripts/Check-Mojibake.ps1 (the encoding/mojibake gate).
+﻿# Pester 5 tests for Tools/Check-Mojibake.ps1 (the encoding/mojibake gate).
 # The script is executed as a child process so its `exit 1` contract can be
 # asserted without terminating the test host. No system state is mutated:
 # fixtures live under $TestDrive (a real filesystem path that native git and
@@ -9,7 +9,7 @@
 BeforeAll {
     $script:PsExe = if ($PSVersionTable.PSEdition -eq 'Core') { 'pwsh' } else { 'powershell' }
     $script:Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    $script:Check = Join-Path $PSScriptRoot '..\Scripts\Check-Mojibake.ps1'
+    $script:Check = Join-Path $PSScriptRoot '..\Tools\Check-Mojibake.ps1'
 
     # Double-encoded Latin-1 samples (built from character codes so this file
     # stays clean for the encoding gate): Turkish words with Latin-1 accents.

@@ -37,6 +37,6 @@ jobs:
         shell: pwsh
         run: |
           foreach ($f in '/tmp/gh-meta.json','/tmp/gh-releases.json','/tmp/gl-meta.json','/tmp/gl-releases.json') {
-            & ./Scripts/Check-Mojibake.ps1 -JsonFile $f
+            & ./Tools/Check-Mojibake.ps1 -JsonFile $f
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }

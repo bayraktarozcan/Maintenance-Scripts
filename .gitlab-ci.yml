@@ -39,9 +39,9 @@ validate:
         exit 1
       fi
     - |
-      pwsh -NoProfile -File ./Scripts/Check-Mojibake.ps1 -Files
+      pwsh -NoProfile -File ./Tools/Check-Mojibake.ps1 -Files
     - |
-      pwsh -NoProfile -File ./Scripts/Check-Mojibake.ps1 -Commits -CommitRange "$CI_COMMIT_BEFORE_SHA..$CI_COMMIT_SHA"
+      pwsh -NoProfile -File ./Tools/Check-Mojibake.ps1 -Commits -CommitRange "$CI_COMMIT_BEFORE_SHA..$CI_COMMIT_SHA"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
@@ -110,7 +110,7 @@ text_audit:
       curl -fsSL "https://gitlab.com/api/v4/projects/bayraktarozcan%2FMaintenance-Scripts/releases" -o /tmp/gl-releases.json
     - |
       for f in /tmp/gh-meta.json /tmp/gh-releases.json /tmp/gl-meta.json /tmp/gl-releases.json; do
-        pwsh -NoProfile -File ./Scripts/Check-Mojibake.ps1 -JsonFile "$f" || exit 1
+        pwsh -NoProfile -File ./Tools/Check-Mojibake.ps1 -JsonFile "$f" || exit 1
       done
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule"'

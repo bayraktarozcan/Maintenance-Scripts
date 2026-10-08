@@ -46,7 +46,7 @@ Each script does one job: it runs commands in order and writes output both to th
 
 - Runtime artifacts are excluded from version control (see `.gitignore`); scripts create and use their `Logs/` folder at runtime.
 - Console and log output are identical.
-- A mojibake/encoding gate (`Scripts/Check-Mojibake.ps1`) blocks double-encoded text and invalid UTF-8 in files, commits, and release text; run `git config core.hooksPath .githooks` to arm the bundled local hooks.
+- A mojibake/encoding gate (`Tools/Check-Mojibake.ps1`) blocks double-encoded text and invalid UTF-8 in files, commits, and release text; run `git config core.hooksPath .githooks` to arm the bundled local hooks.
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for contributions, [SUPPORT.md](SUPPORT.md) for help, [PRIVACY.md](PRIVACY.md) for data handling, and [SECURITY.md](SECURITY.md) for security.
 
 ---

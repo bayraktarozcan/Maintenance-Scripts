@@ -42,14 +42,14 @@ jobs:
 
       - name: Mojibake scan (tracked files)
         shell: pwsh
-        run: ./Scripts/Check-Mojibake.ps1 -Files
+        run: ./Tools/Check-Mojibake.ps1 -Files
 
       - name: Mojibake scan (pushed commits)
         if: github.event_name == 'push'
         shell: pwsh
-        run: './Scripts/Check-Mojibake.ps1 -Commits -CommitRange "${{ github.event.before }}..HEAD"'
+        run: './Tools/Check-Mojibake.ps1 -Commits -CommitRange "${{ github.event.before }}..HEAD"'
 
       - name: Mojibake scan (pull request commits)
         if: github.event_name == 'pull_request'
         shell: pwsh
-        run: './Scripts/Check-Mojibake.ps1 -Commits -CommitRange "${{ github.event.pull_request.base.sha }}..HEAD"'
+        run: './Tools/Check-Mojibake.ps1 -Commits -CommitRange "${{ github.event.pull_request.base.sha }}..HEAD"'

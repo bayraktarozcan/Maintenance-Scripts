@@ -12,7 +12,7 @@ else
   PS=powershell
 fi
 
-if ! "$PS" -NoProfile -File "$root/Scripts/Check-Mojibake.ps1" -Files -Staged; then
+if ! "$PS" -NoProfile -File "$root/Tools/Check-Mojibake.ps1" -Files -Staged; then
   echo "pre-commit: mojibake check failed (staged files). Run the script with -Files to inspect all tracked files." >&2
   exit 1
 fi
