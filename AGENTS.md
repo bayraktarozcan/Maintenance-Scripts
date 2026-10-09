@@ -1,4 +1,4 @@
-﻿# Agent Guide
+# Agent Guide
 
 Universal operating rules for humans and AI agents, written once and valid for every project. This file holds standards, never project facts: layout, versions, commands, release steps, and naming exemptions live in the project layer (see "Project Layer Contract") and are not copied here. English is the single source of operational truth.
 
