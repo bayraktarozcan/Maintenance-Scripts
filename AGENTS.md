@@ -402,7 +402,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=6358e373a3272d8a6174cf6700dc8201e0febc22 -->
+<!-- mirror-sync: sync-sha=e64860eaf7811ba128d95550090641a1e9a18f76 -->
 
 ---
 
@@ -573,7 +573,6 @@ Project facts for this repository. Points at the universal rules above instead o
 | `.github/` | GitHub quality gates |
 | `Logs/<Name>/` | Runtime output, git-ignored; never committed; each script recreates its folder |
 | `Shortcuts/` | Generated locally per machine, git-ignored |
-| `AGENTS-TR.md` | Untracked local Turkish mirror for human review only; never committed |
 
 ## Versions - scheme, current constants, where each is stated
 
@@ -612,12 +611,12 @@ git config core.hooksPath .githooks
 | `Tests/` | `<Subject>.Tests.ps1` mirroring the file under test |
 | Root docs | UPPER (`README.md`, `SECURITY.md`, `CHANGELOG.md`, `CODEOWNERS`, platform-fixed names) |
 
-Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Logs/` (runtime output, untracked).
+Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Logs/` (runtime output, untracked); `IPConfig-FlushDNS.bat` (embeds the canonical `ipconfig` tool name; renaming would break script, log-folder, doc, and test references).
 
 ## Hidden layers - scratch directory name (named here once), cadence for clearing it
 
 - No scratch directory in use. Intermediates stay in `Logs/` (git-ignored, recreated per run) and are removed when the task ends.
-- Local-only layer: `AGENTS-TR.md` (git-ignored via `.gitignore`, never committed, never referenced from committed output beyond the ignore pattern). Whenever `AGENTS.md` changes, regenerate `AGENTS-TR.md` in the same session so the `sync-sha` value matches across both files.
+- Local-only layer: the gitignored Turkish mirror of this file (see `.gitignore`; never committed). Whenever `AGENTS.md` changes, regenerate the mirror in the same session so the `sync-sha` value matches across both files.
 
 ## Toolchain - overrides of the defaults in the appendix, compatibility floor
 
