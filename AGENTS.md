@@ -402,7 +402,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=e64860eaf7811ba128d95550090641a1e9a18f76 -->
+<!-- mirror-sync: sync-sha=a03006a305848b4bcb8d16ae16edc043b7c50053 -->
 
 ---
 
@@ -571,6 +571,8 @@ Project facts for this repository. Points at the universal rules above instead o
 | `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`) |
 | `.githooks/` | Bundled local hooks; enable with `git config core.hooksPath .githooks` |
 | `.github/` | GitHub quality gates |
+| `Docs/` | Tracked chapters: overview/setup, architecture, troubleshooting |
+| `Planning/` | Work plans and task tracking (assistant-managed) |
 | `Logs/<Name>/` | Runtime output, git-ignored; never committed; each script recreates its folder |
 | `Shortcuts/` | Generated locally per machine, git-ignored |
 
