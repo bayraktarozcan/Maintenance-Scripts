@@ -17,4 +17,15 @@ if ! "$PS" -NoProfile -File "$root/Tools/Check-Mojibake.ps1" -Files -Staged; the
   exit 1
 fi
 
+# Secret scan: inspect staged content with gitleaks when it is installed.
+# Missing gitleaks only warns; CI (secret-scan.yml) always scans.
+if command -v gitleaks >/dev/null 2>&1; then
+  if ! gitleaks protect --staged --redact; then
+    echo "pre-commit: gitleaks reported possible secrets in staged changes." >&2
+    exit 1
+  fi
+else
+  echo "pre-commit: gitleaks not installed, secret scan skipped (CI still scans)." >&2
+fi
+
 exit 0
