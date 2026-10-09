@@ -22,6 +22,7 @@ if ($List) {
 
 $script:Root = Split-Path -Parent $PSScriptRoot
 $script:Failed = 0
+$script:PsExe = if ($PSVersionTable.PSEdition -eq 'Core') { 'pwsh' } else { 'powershell' }
 
 function Invoke-GateStep([string]$Name, [scriptblock]$Body) {
     Write-Output ("[..] " + $Name)
@@ -55,7 +56,7 @@ Invoke-GateStep 'Whitespace' {
 }
 
 Invoke-GateStep 'Mojibake' {
-    & powershell -NoProfile -File (Join-Path $script:Root 'Tools\Check-Mojibake.ps1') -Files
+    & $script:PsExe -NoProfile -File (Join-Path $script:Root 'Tools\Check-Mojibake.ps1') -Files
     if ($LASTEXITCODE -ne 0) { throw "mojibake findings present" }
 }
 
