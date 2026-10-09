@@ -402,7 +402,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=a03006a305848b4bcb8d16ae16edc043b7c50053 -->
+<!-- mirror-sync: sync-sha=691ff72a0ee0c6254e51905d64988d6e7a02594e -->
 
 ---
 
@@ -584,6 +584,15 @@ Project facts for this repository. Points at the universal rules above instead o
 ## Commands - setup, build, test, lint, the single local gate command
 
 Verification on Windows PowerShell 5.1 (Pester 5.7.1 installed):
+
+The single local gate command runs every check CI declares
+(Syntax, Whitespace, Mojibake, Pester):
+
+```powershell
+powershell -NoProfile -File Tools/Invoke-Gate.ps1
+```
+
+Individual checks (the same ones the gate runs):
 
 ```powershell
 # Regression tests
