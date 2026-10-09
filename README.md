@@ -49,6 +49,7 @@ Each script does one job: it runs commands in order and writes output both to th
 - A mojibake/encoding gate (`Tools/Check-Mojibake.ps1`) blocks double-encoded text and invalid UTF-8 in files, commits, and release text; run `git config core.hooksPath .githooks` to arm the bundled local hooks.
 - See [CONTRIBUTING.md](CONTRIBUTING.md) for contributions, [SUPPORT.md](SUPPORT.md) for help, [PRIVACY.md](PRIVACY.md) for data handling, and [SECURITY.md](SECURITY.md) for security.
 - Docs index: [CHANGELOG.md](CHANGELOG.md) (version history), [NOTICE](NOTICE) (attribution), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) (conduct), [CODEOWNERS](CODEOWNERS) (reviewers), [RELEASE-NOTE-TEMPLATE.md](RELEASE-NOTE-TEMPLATE.md) (release skeleton), [AGENTS.md](AGENTS.md) (agent working rules).
+- Guides: [Docs/Overview-And-Setup.md](Docs/Overview-And-Setup.md), [Docs/Architecture.md](Docs/Architecture.md), [Docs/Troubleshooting.md](Docs/Troubleshooting.md).
 
 ---
 
@@ -83,4 +84,5 @@ Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ek
 - Çıktı hem ekranda hem günlükte birebir aynıdır.
 - Katkı için [CONTRIBUTING.md](CONTRIBUTING.md), destek için [SUPPORT.md](SUPPORT.md), gizlilik için [PRIVACY.md](PRIVACY.md) ve güvenlik için [SECURITY.md](SECURITY.md) dosyasına bakın.
 - Belge dizini: [CHANGELOG.md](CHANGELOG.md) (sürüm geçmişi), [NOTICE](NOTICE) (atıflar), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) (davranış), [CODEOWNERS](CODEOWNERS) (gözden geçirenler), [RELEASE-NOTE-TEMPLATE.md](RELEASE-NOTE-TEMPLATE.md) (yayın iskeleti), [AGENTS.md](AGENTS.md) (ajan çalışma kuralları).
+- Kılavuzlar: [Docs/Overview-And-Setup.md](Docs/Overview-And-Setup.md), [Docs/Architecture.md](Docs/Architecture.md), [Docs/Troubleshooting.md](Docs/Troubleshooting.md).
 - Dosyalarda, commitlerde ve yayın metinlerinde çift kodlanmış metni ve geçersiz UTF-8'i engelleyen bir bozuk-kodlama geçidi (`Tools/Check-Mojibake.ps1`) vardır; paketlenmiş yerel kancaları kurmak için `git config core.hooksPath .githooks` çalıştırın.
