@@ -7,16 +7,17 @@ BeforeAll {
     $toks = $null
     [void][System.Management.Automation.Language.Parser]::ParseFile($script:GatePath, [ref]$toks, [ref]$errs)
     if ($errs.Count -gt 0) { throw ('Syntax errors in Invoke-Gate.ps1: ' + ($errs.Message -join '; ')) }
+    $script:PsExe = if ($PSVersionTable.PSEdition -eq 'Core') { 'pwsh' } else { 'powershell' }
 }
 
 Describe 'Invoke-Gate -List' {
     It 'Reports exactly the CI-declared check names' {
-        $names = powershell -NoProfile -File $script:GatePath -List
+        $names = & $script:PsExe -NoProfile -File $script:GatePath -List
         $names | Should -Be @('Syntax', 'Whitespace', 'Mojibake', 'Pester')
     }
 
     It 'Exits 0 in list mode' {
-        powershell -NoProfile -File $script:GatePath -List > $null
+        & $script:PsExe -NoProfile -File $script:GatePath -List > $null
         $LASTEXITCODE | Should -Be 0
     }
 }
