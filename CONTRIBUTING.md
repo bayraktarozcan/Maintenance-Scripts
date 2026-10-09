@@ -10,7 +10,7 @@
 
 ### Workflow
 
-1. Open a topic branch from `main` (`feature/...`, `fix/...`).
+1. Open a topic branch from `main` (`feat/...`, `fix/...`, `docs/...`).
 2. Make the change, run the [checklist](#checklist) below.
 3. Open a pull request describing what changed and why.
 
@@ -45,7 +45,7 @@ feat: add dry-run mode to cleanup script
 
 ### İş akışı
 
-1. `main` dalından konu dalı açın (`ozellik/...`, `duzeltme/...`).
+1. `main` dalından konu dalı açın (`feat/...`, `fix/...`, `docs/...`).
 2. Değişikliği yapın, [aşağıdaki](#test-listesi) testleri koşun.
 3. Pull request açın; neyin neden değiştiğini yazın.
 
