@@ -402,7 +402,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=5add8f1951cf39d9aa5d504163bea99c6d727689 -->
+<!-- mirror-sync: sync-sha=6358e373a3272d8a6174cf6700dc8201e0febc22 -->
 
 ---
 
@@ -568,14 +568,12 @@ Project facts for this repository. Points at the universal rules above instead o
 | `Scripts/Bug-Report.ps1` | Only runtime PowerShell logic; HTML report engine, UTF-8 with BOM |
 | `Scripts/*.bat` | Thin wrappers around system tools (`DISM`, `SFC`, `ipconfig`, `winget`); run tools inline |
 | `Tools/Check-Mojibake.ps1` | Developer-side encoding gate; rejects double-encoded text and invalid UTF-8, never makes network calls |
-| `Tools/Invoke-Gate.ps1` | Single local gate command running every CI-declared check |
-| `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`, `WinGet-Upgrade.Tests.ps1`, `Invoke-Gate.Tests.ps1`) |
+| `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`) |
 | `.githooks/` | Bundled local hooks; enable with `git config core.hooksPath .githooks` |
 | `.github/` | GitHub quality gates |
-| `Docs/` | Tracked chapters: overview/setup, architecture, troubleshooting |
-| `Planning/` | Work plans and task tracking (assistant-managed) |
 | `Logs/<Name>/` | Runtime output, git-ignored; never committed; each script recreates its folder |
 | `Shortcuts/` | Generated locally per machine, git-ignored |
+| `AGENTS-TR.md` | Untracked local Turkish mirror for human review only; never committed |
 
 ## Versions - scheme, current constants, where each is stated
 
@@ -586,21 +584,12 @@ Project facts for this repository. Points at the universal rules above instead o
 
 Verification on Windows PowerShell 5.1 (Pester 5.7.1 installed):
 
-The single local gate command runs every check CI declares
-(Syntax, Whitespace, Mojibake, Commits, Pester):
-
-```powershell
-powershell -NoProfile -File Tools/Invoke-Gate.ps1
-```
-
-Individual checks (the same ones the gate runs):
-
 ```powershell
 # Regression tests
 powershell -NoProfile -Command "Invoke-Pester -Path ./Tests -Output Detailed"
 
 # Syntax check all PowerShell sources
-powershell -NoProfile -Command "Get-ChildItem -Recurse -Filter *.ps1 . | ForEach-Object { [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$errs) }; $errs"
+powershell -NoProfile -Command "[void][System.Management.Automation.Language.Parser]::ParseFile('Scripts/Bug-Report.ps1', [ref]$null, [ref]$errors); $errors"
 
 # Trailing-whitespace scan (matches the CI gate)
 git show --format= --unified=0 HEAD | Select-String -Pattern '^\+.*[ \t]+$'
@@ -623,12 +612,12 @@ git config core.hooksPath .githooks
 | `Tests/` | `<Subject>.Tests.ps1` mirroring the file under test |
 | Root docs | UPPER (`README.md`, `SECURITY.md`, `CHANGELOG.md`, `CODEOWNERS`, platform-fixed names) |
 
-Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Logs/` (runtime output, untracked); `IPConfig-FlushDNS.bat` (embeds the canonical `ipconfig` tool name; renaming would break script, log-folder, doc, and test references).
+Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Logs/` (runtime output, untracked).
 
 ## Hidden layers - scratch directory name (named here once), cadence for clearing it
 
 - No scratch directory in use. Intermediates stay in `Logs/` (git-ignored, recreated per run) and are removed when the task ends.
-- Local-only layer: the gitignored Turkish mirror of this file (see `.gitignore`; never committed). Whenever `AGENTS.md` changes, regenerate the mirror in the same session so the `sync-sha` value matches across both files.
+- Local-only layer: `AGENTS-TR.md` (git-ignored via `.gitignore`, never committed, never referenced from committed output beyond the ignore pattern). Whenever `AGENTS.md` changes, regenerate `AGENTS-TR.md` in the same session so the `sync-sha` value matches across both files.
 
 ## Toolchain - overrides of the defaults in the appendix, compatibility floor
 
