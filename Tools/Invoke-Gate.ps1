@@ -4,6 +4,7 @@
 #   Syntax     - PowerShell parser over every .ps1 file in the tree
 #   Whitespace - trailing-whitespace scan of added lines (HEAD)
 #   Mojibake   - Tools/Check-Mojibake.ps1 -Files (tracked files)
+#   Commits    - Tools/Check-Mojibake.ps1 -Commits on HEAD (message/author)
 #   Pester     - ./Tests suite (requires Pester 5.7.1)
 # Usage: powershell -NoProfile -File Tools/Invoke-Gate.ps1 [-List]
 # -List prints the check names without running them (for parity tests).
@@ -13,7 +14,7 @@ param(
     [switch]$List
 )
 
-$script:Checks = @('Syntax', 'Whitespace', 'Mojibake', 'Pester')
+$script:Checks = @('Syntax', 'Whitespace', 'Mojibake', 'Commits', 'Pester')
 
 if ($List) {
     $script:Checks
@@ -58,6 +59,11 @@ Invoke-GateStep 'Whitespace' {
 Invoke-GateStep 'Mojibake' {
     & $script:PsExe -NoProfile -File (Join-Path $script:Root 'Tools\Check-Mojibake.ps1') -Files
     if ($LASTEXITCODE -ne 0) { throw "mojibake findings present" }
+}
+
+Invoke-GateStep 'Commits' {
+    & $script:PsExe -NoProfile -File (Join-Path $script:Root 'Tools\Check-Mojibake.ps1') -Commits -CommitRange HEAD
+    if ($LASTEXITCODE -ne 0) { throw "mojibake findings in HEAD commit" }
 }
 
 Invoke-GateStep 'Pester' {
