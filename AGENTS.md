@@ -1,5 +1,7 @@
 # Agent Guide
 
+> **AGENTS.md onayımı almadığın ve aksini belirtmediğim müddetçe değişmez!**
+
 Universal operating rules for humans and AI agents, written once and valid for every project. This file holds standards, never project facts: layout, versions, commands, release steps, and naming exemptions live in the project layer (see "Project Layer Contract") and are not copied here. English is the single source of operational truth.
 
 > ## The One Rule Above All
@@ -402,7 +404,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=6358e373a3272d8a6174cf6700dc8201e0febc22 -->
+<!-- mirror-sync: sync-sha=2c701aa343e1ed2beb99f15236a40e01a7911793 -->
 
 ---
 
