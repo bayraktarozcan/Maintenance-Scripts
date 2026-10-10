@@ -31,9 +31,13 @@ All four `.bat` files follow the same harness, verified by
   `bits`, `msiserver`, `cryptSvc`; delete `SoftwareDistribution` and
   `catroot2` contents; restart the services; `UsoClient StartScan`.
 - `IPConfig-FlushDNS.bat` (1 step): `ipconfig /flushdns`.
-- `WinGet-Upgrade.bat` (2 steps): `winget source update`, then
-  `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
-  This is the only script with network activity (delegated to `winget`).
+- `WinGet-Upgrade.bat` (session probe + 3 steps): detects Standard vs elevated
+  via `fltmc` verified against `whoami /groups` (`S-1-16-12288`), then runs
+  `winget source update`, `winget upgrade --all --scope %SCOPE% ...`, and a
+  list-only `winget upgrade --scope %SCOPE% ...`. Standard sessions use
+  `--scope user`, elevated ones `--scope machine`; `WG_DRYRUN=1` prints
+  steps 1-2 without running them. This is the only script with network
+  activity (delegated to `winget`).
 
 ### Report engine
 
@@ -78,9 +82,13 @@ iskeleti izler:
   `SoftwareDistribution` ve `catroot2` içeriklerini silme; servisleri
   yeniden başlatma; `UsoClient StartScan`.
 - `IPConfig-FlushDNS.bat` (1 adım): `ipconfig /flushdns`.
-- `WinGet-Upgrade.bat` (2 adım): `winget source update`, sonra
-  `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
-  Ağ etkinliği olan tek betik budur (`winget`'e delege edilir).
+- `WinGet-Upgrade.bat` (oturum saptama + 3 adım): `fltmc` ile Standart ve
+  yükseltilmişi ayırır, `whoami /groups` (`S-1-16-12288`) ile doğrular;
+  sonra `winget source update`, `winget upgrade --all --scope %SCOPE% ...`
+  ve yalnızca listeleyen `winget upgrade --scope %SCOPE% ...` çalışır.
+  Standart oturumlar `--scope user`, yükseltilmişler `--scope machine`
+  kullanır; `WG_DRYRUN=1` 1-2. adımları çalıştırmadan yazar. Ağ
+  etkinliği olan tek betik budur (`winget`'e delege edilir).
 
 ### Rapor motoru
 
