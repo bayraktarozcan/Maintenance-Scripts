@@ -32,7 +32,7 @@ Each script does one job: it runs commands in order and writes output both to th
 | `Repair-Windows.bat` | DISM + SFC + WinSxS maintenance (includes ResetBase) |
 | `Reset-Windows-Update.bat` | Reset Windows Update components |
 | `IPConfig-FlushDNS.bat` | Flush DNS cache |
-| `WinGet-Upgrade.bat` | Upgrade all packages |
+| `WinGet-Upgrade.bat` | Upgrade all packages (auto user/machine scope; `WG_DRYRUN=1` dry-run) |
 | `Bug-Report.ps1` | Event log HTML report (`-Period Daily, Weekly, Monthly`) |
 
 ### Usage
@@ -68,7 +68,7 @@ Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ek
 | `Repair-Windows.bat` | DISM + SFC + WinSxS bakımı (ResetBase dahil) |
 | `Reset-Windows-Update.bat` | Windows Update bileşenlerini sıfırlama |
 | `IPConfig-FlushDNS.bat` | DNS önbelleğini temizleme |
-| `WinGet-Upgrade.bat` | Tüm paketleri yükseltme |
+| `WinGet-Upgrade.bat` | Tüm paketleri yükseltme (otomatik user/machine kapsamı; `WG_DRYRUN=1` kuru-koşu) |
 | `Bug-Report.ps1` | Olay günlüğü HTML raporu (`-Period Daily, Weekly, Monthly`) |
 
 ### Kullanım
