@@ -6,6 +6,8 @@
 #   Mojibake   - Tools/Check-Mojibake.ps1 -Files (tracked files)
 #   Commits    - Tools/Check-Mojibake.ps1 -Commits on HEAD (message/author)
 #   Pester     - ./Tests suite (requires Pester 5.7.1)
+#   Hygiene    - actionlint over .github/workflows (skipped if not installed)
+#   LinkCheck  - lychee over './**/*.md' (skipped if not installed)
 # Usage: powershell -NoProfile -File Tools/Invoke-Gate.ps1 [-List]
 # -List prints the check names without running them (for parity tests).
 # Exits 0 when every check passes, 1 otherwise. Never makes network calls.
@@ -14,7 +16,7 @@ param(
     [switch]$List
 )
 
-$script:Checks = @('Syntax', 'Whitespace', 'Mojibake', 'Commits', 'Pester')
+$script:Checks = @('Syntax', 'Whitespace', 'Mojibake', 'Commits', 'Pester', 'Hygiene', 'LinkCheck')
 
 if ($List) {
     $script:Checks
@@ -71,6 +73,34 @@ Invoke-GateStep 'Pester' {
     if (-not $pester) { throw "Pester 5.7.1 is not installed" }
     $result = Invoke-Pester -Path (Join-Path $script:Root 'Tests') -Output Detailed -PassThru
     if ($result.FailedCount -gt 0) { throw ($result.FailedCount.ToString() + " failing tests") }
+}
+
+Invoke-GateStep 'Hygiene' {
+    if (-not (Get-Command actionlint -ErrorAction SilentlyContinue)) {
+        Write-Output "[skip] Hygiene: actionlint is not installed"
+        return
+    }
+    Push-Location -LiteralPath $script:Root
+    try {
+        & actionlint
+        if ($LASTEXITCODE -ne 0) { throw "actionlint findings present" }
+    } finally {
+        Pop-Location
+    }
+}
+
+Invoke-GateStep 'LinkCheck' {
+    if (-not (Get-Command lychee -ErrorAction SilentlyContinue)) {
+        Write-Output "[skip] LinkCheck: lychee is not installed"
+        return
+    }
+    Push-Location -LiteralPath $script:Root
+    try {
+        & lychee --no-progress --max-retries 2 './**/*.md'
+        if ($LASTEXITCODE -ne 0) { throw "lychee found broken links" }
+    } finally {
+        Pop-Location
+    }
 }
 
 if ($script:Failed -ne 0) {
