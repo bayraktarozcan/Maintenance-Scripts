@@ -402,7 +402,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=691ff72a0ee0c6254e51905d64988d6e7a02594e -->
+<!-- mirror-sync: sync-sha=f0f6d12fa011ef3c854b7fc782877c8d0deb1f94 -->
 
 ---
 
@@ -568,7 +568,7 @@ Project facts for this repository. Points at the universal rules above instead o
 | `Scripts/Bug-Report.ps1` | Only runtime PowerShell logic; HTML report engine, UTF-8 with BOM |
 | `Scripts/*.bat` | Thin wrappers around system tools (`DISM`, `SFC`, `ipconfig`, `winget`); run tools inline |
 | `Tools/Check-Mojibake.ps1` | Developer-side encoding gate; rejects double-encoded text and invalid UTF-8, never makes network calls |
-| `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`) |
+| `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`, `WinGet-Upgrade.Tests.ps1`, `Invoke-Gate.Tests.ps1`) |
 | `.githooks/` | Bundled local hooks; enable with `git config core.hooksPath .githooks` |
 | `.github/` | GitHub quality gates |
 | `Docs/` | Tracked chapters: overview/setup, architecture, troubleshooting |
