@@ -13,7 +13,7 @@ BeforeAll {
 Describe 'Invoke-Gate -List' {
     It 'Reports exactly the CI-declared check names' {
         $names = & $script:PsExe -NoProfile -File $script:GatePath -List
-        $names | Should -Be @('Syntax', 'Whitespace', 'Mojibake', 'Commits', 'Pester')
+        $names | Should -Be @('Syntax', 'Whitespace', 'Mojibake', 'Commits', 'Pester', 'Hygiene', 'LinkCheck')
     }
 
     It 'Exits 0 in list mode' {
