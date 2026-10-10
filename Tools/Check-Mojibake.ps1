@@ -1,4 +1,4 @@
-# Maintenance Scripts - Mojibake / encoding gate
+﻿# Maintenance Scripts - Mojibake / encoding gate
 # Detects double-encoded (mojibake) text and invalid UTF-8 in:
 #   - tracked files           (-Files)      optionally restricted to staged
 #   - explicit files or dirs  (-Path)
