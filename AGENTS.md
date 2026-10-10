@@ -402,7 +402,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=f0f6d12fa011ef3c854b7fc782877c8d0deb1f94 -->
+<!-- mirror-sync: sync-sha=dd63f3e9b600f07844018682ce0ffbdeb2538360 -->
 
 ---
 
@@ -586,7 +586,7 @@ Project facts for this repository. Points at the universal rules above instead o
 Verification on Windows PowerShell 5.1 (Pester 5.7.1 installed):
 
 The single local gate command runs every check CI declares
-(Syntax, Whitespace, Mojibake, Pester):
+(Syntax, Whitespace, Mojibake, Commits, Pester):
 
 ```powershell
 powershell -NoProfile -File Tools/Invoke-Gate.ps1
@@ -599,7 +599,7 @@ Individual checks (the same ones the gate runs):
 powershell -NoProfile -Command "Invoke-Pester -Path ./Tests -Output Detailed"
 
 # Syntax check all PowerShell sources
-powershell -NoProfile -Command "[void][System.Management.Automation.Language.Parser]::ParseFile('Scripts/Bug-Report.ps1', [ref]$null, [ref]$errors); $errors"
+powershell -NoProfile -Command "Get-ChildItem -Recurse -Filter *.ps1 . | ForEach-Object { [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$errs) }; $errs"
 
 # Trailing-whitespace scan (matches the CI gate)
 git show --format= --unified=0 HEAD | Select-String -Pattern '^\+.*[ \t]+$'
