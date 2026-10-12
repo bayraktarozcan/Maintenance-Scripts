@@ -12,6 +12,10 @@
 administrator (right-click → Run as administrator). The log file shows
 which numbered step failed; re-run elevated.
 
+Do not elevate `WinGet-Upgrade.bat` or `IPConfig-FlushDNS.bat` to work
+around failures; they are designed to run standard. If a package needs
+elevation, the tool or installer raises it externally.
+
 ### `Bug-Report.ps1` exits immediately or shows no events
 
 - Run it from an account that can read the System and Application event
@@ -49,6 +53,10 @@ Microsoft Store. Install it, then re-run; the log captures the exact
 `Repair-Windows.bat` ve `Reset-Windows-Update.bat` yönetici olarak
 çalışmalıdır (sağ tık → Yönetici olarak çalıştır). Hangi numaralı adımın
 başarısız olduğu günlükte görünür; yükseltilmiş olarak yeniden çalıştırın.
+
+Arızaları aşmak için `WinGet-Upgrade.bat` veya `IPConfig-FlushDNS.bat`
+dosyasını yükseltmeyin; standart koşmak üzere tasarlandılar. Bir paket
+yükseltme isterse araç ya da yükleyici haricen yükseltir.
 
 ### `Bug-Report.ps1` hemen çıkıyor ya da olay göstermiyor
 
