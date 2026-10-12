@@ -19,6 +19,7 @@ forks are not supported.
 
 - Scripts never upload or transmit data and write **no registry keys**. Only `WinGet-Upgrade.bat` triggers network activity: it delegates package upgrades to `winget`, which queries configured sources and downloads packages. The other scripts make **no network calls** and download **no external files**.
 - `Repair-Windows.bat` and `Reset-Windows-Update.bat` **require administrator rights** (they run system commands); elevation is never persisted.
+- Administrator Protection aim: the launchers run unelevated and never self-elevate. The goal is to stay compatible with least-privilege elevation (Windows 11 Administrator protection, previewed via KB5120998/KB5124010): any per-package elevation prompt comes from the tool or installer itself, never from these scripts.
 - Logs are written to local disk only and never transmitted.
 
 ### Reporting
@@ -52,6 +53,7 @@ commitler, dallar ve çatallar desteklenmez.
 
 - Betikler asla veri yüklemez veya aktarmaz ve kayıt defterine **yazmaz**. Ağ etkinliğini tetikleyen tek betik `WinGet-Upgrade.bat`'tir: paket yükseltmelerini `winget`'e delege eder; winget yapılandırılmış kaynakları sorgular ve paket indirir. Diğer betikler **ağ çağrısı yapmaz** ve harici dosya **indirmez**.
 - `Repair-Windows.bat` ve `Reset-Windows-Update.bat` **yönetici hakkı** ister (sistem komutları çalıştırdıkları için); yetki kalıcı hale getirilmez.
+- Yönetici Koruması hedefi: başlatıcılar yükseltilmeden koşar ve kendini asla yükseltmez. Hedef, en az ayrıcalıklı yükseltmeyle uyumlu kalmaktır (Windows 11 Yönetici koruması, KB5120998/KB5124010 önizlemeleriyle duyuruldu): olası paket başına yükseltme istemi bu betiklerden değil, aracın ya da yükleyicinin kendisinden gelir.
 - Günlükler yalnızca yerel diske yazılır, dışarı gönderilmez.
 
 ### Bildirim
