@@ -19,6 +19,8 @@ table and [Architecture](Architecture.md) for how they work.
   `winget`.
 - Administrator rights for `Repair-Windows.bat` and
   `Reset-Windows-Update.bat` only; the other scripts run as a normal user.
+- Elevation posture: no launcher self-elevates; run everything standard
+  except the two admin scripts above (see [SECURITY.md](../SECURITY.md)).
 - `Bug-Report.ps1` reads the System and Application event logs, so the
   scheduling account needs permission to read them.
 
@@ -53,6 +55,9 @@ dört `.bat` başlatıcı ile bir PowerShell HTML rapor motoru
   bulunan Windows.
 - Yalnızca `Repair-Windows.bat` ve `Reset-Windows-Update.bat` yönetici
   hakkı ister; diğer betikler normal kullanıcı olarak koşar.
+- Yükseltme duruşu: hiçbir başlatıcı kendini yükseltmez; yukarıdaki iki
+  yönetici betiği dışında her şeyi standart çalıştırın (bkz.
+  [SECURITY.md](../SECURITY.md)).
 - `Bug-Report.ps1`, System ve Application olay günlüklerini okur; bu yüzden
   zamanlayan hesabın bunları okuma izni olmalıdır.
 
