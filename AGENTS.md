@@ -454,7 +454,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=75643b70235e0cbffc6c53288f676899167c63d5 -->
+<!-- mirror-sync: sync-sha=8e0ecd6fe5a426ee0dfc34a3bef072bd1c6baf0f -->
 
 ---
 
@@ -622,9 +622,13 @@ Project facts for this repository. Points at the universal rules above instead o
 | `Scripts/Bug-Report.ps1` | Only runtime PowerShell logic; HTML report engine, UTF-8 with BOM |
 | `Scripts/*.bat` | Thin wrappers around system tools (`DISM`, `SFC`, `ipconfig`, `winget`); run tools inline |
 | `Tools/Check-Mojibake.ps1` | Developer-side encoding gate; rejects double-encoded text and invalid UTF-8, never makes network calls |
-| `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`) |
+| `Tools/Invoke-Gate.ps1` | Single local gate command running every CI-declared check |
+| `Tools/Install-Dependencies.ps1` | Single host dependency setup command (per-user scope, `-Check` verifies) |
+| `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`, `WinGet-Upgrade.Tests.ps1`, `Invoke-Gate.Tests.ps1`, `Install-Dependencies.Tests.ps1`) |
 | `.githooks/` | Bundled local hooks; enable with `git config core.hooksPath .githooks` |
 | `.github/` | GitHub quality gates |
+| `Docs/` | Tracked chapters: overview/setup, architecture, troubleshooting |
+| `Planning/` | Work plans and task tracking (assistant-managed) |
 | `Logs/<Name>/` | Runtime output, git-ignored; never committed; each script recreates its folder |
 | `Shortcuts/` | Generated locally per machine, git-ignored |
 | `AGENTS-TR.md` | Untracked local Turkish mirror for human review only; never committed |
@@ -675,7 +679,29 @@ git config core.hooksPath .githooks
 | `Tests/` | `<Subject>.Tests.ps1` mirroring the file under test |
 | Root docs | UPPER (`README.md`, `SECURITY.md`, `CHANGELOG.md`, `CODEOWNERS`, platform-fixed names) |
 
-Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Logs/` (runtime output, untracked).
+Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Logs/` (runtime output, untracked); `IPConfig-FlushDNS.bat` (proper noun: embeds the canonical `ipconfig` tool name; the owner ruled it is not a defect).
+
+## Transport - per-remote transport and credential source, any pinned override with its reason
+
+- Fetch: `origin` → `https://github.com/bayraktarozcan/Maintenance-Scripts.git`; `gitlab` → `https://gitlab.com/bayraktarozcan/Maintenance-Scripts.git`.
+- Push: `origin` carries two push URLs (GitHub + GitLab); one `git push` publishes to both. `gitlab` pushes to GitLab. Verified with `git remote -v` and `git remote get-url --push --all origin`.
+- Credentials come from the OS credential store (IDE OAuth entries); never pasted, never committed.
+- Pinned override: HTTPS-only. Reason: the owner's explicit decision; no SSH keys are provisioned on this host (`~/.ssh` holds only `known_hosts`), so HTTPS with OS-vault OAuth is the strongest method this environment supports. Meets the floor (TLS 1.2+); the unsafe/legacy ban stands.
+- No mechanical `protocol.*.allow` pins are committed; verification is `git remote -v` plus a push showing each leg.
+
+## Dependencies - host dependency manifest, versions and sources, the single setup command, approved project-scope exceptions with reasons
+
+| Dependency | Version | Source |
+|------------|---------|--------|
+| Pester | 5.7.1 | PSGallery (`Install-Module -Scope CurrentUser`) |
+| PowerShell | 7.6.6 | winget `Microsoft.PowerShell` |
+| gitleaks | 8.30.1 | winget `Gitleaks.Gitleaks` |
+| actionlint | 1.7.12 | winget `rhysd.actionlint` |
+| lychee | 0.24.2 | winget `lycheeverse.lychee` |
+| git, gh, winget | present | OS / GitHub CLI / App Installer |
+
+- Single setup command: `powershell -NoProfile -File Tools/Install-Dependencies.ps1` (`-Check` verifies without changing the host).
+- No approved project-scope exceptions: everything is global/user-global.
 
 ## Hidden layers - scratch directory name (named here once), cadence for clearing it
 
