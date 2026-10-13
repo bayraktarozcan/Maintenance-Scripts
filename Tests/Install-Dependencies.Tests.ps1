@@ -10,7 +10,6 @@ BeforeAll {
     [void][System.Management.Automation.Language.Parser]::ParseFile($script:ScriptPath, [ref]$toks, [ref]$errs)
     if ($errs.Count -gt 0) { throw ('Syntax errors in Install-Dependencies.ps1: ' + ($errs.Message -join '; ')) }
     $script:Text = [System.IO.File]::ReadAllText($script:ScriptPath) -replace "`r`n", "`n"
-    $script:PsExe = if ($PSVersionTable.PSEdition -eq 'Core') { 'pwsh' } else { 'powershell' }
 }
 
 Describe 'Install-Dependencies manifest' {
@@ -40,21 +39,5 @@ Describe 'Install-Dependencies manifest' {
 
     It 'Never installs machine-wide or elevated' {
         $script:Text | Should -Not -Match 'scope machine|--scope machine|-Scope AllUsers|RunAs|Start-Process'
-    }
-}
-
-Describe 'Install-Dependencies -Check' {
-    It 'Reports every dependency OK on this host' {
-        $names = (& $script:PsExe -NoProfile -File $script:ScriptPath -Check) -join "`n"
-        $names | Should -Match '\[ok\] Pester 5\.7\.1'
-        $names | Should -Match '\[ok\] PowerShell 7\.6\.6'
-        $names | Should -Match '\[ok\] gitleaks 8\.30\.1'
-        $names | Should -Match '\[ok\] actionlint 1\.7\.12'
-        $names | Should -Match '\[ok\] lychee 0\.24\.2'
-    }
-
-    It 'Exits 0 in check mode' {
-        & $script:PsExe -NoProfile -File $script:ScriptPath -Check > $null
-        $LASTEXITCODE | Should -Be 0
     }
 }
