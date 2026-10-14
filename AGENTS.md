@@ -471,7 +471,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=0f034e84f601ca36d7dd5fd3908d407d28d76db1 -->
+<!-- mirror-sync: sync-sha=7f64e706f88716e16479f429ec35b6f216f385db -->
 
 ---
 
@@ -711,7 +711,7 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 | Dependency | Version | Source |
 |------------|---------|--------|
 | Pester | 5.7.1 | PSGallery (`Install-Module -Scope CurrentUser`) |
-| PowerShell | 7.6.6 | winget `Microsoft.PowerShell` |
+| PowerShell | 7.6.7 | winget `Microsoft.PowerShell` |
 | gitleaks | 8.30.1 | winget `Gitleaks.Gitleaks` |
 | actionlint | 1.7.12 | winget `rhysd.actionlint` |
 | lychee | 0.24.2 | winget `lycheeverse.lychee` |
