@@ -16,7 +16,7 @@ table and [Architecture](Architecture.md) for how they work.
 ### Requirements
 
 - Windows with `cmd.exe`, PowerShell 5.1+, and (for `WinGet-Upgrade.bat`)
-  `winget`. PowerShell 7.6.6 is recommended where available. The full
+  `winget`. PowerShell 7.6.7 is recommended where available. The full
   host manifest and setup live in the project layer (`Dependencies`):
   `powershell -NoProfile -File Tools/Install-Dependencies.ps1`.
 - Administrator rights for `Repair-Windows.bat` and
@@ -54,7 +54,7 @@ dört `.bat` başlatıcı ile bir PowerShell HTML rapor motoru
 ### Gereksinimler
 
 - `cmd.exe`, PowerShell 5.1+ ve (`WinGet-Upgrade.bat` için) `winget`
-  bulunan Windows. Olanak varsa PowerShell 7.6.6 önerilir. Tam konak
+  bulunan Windows. Olanak varsa PowerShell 7.6.7 önerilir. Tam konak
   bildirimi ve kurulum proje katmanındadır (`Dependencies`):
   `powershell -NoProfile -File Tools/Install-Dependencies.ps1`.
 - Yalnızca `Repair-Windows.bat` ve `Reset-Windows-Update.bat` yönetici
