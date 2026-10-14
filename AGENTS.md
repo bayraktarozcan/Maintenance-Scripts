@@ -447,6 +447,7 @@ All committed file and directory names are English.
 - The nispa suffix, the derivation that turns nouns into adjectives, is written with circumflex `î` (ahlâkî, medenî, askerî); avoid the mark where accepted usage does not call for it.
 - Turkish prose prefers established native terms over imported ones, with the foreign term in parentheses on first use where clarity needs it. Code, commands, identifiers, and quoted output are never translated.
 - PowerShell 5.1 scripts are saved UTF-8 with BOM so characters render correctly in console, IDE, and runtime. Inside PowerShell code, identifiers (variables, parameters, functions) are ASCII-only, because the 5.1 parser mishandles Turkish characters in identifiers even in BOM files; user-facing strings, comments, and string data keep full Turkish characters.
+- Line endings follow the project's declared rules (`.gitattributes`, `.editorconfig`); a file never mixes styles. Verify with a byte-level scan before committing, because normalization can hide the mixture from `git status` and `git diff`.
 
 ### Data layer, testing, and services
 
@@ -471,7 +472,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=7f64e706f88716e16479f429ec35b6f216f385db -->
+<!-- mirror-sync: sync-sha=a6e23a47ddc08ebbab99b7d3c4f0f9f1a1abab1b -->
 
 ---
 
