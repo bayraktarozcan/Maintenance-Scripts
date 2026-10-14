@@ -1,7 +1,7 @@
 ﻿# Maintenance Scripts - host dependency setup
 # Installs (or verifies with -Check) every host-side dependency named in the
 # project layer ("Dependencies"), at per-user global scope, never elevated:
-#   Pester 5.7.1, PowerShell 7.6.6, gitleaks 8.30.1, actionlint 1.7.12,
+#   Pester 5.7.1, PowerShell 7.6.7, gitleaks 8.30.1, actionlint 1.7.12,
 #   lychee 0.24.2, plus presence checks for git, gh, and winget.
 # Usage: powershell -NoProfile -File Tools/Install-Dependencies.ps1 [-Check]
 # -Check reports OK/MISSING per dependency and exits 1 when anything is
@@ -65,8 +65,8 @@ Install-Dependency 'Pester 5.7.1' `
     { Test-ModuleVersion 'Pester' '5.7.1' } `
     { Install-Module Pester -RequiredVersion 5.7.1 -Force -SkipPublisherCheck -Scope CurrentUser }
 
-Install-Dependency 'PowerShell 7.6.6' `
-    { Test-PwshVersion '7.6.6' } `
+Install-Dependency 'PowerShell 7.6.7' `
+    { Test-PwshVersion '7.6.7' } `
     { Install-Winget 'Microsoft.PowerShell' }
 
 Install-Dependency 'gitleaks 8.30.1' `
