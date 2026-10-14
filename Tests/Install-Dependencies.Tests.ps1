@@ -17,8 +17,8 @@ Describe 'Install-Dependencies manifest' {
         $script:Text | Should -Match "'Pester 5\.7\.1'"
     }
 
-    It 'Pins PowerShell 7.6.6' {
-        $script:Text | Should -Match "'PowerShell 7\.6\.6'"
+    It 'Pins PowerShell 7.6.7' {
+        $script:Text | Should -Match "'PowerShell 7\.6\.7'"
     }
 
     It 'Pins gitleaks 8.30.1' {
