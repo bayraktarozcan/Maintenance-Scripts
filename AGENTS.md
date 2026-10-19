@@ -705,7 +705,7 @@ git config core.hooksPath .githooks
 | `Tests/` | `<Subject>.Tests.ps1` mirroring the file under test |
 | Root docs | UPPER (`README.md`, `SECURITY.md`, `CHANGELOG.md`, `CODEOWNERS`, platform-fixed names) |
 
-Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Logs/` (runtime output, untracked); `IPConfig-FlushDNS.bat` (proper noun: embeds the canonical `ipconfig` tool name; the owner ruled it is not a defect).
+Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Logs/` (runtime output, untracked).
 
 ## Transport - per-remote transport and credential source, any pinned override with its reason
 

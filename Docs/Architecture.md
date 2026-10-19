@@ -30,7 +30,7 @@ All four `.bat` files follow the same harness, verified by
 - `Reset-Windows-Update.bat` (13 steps, needs admin): stop `wuauserv`,
   `bits`, `msiserver`, `cryptSvc`; delete `SoftwareDistribution` and
   `catroot2` contents; restart the services; `UsoClient StartScan`.
-- `IPConfig-FlushDNS.bat` (1 step): `ipconfig /flushdns`.
+- `Clear-DnsClientCache.bat` (1 step): `Clear-DnsClientCache`.
 - `WinGet-Upgrade.bat` (2 steps): `winget source update`, then
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
   This is the only script with network activity (delegated to `winget`).
@@ -77,7 +77,7 @@ iskeleti izler:
   `bits`, `msiserver`, `cryptSvc` servislerini durdurma;
   `SoftwareDistribution` ve `catroot2` içeriklerini silme; servisleri
   yeniden başlatma; `UsoClient StartScan`.
-- `IPConfig-FlushDNS.bat` (1 adım): `ipconfig /flushdns`.
+- `Clear-DnsClientCache.bat` (1 adım): `Clear-DnsClientCache`.
 - `WinGet-Upgrade.bat` (2 adım): `winget source update`, sonra
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
   Ağ etkinliği olan tek betik budur (`winget`'e delege edilir).

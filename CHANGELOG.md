@@ -15,7 +15,7 @@ First release: personal Windows maintenance script collection.
 **Added:**
 - `Repair-Windows.bat` — DISM + SFC + WinSxS maintenance (includes ResetBase).
 - `Reset-Windows-Update.bat` — reset Windows Update components.
-- `IPConfig-FlushDNS.bat` — flush DNS cache.
+- `Clear-DnsClientCache.bat` — flush DNS cache.
 - `WinGet-Upgrade.bat` — upgrade all packages.
 - `Bug-Report.ps1` — single-file daily/weekly/monthly HTML report engine (`-Period`).
 
@@ -37,7 +37,7 @@ First release: personal Windows maintenance script collection.
 **Eklenen:**
 - `Repair-Windows.bat` — DISM + SFC + WinSxS bakımı (ResetBase dahil).
 - `Reset-Windows-Update.bat` — Windows Update bileşenlerini sıfırlama.
-- `IPConfig-FlushDNS.bat` — DNS önbelleğini temizleme.
+- `Clear-DnsClientCache.bat` — DNS önbelleğini temizleme.
 - `WinGet-Upgrade.bat` — toplu paket yükseltme.
 - `Bug-Report.ps1` — tek dosyalık günlük/haftalık/aylık HTML rapor motoru (`-Period`).
 

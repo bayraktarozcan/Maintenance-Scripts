@@ -12,7 +12,7 @@
 administrator (right-click → Run as administrator). The log file shows
 which numbered step failed; re-run elevated.
 
-Do not elevate `WinGet-Upgrade.bat` or `IPConfig-FlushDNS.bat` to work
+Do not elevate `WinGet-Upgrade.bat` or `Clear-DnsClientCache.bat` to work
 around failures; they are designed to run standard. If a package needs
 elevation, the tool or installer raises it externally.
 
@@ -54,7 +54,7 @@ Microsoft Store. Install it, then re-run; the log captures the exact
 çalışmalıdır (sağ tık → Yönetici olarak çalıştır). Hangi numaralı adımın
 başarısız olduğu günlükte görünür; yükseltilmiş olarak yeniden çalıştırın.
 
-Arızaları aşmak için `WinGet-Upgrade.bat` veya `IPConfig-FlushDNS.bat`
+Arızaları aşmak için `WinGet-Upgrade.bat` veya `Clear-DnsClientCache.bat`
 dosyasını yükseltmeyin; standart koşmak üzere tasarlandılar. Bir paket
 yükseltme isterse araç ya da yükleyici haricen yükseltir.
 

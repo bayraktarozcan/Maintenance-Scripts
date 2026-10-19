@@ -94,7 +94,7 @@ First public release of the personal Windows maintenance collection.
 
 ### Added
 
-- `Repair-Windows.bat`, `Reset-Windows-Update.bat`, `IPConfig-FlushDNS.bat`,
+- `Repair-Windows.bat`, `Reset-Windows-Update.bat`, `Clear-DnsClientCache.bat`,
   `WinGet-Upgrade.bat`, `Bug-Report.ps1`
 
 ### Verification
@@ -115,7 +115,7 @@ Kişisel Windows bakım koleksiyonunun ilk herkese açık sürümü.
 
 ### Eklenenler
 
-- `Repair-Windows.bat`, `Reset-Windows-Update.bat`, `IPConfig-FlushDNS.bat`,
+- `Repair-Windows.bat`, `Reset-Windows-Update.bat`, `Clear-DnsClientCache.bat`,
   `WinGet-Upgrade.bat`, `Bug-Report.ps1`
 
 ### Doğrulama
