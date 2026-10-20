@@ -11,8 +11,9 @@
 All four `.bat` files follow the same harness, verified by
 `Tests/Bug-Report.Tests.ps1`:
 
-1. Resolve the PowerShell engine (`pwsh` when it is on `PATH` and starts,
-   otherwise `powershell`), then build a timestamp with it
+1. Resolve the PowerShell engine (the `pwsh` app alias under
+   `%LOCALAPPDATA%\Microsoft\WindowsApps` when it exists and starts, otherwise
+   `pwsh` from `PATH`, otherwise `powershell`), then build a timestamp with it
    (`yyyyMMdd_HHmmss`).
 2. Resolve `Logs/<Name>/` next to the repo; fall back to
    `%TEMP%\<Name>` when the folder cannot be created.
@@ -59,9 +60,10 @@ System/Application toggles). See
 Dört `.bat` dosyası da `Tests/Bug-Report.Tests.ps1` ile doğrulanan aynı
 iskeleti izler:
 
-1. PowerShell motorunu çöz (`pwsh` `PATH` üzerinde varsa ve başlıyorsa onu,
-   aksi halde `powershell`'i kullan) ve zaman damgasını (`yyyyMMdd_HHmmss`)
-   bununla kur.
+1. PowerShell motorunu çöz (`%LOCALAPPDATA%\Microsoft\WindowsApps` altındaki
+   `pwsh` uygulama kısayolu varsa ve başlıyorsa onu, yoksa `PATH` üzerindeki
+   `pwsh`'yi, o da yoksa `powershell`'i kullan) ve zaman damgasını
+   (`yyyyMMdd_HHmmss`) bununla kur.
 2. Deponun yanındaki `Logs/<Ad>/` klasörünü çöz; klasör açılamazsa
    `%TEMP%\<Ad>` yedeğine düş.
 3. Günlük dosyasına UTF-8 BOM damgala ve koşuyu `index.txt`

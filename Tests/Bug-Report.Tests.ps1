@@ -123,13 +123,18 @@ Describe 'Batch static checks' {
         $lines[0] | Should -Be '@echo off'
         $lines[-1] | Should -Match '^(if not defined NOPAUSE )?pause$'
     }
-    It 'Prefers pwsh with a silent Windows PowerShell fallback' -ForEach $script:BatFiles {
+    It 'Prefers the pwsh app alias, then PATH, then Windows PowerShell' -ForEach $script:BatFiles {
         $lines = [System.IO.File]::ReadAllLines($_.FullName)
-        if ($lines -match '^%PSEXE% -NoProfile') {
+        if ($lines -match '^"%PSEXE%" -NoProfile') {
             $lines | Should -Contain 'set "PSEXE=powershell"'
-            $lines | Should -Contain 'where pwsh.exe >nul 2>&1'
-            $lines | Should -Contain 'if not errorlevel 1 pwsh -NoProfile -Command "exit 0" >nul 2>&1'
-            $lines | Should -Contain 'if not errorlevel 1 set "PSEXE=pwsh"'
+            $lines | Should -Contain 'set "PW7=%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe"'
+            $lines | Should -Contain 'if not exist "%PW7%" set "PW7="'
+            $lines | Should -Contain 'if defined PW7 "%PW7%" -NoProfile -Command "exit 0" >nul 2>&1'
+            $lines | Should -Contain 'if defined PW7 if not errorlevel 1 set "PSEXE=%PW7%"'
+            $lines | Should -Contain 'if "%PSEXE%"=="powershell" where pwsh.exe >nul 2>&1'
+            $lines | Should -Contain 'if "%PSEXE%"=="powershell" if not errorlevel 1 pwsh -NoProfile -Command "exit 0" >nul 2>&1'
+            $lines | Should -Contain 'if "%PSEXE%"=="powershell" if not errorlevel 1 set "PSEXE=pwsh"'
+            @($lines | Where-Object { $_ -match '^for /f "delims=" %%I in \(.cmd /c ""%PSEXE%"' }).Count | Should -Be 1
             @($lines | Where-Object { $_ -match '^\s*powershell\s' }).Count | Should -Be 0
         }
     }
