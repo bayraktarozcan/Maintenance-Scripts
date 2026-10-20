@@ -1,6 +1,7 @@
 @echo off
 chcp 65001 >nul 2>&1
 setlocal EnableExtensions
+if /i "%~1"=="/nopause" set "NOPAUSE=1"
 for /f %%I in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set "TS=%%I"
 if not defined TS set "TS=notime"
 for %%I in ("%~dp0..\Logs\Clear-DnsClientCache") do set "LOGDIR=%%~fI"
@@ -30,4 +31,4 @@ echo Log: %LOG%
 >>"%LOG%" echo Log: %LOG%
 powershell -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 echo.
-pause
+if not defined NOPAUSE pause

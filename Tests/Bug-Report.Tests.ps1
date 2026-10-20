@@ -118,9 +118,15 @@ Describe 'Batch static checks' {
         $bad = Select-String -LiteralPath $_.FullName -Pattern 'set "(TMP|TEMP|PATH|PATHEXT|CD|DATE|TIME|OS|COMSPEC|PROMPT|WINDIR|SYSTEMROOT|SYSTEMDRIVE|APPDATA|LOCALAPPDATA|USERPROFILE|COMPUTERNAME|USERNAME|NUMBER_OF_PROCESSORS)="'
         $bad | Should -BeNullOrEmpty
     }
-    It 'Starts with @echo off and ends with pause' -ForEach $script:BatFiles {
+    It 'Starts with @echo off and ends with a pause guard' -ForEach $script:BatFiles {
         $lines = [System.IO.File]::ReadAllLines($_.FullName) | Where-Object { $_.Trim() -ne '' }
         $lines[0] | Should -Be '@echo off'
-        $lines[-1] | Should -Be 'pause'
+        $lines[-1] | Should -Match '^(if not defined NOPAUSE )?pause$'
+    }
+    It 'Clear-DnsClientCache.bat honors /nopause' {
+        $bat = Join-Path $PSScriptRoot '..\Scripts\Clear-DnsClientCache.bat'
+        $text = [System.IO.File]::ReadAllText($bat)
+        $text | Should -Match 'if /i "%~1"=="/nopause" set "NOPAUSE=1"'
+        $text | Should -Match 'if not defined NOPAUSE pause'
     }
 }
