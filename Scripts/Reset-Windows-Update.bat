@@ -1,14 +1,18 @@
 @echo off
 chcp 65001 >nul 2>&1
 setlocal EnableExtensions
-for /f %%I in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set "TS=%%I"
+set "PSEXE=powershell"
+where pwsh.exe >nul 2>&1
+if not errorlevel 1 pwsh -NoProfile -Command "exit 0" >nul 2>&1
+if not errorlevel 1 set "PSEXE=pwsh"
+for /f %%I in ('%PSEXE% -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set "TS=%%I"
 if not defined TS set "TS=notime"
 for %%I in ("%~dp0..\Logs\Reset-Windows-Update") do set "LOGDIR=%%~fI"
 if not exist "%LOGDIR%" mkdir "%LOGDIR%" >nul 2>&1
 if not exist "%LOGDIR%" set "LOGDIR=%TEMP%\Reset-Windows-Update"
 if not exist "%LOGDIR%" mkdir "%LOGDIR%" >nul 2>&1
 set "LOG=%LOGDIR%\Reset-Windows-Update_%TS%.txt"
-powershell -NoProfile -Command "[System.IO.File]::WriteAllBytes($env:LOG, @(0xEF,0xBB,0xBF))" >nul 2>&1
+%PSEXE% -NoProfile -Command "[System.IO.File]::WriteAllBytes($env:LOG, @(0xEF,0xBB,0xBF))" >nul 2>&1
 set "INDEX=%LOGDIR%\index.txt"
 if not exist "%INDEX%" >>"%INDEX%" echo Script: Reset-Windows-Update - Dir: %LOGDIR% - Created: %TS%
 >>"%INDEX%" echo %TS% %LOG%
@@ -150,6 +154,6 @@ del "%OUT%" >nul 2>&1
 echo.
 echo Log: %LOG%
 >>"%LOG%" echo Log: %LOG%
-powershell -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
+%PSEXE% -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 echo.
 pause

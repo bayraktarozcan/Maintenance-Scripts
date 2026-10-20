@@ -11,7 +11,9 @@
 All four `.bat` files follow the same harness, verified by
 `Tests/Bug-Report.Tests.ps1`:
 
-1. Build a timestamp with `powershell -NoProfile` (`yyyyMMdd_HHmmss`).
+1. Resolve the PowerShell engine (`pwsh` when it is on `PATH` and starts,
+   otherwise `powershell`), then build a timestamp with it
+   (`yyyyMMdd_HHmmss`).
 2. Resolve `Logs/<Name>/` next to the repo; fall back to
    `%TEMP%\<Name>` when the folder cannot be created.
 3. Stamp the log file with a UTF-8 BOM and append the run to
@@ -57,7 +59,9 @@ System/Application toggles). See
 Dört `.bat` dosyası da `Tests/Bug-Report.Tests.ps1` ile doğrulanan aynı
 iskeleti izler:
 
-1. `powershell -NoProfile` ile zaman damgası kur (`yyyyMMdd_HHmmss`).
+1. PowerShell motorunu çöz (`pwsh` `PATH` üzerinde varsa ve başlıyorsa onu,
+   aksi halde `powershell`'i kullan) ve zaman damgasını (`yyyyMMdd_HHmmss`)
+   bununla kur.
 2. Deponun yanındaki `Logs/<Ad>/` klasörünü çöz; klasör açılamazsa
    `%TEMP%\<Ad>` yedeğine düş.
 3. Günlük dosyasına UTF-8 BOM damgala ve koşuyu `index.txt`

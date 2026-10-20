@@ -123,6 +123,16 @@ Describe 'Batch static checks' {
         $lines[0] | Should -Be '@echo off'
         $lines[-1] | Should -Match '^(if not defined NOPAUSE )?pause$'
     }
+    It 'Prefers pwsh with a silent Windows PowerShell fallback' -ForEach $script:BatFiles {
+        $lines = [System.IO.File]::ReadAllLines($_.FullName)
+        if ($lines -match '^%PSEXE% -NoProfile') {
+            $lines | Should -Contain 'set "PSEXE=powershell"'
+            $lines | Should -Contain 'where pwsh.exe >nul 2>&1'
+            $lines | Should -Contain 'if not errorlevel 1 pwsh -NoProfile -Command "exit 0" >nul 2>&1'
+            $lines | Should -Contain 'if not errorlevel 1 set "PSEXE=pwsh"'
+            @($lines | Where-Object { $_ -match '^\s*powershell\s' }).Count | Should -Be 0
+        }
+    }
     It 'Clear-DnsClientCache.bat honors /nopause' {
         $bat = Join-Path $PSScriptRoot '..\Scripts\Clear-DnsClientCache.bat'
         $text = [System.IO.File]::ReadAllText($bat)
