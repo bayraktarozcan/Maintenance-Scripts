@@ -1,6 +1,7 @@
 @echo off
 chcp 65001 >nul 2>&1
 setlocal EnableExtensions
+set "NOPAUSE="
 if /i "%~1"=="/nopause" set "NOPAUSE=1"
 set "PSEXE=powershell"
 set "PW7=%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe"

@@ -162,7 +162,12 @@ Describe 'Batch static checks' {
     It 'Clear-DnsClientCache.bat honors /nopause' {
         $bat = Join-Path $PSScriptRoot '..\Scripts\Clear-DnsClientCache.bat'
         $text = [System.IO.File]::ReadAllText($bat)
-        $text | Should -Match 'if /i "%~1"=="/nopause" set "NOPAUSE=1"'
+        $lines = @($text -split "\r?\n")
+        $local = [Array]::IndexOf($lines, 'setlocal EnableExtensions')
+        $reset = [Array]::IndexOf($lines, 'set "NOPAUSE="')
+        $argument = [Array]::IndexOf($lines, 'if /i "%~1"=="/nopause" set "NOPAUSE=1"')
+        $reset | Should -BeGreaterThan $local
+        $argument | Should -BeGreaterThan $reset
         $text | Should -Match 'if not defined NOPAUSE pause'
     }
 }
