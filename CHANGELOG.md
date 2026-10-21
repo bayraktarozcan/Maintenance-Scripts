@@ -8,6 +8,17 @@
 
 ## English
 
+### Unreleased
+
+**Changed:**
+- `.bat` launchers resolve one PowerShell engine per run (`pwsh` app alias, `pwsh` from PATH, then Windows PowerShell 5.1) and reuse it for timestamps, BOM checks, workload, and drain calls.
+- `Clear-DnsClientCache.bat` clears an inherited `NOPAUSE` variable before parsing `/nopause`.
+
+**Fixed:**
+- Launcher timestamps no longer break when the PowerShell path contains `(` or `&`.
+- The local gate fails when `actionlint` or `lychee` is missing instead of reporting a skipped check and exiting 0; its header now states that LinkCheck fetches URLs.
+- `Invoke-Gate.Tests.ps1` maps every gate check to its workflow step and pins the workflow file set.
+
 ### v0.1.0.0 — 2026-09-16
 
 First release: personal Windows maintenance script collection.
@@ -29,6 +40,17 @@ First release: personal Windows maintenance script collection.
 <a id="tr"></a>
 
 ## Türkçe
+
+### Yayınlanmamış
+
+**Değişen:**
+- `.bat` başlatıcıları her koşuda tek bir PowerShell motoru çözer (`pwsh` uygulama diğer adı, PATH'teki `pwsh`, sonra Windows PowerShell 5.1) ve zaman damgası, BOM denetimi, iş yükü ve boşaltma çağrılarında onu yeniden kullanır.
+- `Clear-DnsClientCache.bat`, `/nopause` bağımsız değişkenini ayrıştırmadan önce devralınan `NOPAUSE` değişkenini temizler.
+
+**Düzeltilen:**
+- PowerShell yolu `(` veya `&` içerdiğinde başlatıcı zaman damgaları artık bozulmaz.
+- Yerel geçit, `actionlint` veya `lychee` eksikken atlanan denetim bildirip 0 ile çıkmak yerine başarısız olur; başlığı artık LinkCheck'in URL'leri getirdiğini belirtir.
+- `Invoke-Gate.Tests.ps1`, her geçit denetimini iş akışı adımına eşler ve iş akışı dosya kümesini sabitler.
 
 ### v0.1.0.0 — 2026-09-16
 
