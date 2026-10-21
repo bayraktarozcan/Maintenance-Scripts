@@ -1,16 +1,16 @@
 ﻿# Maintenance Scripts - local quality gate
-# Runs the same checks the CI definition declares
-# (.github/workflows/validate.yml + quality.yml):
+# Runs the local counterparts of the checks declared in the CI workflows
+# (validate.yml, quality.yml, hygiene.yml, link-check.yml):
 #   Syntax     - PowerShell parser over every .ps1 file in the tree
 #   Whitespace - trailing-whitespace scan of added lines (HEAD)
 #   Mojibake   - Tools/Check-Mojibake.ps1 -Files (tracked files)
 #   Commits    - Tools/Check-Mojibake.ps1 -Commits on HEAD (message/author)
 #   Pester     - ./Tests suite (requires Pester 5.7.1)
-#   Hygiene    - actionlint over .github/workflows (skipped if not installed)
-#   LinkCheck  - lychee over './**/*.md' (skipped if not installed)
+#   Hygiene    - actionlint over .github/workflows (required)
+#   LinkCheck  - lychee over './**/*.md' (required; fetches URLs)
 # Usage: powershell -NoProfile -File Tools/Invoke-Gate.ps1 [-List]
 # -List prints the check names without running them (for parity tests).
-# Exits 0 when every check passes, 1 otherwise. Never makes network calls.
+# Exits 0 when every check passes, 1 otherwise.
 [CmdletBinding()]
 param(
     [switch]$List
@@ -77,8 +77,7 @@ Invoke-GateStep 'Pester' {
 
 Invoke-GateStep 'Hygiene' {
     if (-not (Get-Command actionlint -ErrorAction SilentlyContinue)) {
-        Write-Output "[skip] Hygiene: actionlint is not installed"
-        return
+        throw "actionlint is not installed; run Tools/Install-Dependencies.ps1"
     }
     Push-Location -LiteralPath $script:Root
     try {
@@ -91,8 +90,7 @@ Invoke-GateStep 'Hygiene' {
 
 Invoke-GateStep 'LinkCheck' {
     if (-not (Get-Command lychee -ErrorAction SilentlyContinue)) {
-        Write-Output "[skip] LinkCheck: lychee is not installed"
-        return
+        throw "lychee is not installed; run Tools/Install-Dependencies.ps1"
     }
     Push-Location -LiteralPath $script:Root
     try {
