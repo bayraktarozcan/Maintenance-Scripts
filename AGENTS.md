@@ -480,7 +480,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=4b33fc32e927d8ac472778ed11b28efbfca89ccc -->
+<!-- mirror-sync: sync-sha=9aa2f0454b2421c6d868980ce5b8d7f23db107b4 -->
 
 ---
 
@@ -737,7 +737,7 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 ## Toolchain - overrides of the defaults in the appendix, compatibility floor
 
 - Compatibility floor: **Windows PowerShell 5.1** (no PowerShell 7-only syntax).
-- `.bat` launchers never pass `-ExecutionPolicy Bypass`; they only invoke `powershell -NoProfile` to build log timestamps. `Bug-Report.ps1` is called separately (e.g. scheduled task) with `-NoProfile -ExecutionPolicy Bypass -File`.
+- `.bat` launchers never pass `-ExecutionPolicy Bypass`; each resolves one engine per run (`%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe` when it starts, otherwise `pwsh` from PATH, otherwise Windows PowerShell 5.1) and uses it for timestamp, BOM, workload, and drain calls. `Bug-Report.ps1` is called separately (e.g. scheduled task) with `-NoProfile -ExecutionPolicy Bypass -File`.
 - `Bug-Report.ps1` writes output as UTF-8 **with BOM**; do not change encodings.
 - `.gitattributes` enforces `eol=crlf` for `.bat`/`.ps1` and `eol=lf` for `.yml`; `.editorconfig` mirrors those line-ending rules plus indentation.
 
