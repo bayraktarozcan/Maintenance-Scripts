@@ -9,7 +9,10 @@ if defined PW7 if not errorlevel 1 set "PSEXE=%PW7%"
 if "%PSEXE%"=="powershell" where pwsh.exe >nul 2>&1
 if "%PSEXE%"=="powershell" if not errorlevel 1 pwsh -NoProfile -Command "exit 0" >nul 2>&1
 if "%PSEXE%"=="powershell" if not errorlevel 1 set "PSEXE=pwsh"
-for /f "delims=" %%I in ('cmd /c ""%PSEXE%" -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss""') do set "TS=%%I"
+set "TSFILE=%TEMP%\ts_%RANDOM%.txt"
+"%PSEXE%" -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss" > "%TSFILE%"
+set /p TS=<"%TSFILE%"
+del "%TSFILE%" >nul 2>&1
 if not defined TS set "TS=notime"
 for %%I in ("%~dp0..\Logs\Reset-Windows-Update") do set "LOGDIR=%%~fI"
 if not exist "%LOGDIR%" mkdir "%LOGDIR%" >nul 2>&1

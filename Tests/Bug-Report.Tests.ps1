@@ -134,8 +134,29 @@ Describe 'Batch static checks' {
             $lines | Should -Contain 'if "%PSEXE%"=="powershell" where pwsh.exe >nul 2>&1'
             $lines | Should -Contain 'if "%PSEXE%"=="powershell" if not errorlevel 1 pwsh -NoProfile -Command "exit 0" >nul 2>&1'
             $lines | Should -Contain 'if "%PSEXE%"=="powershell" if not errorlevel 1 set "PSEXE=pwsh"'
-            @($lines | Where-Object { $_ -match '^for /f "delims=" %%I in \(.cmd /c ""%PSEXE%"' }).Count | Should -Be 1
+            $lines | Should -Contain 'set "TSFILE=%TEMP%\ts_%RANDOM%.txt"'
+            $lines | Should -Contain '"%PSEXE%" -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss" > "%TSFILE%"'
+            $lines | Should -Contain 'set /p TS=<"%TSFILE%"'
+            $lines | Should -Contain 'del "%TSFILE%" >nul 2>&1'
+            @($lines | Where-Object { $_ -match '^for /f .*%PSEXE%' }).Count | Should -Be 0
             @($lines | Where-Object { $_ -match '^\s*powershell\s' }).Count | Should -Be 0
+            $defaultEngine = [Array]::IndexOf($lines, 'set "PSEXE=powershell"')
+            $aliasProbe = [Array]::IndexOf($lines, 'if defined PW7 "%PW7%" -NoProfile -Command "exit 0" >nul 2>&1')
+            $aliasSelect = [Array]::IndexOf($lines, 'if defined PW7 if not errorlevel 1 set "PSEXE=%PW7%"')
+            $pathProbe = [Array]::IndexOf($lines, 'if "%PSEXE%"=="powershell" where pwsh.exe >nul 2>&1')
+            $pathSelect = [Array]::IndexOf($lines, 'if "%PSEXE%"=="powershell" if not errorlevel 1 set "PSEXE=pwsh"')
+            $tsFile = [Array]::IndexOf($lines, 'set "TSFILE=%TEMP%\ts_%RANDOM%.txt"')
+            $tsWrite = [Array]::IndexOf($lines, '"%PSEXE%" -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss" > "%TSFILE%"')
+            $tsRead = [Array]::IndexOf($lines, 'set /p TS=<"%TSFILE%"')
+            $tsDelete = [Array]::IndexOf($lines, 'del "%TSFILE%" >nul 2>&1')
+            $aliasProbe | Should -BeGreaterThan $defaultEngine
+            $aliasSelect | Should -BeGreaterThan $aliasProbe
+            $pathProbe | Should -BeGreaterThan $aliasSelect
+            $pathSelect | Should -BeGreaterThan $pathProbe
+            $tsFile | Should -BeGreaterThan $pathSelect
+            $tsWrite | Should -BeGreaterThan $tsFile
+            $tsRead | Should -BeGreaterThan $tsWrite
+            $tsDelete | Should -BeGreaterThan $tsRead
         }
     }
     It 'Clear-DnsClientCache.bat honors /nopause' {
