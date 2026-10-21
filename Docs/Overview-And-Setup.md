@@ -35,8 +35,10 @@ No installation step exists. Clone the repository and run a launcher from
 `Scripts/`, or schedule `Bug-Report.ps1`:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily
+pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily
 ```
+
+PowerShell 7 is recommended; on a host without it, use `powershell.exe` with the same arguments.
 
 `-Period` accepts `Daily`, `Weekly`, or `Monthly`. Each run creates its log
 folder on first use; runtime output lives under `Logs/<Name>/` and is never
@@ -76,8 +78,10 @@ Kurulum adımı yoktur. Depoyu klonlayıp `Scripts/` içinden bir başlatıcı
 çalıştırın ya da `Bug-Report.ps1` dosyasını zamanlayın:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily
+pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily
 ```
+
+PowerShell 7 önerilir; kurulu değilse aynı bağımsız değişkenlerle `powershell.exe` kullanın.
 
 `-Period` değeri `Daily`, `Weekly` veya `Monthly` olur. Her betik günlük
 klasörünü ilk kullanımda kendisi açar; çalışma zamanı çıktısı

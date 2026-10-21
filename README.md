@@ -40,7 +40,8 @@ Each script does one job: it runs commands in order and writes output both to th
 1. Run `Scripts/<name>.bat` as administrator (right-click → Run as administrator); only `Repair-Windows.bat` and `Reset-Windows-Update.bat` require it.
 2. Each script logs under `Logs/<Script-Name>/`; every folder keeps an `index.txt` run ledger.
 3. `Bug-Report.ps1` runs on a schedule:
-   `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
+   `pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
+   (use `powershell.exe` on a host without PowerShell 7)
 
 ### Rules
 
@@ -76,7 +77,8 @@ Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ek
 1. `Scripts/` klasöründeki betiği yönetici olarak çalıştırın (sağ tık → Yönetici olarak çalıştır); bunu yalnızca `Repair-Windows.bat` ve `Reset-Windows-Update.bat` gerektirir.
 2. Her betik günlüğünü `Logs/<Betik-Adı>/` altına yazar; her klasörde `index.txt` koşu dökümünü tutar.
 3. `Bug-Report.ps1` Zamanlayıcı ile koşar:
-   `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
+   `pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
+   (PowerShell 7 yoksa `powershell.exe` kullanın)
 
 ### Kurallar
 
