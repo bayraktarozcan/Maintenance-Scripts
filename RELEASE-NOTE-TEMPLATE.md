@@ -32,6 +32,10 @@ Yeni sürümlerde aşağıdaki şablonu kopyalayıp yer tutucuları doldurun.
 
 - {ITEM} - {REASON}
 
+### Fixed
+
+- {FIX_DESCRIPTION}
+
 ### Files
 
 - `Scripts/...` - {NOTE}
@@ -68,6 +72,10 @@ Yeni sürümlerde aşağıdaki şablonu kopyalayıp yer tutucuları doldurun.
 
 - {ITEM} - {REASON}
 
+### Düzeltilenler
+
+- {FIX_DESCRIPTION}
+
 ### Dosyalar
 
 - `Scripts/...` - {NOTE}
@@ -94,7 +102,7 @@ First public release of the personal Windows maintenance collection.
 
 ### Added
 
-- `Repair-Windows.bat`, `Reset-Windows-Update.bat`, `Clear-DnsClientCache.bat`,
+- `Repair-Windows.bat`, `Reset-Windows-Update.bat`, `IPConfig-FlushDNS.bat`,
   `WinGet-Upgrade.bat`, `Bug-Report.ps1`
 
 ### Verification
@@ -115,7 +123,7 @@ Kişisel Windows bakım koleksiyonunun ilk herkese açık sürümü.
 
 ### Eklenenler
 
-- `Repair-Windows.bat`, `Reset-Windows-Update.bat`, `Clear-DnsClientCache.bat`,
+- `Repair-Windows.bat`, `Reset-Windows-Update.bat`, `IPConfig-FlushDNS.bat`,
   `WinGet-Upgrade.bat`, `Bug-Report.ps1`
 
 ### Doğrulama

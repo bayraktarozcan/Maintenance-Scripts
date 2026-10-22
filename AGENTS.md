@@ -480,7 +480,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=9aa2f0454b2421c6d868980ce5b8d7f23db107b4 -->
+<!-- mirror-sync: sync-sha=8734c5553300019898e156bd8d13df3a007c7e63 -->
 
 ---
 
@@ -650,7 +650,7 @@ Project facts for this repository. Points at the universal rules above instead o
 | `Tools/Check-Mojibake.ps1` | Developer-side encoding gate; rejects double-encoded text and invalid UTF-8, never makes network calls |
 | `Tools/Invoke-Gate.ps1` | Single local gate command running every CI-declared check |
 | `Tools/Install-Dependencies.ps1` | Single host dependency setup command (per-user scope, `-Check` verifies) |
-| `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`, `WinGet-Upgrade.Tests.ps1`, `Invoke-Gate.Tests.ps1`, `Install-Dependencies.Tests.ps1`) |
+| `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`, `WinGet-Upgrade.Tests.ps1`, `Invoke-Gate.Tests.ps1`, `Install-Dependencies.Tests.ps1`, `Repair-Windows.Tests.ps1`) |
 | `.githooks/` | Bundled local hooks; enable with `git config core.hooksPath .githooks` |
 | `.github/` | GitHub quality gates |
 | `Docs/` | Tracked chapters: overview/setup, architecture, troubleshooting |
@@ -661,7 +661,7 @@ Project facts for this repository. Points at the universal rules above instead o
 
 ## Versions - scheme, current constants, where each is stated
 
-- Scheme: four-part (`v0.1.0.0`, 2026-09-16) stated in `CHANGELOG.md` headings.
+- Scheme: four-part (`v0.1.0.1`, 2026-10-23) stated in `CHANGELOG.md` headings.
 - No version constants in code; `CHANGELOG.md` is the single source.
 
 ## Commands - setup, build, test, lint, the single local gate command
@@ -743,7 +743,7 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 
 ## Releases - procedure, hosts, parity checks
 
-- No release procedure yet; `CHANGELOG.md` keeps the history (`v0.1.0.0`).
+- Release procedure: update `CHANGELOG.md`, run `Tools/Invoke-Gate.ps1`, commit, create annotated tag `vX.Y.Z.W`, push to both hosts, publish matching releases with the bilingual note, then prefix the previous release title with `[DEPRECATED]`; `CHANGELOG.md` keeps the history (`v0.1.0.1`).
 - `.gitlab-ci.yml` mirrors the GitHub quality gates and runs on GitLab CI. Pipelines trigger on pushes to `main`; the pipeline badge in `README.md` resolves to https://gitlab.com/bayraktarozcan/Maintenance-Scripts/-/pipelines.
 - Commit message style: English, imperative, with a `type:` prefix (`fix:`, `docs:`, `chore:`, `test:`); match the existing Conventional Commits history.
 
