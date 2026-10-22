@@ -12,6 +12,7 @@
 
 **Changed:**
 - `.bat` launchers resolve one PowerShell engine per run (`pwsh` app alias, `pwsh` from PATH, then Windows PowerShell 5.1) and reuse it for timestamps, BOM checks, workload, and drain calls.
+- `Repair-Windows.bat` records per-stage start/end timestamps, exit codes and elapsed milliseconds, then prints a nine-line summary, total time and an overall status; missing evidence reports `INDETERMINATE` instead of success.
 - `Clear-DnsClientCache.bat` clears an inherited `NOPAUSE` variable before parsing `/nopause`.
 
 **Fixed:**
@@ -45,6 +46,7 @@ First release: personal Windows maintenance script collection.
 
 **Değişen:**
 - `.bat` başlatıcıları her koşuda tek bir PowerShell motoru çözer (`pwsh` uygulama diğer adı, PATH'teki `pwsh`, sonra Windows PowerShell 5.1) ve zaman damgası, BOM denetimi, iş yükü ve boşaltma çağrılarında onu yeniden kullanır.
+- `Repair-Windows.bat` her aşama için başlangıç/bitiş zaman damgası, çıkış kodu ve geçen milisaniyeyi kaydeder; ardından dokuz satırlık özet, toplam süre ve genel durum yazar; eksik kanıt başarı yerine `INDETERMINATE` bildirir.
 - `Clear-DnsClientCache.bat`, `/nopause` bağımsız değişkenini ayrıştırmadan önce devralınan `NOPAUSE` değişkenini temizler.
 
 **Düzeltilen:**

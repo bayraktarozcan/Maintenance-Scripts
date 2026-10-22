@@ -9,7 +9,8 @@
 ### Shared launcher harness
 
 All four `.bat` files follow the same harness, verified by
-`Tests/Bug-Report.Tests.ps1`:
+`Tests/Bug-Report.Tests.ps1`; `Tests/Repair-Windows.Tests.ps1` covers the
+Repair-specific logging:
 
 1. Resolve the PowerShell engine (the `pwsh` app alias under
    `%LOCALAPPDATA%\Microsoft\WindowsApps` when it exists and starts, otherwise
@@ -29,7 +30,13 @@ All four `.bat` files follow the same harness, verified by
   `ScanHealth`, ensure `wuauserv`/`bits` are started, DISM
   `RestoreHealth`, `AnalyzeComponentStore`,
   `StartComponentCleanup /ResetBase`, `sfc /scannow`, final
-  `AnalyzeComponentStore`.
+  `AnalyzeComponentStore`. It also records a local start/end timestamp
+  (`yyyy-MM-dd HH:mm:ss.fff`), exit code, and elapsed milliseconds for
+  every step, then a nine-line summary and `TOTAL`. The overall status is
+  `FAILED`, `REVIEW REQUIRED`, `INDETERMINATE`, `SUCCESS (restart
+  required)`, or `SUCCESS`; missing evidence is never treated as success.
+  DISM `3010` means restart required, `net start` `2` means already
+  running, and SFC `1` means review.
 - `Reset-Windows-Update.bat` (13 steps, needs admin): stop `wuauserv`,
   `bits`, `msiserver`, `cryptSvc`; delete `SoftwareDistribution` and
   `catroot2` contents; restart the services; `UsoClient StartScan`.
@@ -58,7 +65,8 @@ System/Application toggles). See
 ### Ortak başlatıcı iskeleti
 
 Dört `.bat` dosyası da `Tests/Bug-Report.Tests.ps1` ile doğrulanan aynı
-iskeleti izler:
+iskeleti izler; `Tests/Repair-Windows.Tests.ps1` Repair'a özgü günlüklemeyi
+kapsar:
 
 1. PowerShell motorunu çöz (`%LOCALAPPDATA%\Microsoft\WindowsApps` altındaki
    `pwsh` uygulama kısayolu varsa ve başlıyorsa onu, yoksa `PATH` üzerindeki
@@ -78,7 +86,13 @@ iskeleti izler:
   `ScanHealth`, `wuauserv`/`bits` servislerinin çalıştığını sağlama, DISM
   `RestoreHealth`, `AnalyzeComponentStore`,
   `StartComponentCleanup /ResetBase`, `sfc /scannow`, son
-  `AnalyzeComponentStore`.
+  `AnalyzeComponentStore`. Ayrıca her adım için yerel başlangıç/bitiş
+  damgası (`yyyy-MM-dd HH:mm:ss.fff`), çıkış kodu ve geçen milisaniyeyi,
+  ardından dokuz satırlık özet ve `TOTAL` satırını yazar. Genel durum
+  `FAILED`, `REVIEW REQUIRED`, `INDETERMINATE`, `SUCCESS (restart
+  required)` veya `SUCCESS` olur; eksik kanıt asla başarı sayılmaz.
+  DISM `3010` yeniden başlatma, `net start` `2` zaten çalışıyor, SFC `1`
+  inceleme anlamına gelir.
 - `Reset-Windows-Update.bat` (13 adım, yönetici ister): `wuauserv`,
   `bits`, `msiserver`, `cryptSvc` servislerini durdurma;
   `SoftwareDistribution` ve `catroot2` içeriklerini silme; servisleri
