@@ -12,13 +12,15 @@
 
 **Changed:**
 - `.bat` launchers resolve one PowerShell engine per run (`pwsh` app alias, `pwsh` from PATH, then Windows PowerShell 5.1) and reuse it for timestamps, BOM checks, workload, and drain calls.
-- `Repair-Windows.bat` records per-stage start/end timestamps, exit codes and elapsed milliseconds, then prints a nine-line summary, total time and an overall status; missing evidence reports `INDETERMINATE` instead of success.
+- `Repair-Windows.bat` records per-stage start/end timestamps, exit codes and elapsed milliseconds, then prints a nine-line summary, total time and an overall status; missing evidence reports `INDETERMINATE`, `net start` code 2 is accepted only when `sc query` reports the service running, and a DISM cleanup recommendation requires review.
 - `Clear-DnsClientCache.bat` clears an inherited `NOPAUSE` variable before parsing `/nopause`.
 
 **Fixed:**
 - Launcher timestamps no longer break when the PowerShell path contains `(` or `&`.
 - The local gate fails when `actionlint` or `lychee` is missing instead of reporting a skipped check and exiting 0; its header now states that LinkCheck fetches URLs.
 - `Invoke-Gate.Tests.ps1` maps every gate check to its workflow step and pins the workflow file set.
+- `Repair-Windows.bat` exits `1` for every overall status except `SUCCESS` and `SUCCESS (restart required)`; its SFC output is decoded from UTF-16LE before being appended, eliminating NUL bytes in the log.
+- Link Check now runs on Markdown pushes to `main`, not only weekly and on pull requests.
 
 ### v0.1.0.0 — 2026-09-16
 
@@ -46,13 +48,15 @@ First release: personal Windows maintenance script collection.
 
 **Değişen:**
 - `.bat` başlatıcıları her koşuda tek bir PowerShell motoru çözer (`pwsh` uygulama diğer adı, PATH'teki `pwsh`, sonra Windows PowerShell 5.1) ve zaman damgası, BOM denetimi, iş yükü ve boşaltma çağrılarında onu yeniden kullanır.
-- `Repair-Windows.bat` her aşama için başlangıç/bitiş zaman damgası, çıkış kodu ve geçen milisaniyeyi kaydeder; ardından dokuz satırlık özet, toplam süre ve genel durum yazar; eksik kanıt başarı yerine `INDETERMINATE` bildirir.
+- `Repair-Windows.bat` her aşama için başlangıç/bitiş zaman damgası, çıkış kodu ve geçen milisaniyeyi kaydeder; ardından dokuz satırlık özet, toplam süre ve genel durum yazar; eksik kanıt `INDETERMINATE` bildirir, `net start` kod 2 yalnızca `sc query` hizmeti çalışıyor gösterdiğinde kabul edilir ve DISM temizlik önerisi inceleme gerektirir.
 - `Clear-DnsClientCache.bat`, `/nopause` bağımsız değişkenini ayrıştırmadan önce devralınan `NOPAUSE` değişkenini temizler.
 
 **Düzeltilen:**
 - PowerShell yolu `(` veya `&` içerdiğinde başlatıcı zaman damgaları artık bozulmaz.
 - Yerel geçit, `actionlint` veya `lychee` eksikken atlanan denetim bildirip 0 ile çıkmak yerine başarısız olur; başlığı artık LinkCheck'in URL'leri getirdiğini belirtir.
 - `Invoke-Gate.Tests.ps1`, her geçit denetimini iş akışı adımına eşler ve iş akışı dosya kümesini sabitler.
+- `Repair-Windows.bat`, `SUCCESS` ve `SUCCESS (restart required)` dışındaki her genel durumda `1` ile çıkar; SFC çıktısı eklenmeden önce UTF-16LE'den çözülür ve günlükteki NUL baytları kaldırılır.
+- Link Check artık yalnızca haftalık ve pull request'lerde değil, `main` üzerindeki Markdown push'larında da çalışır.
 
 ### v0.1.0.0 — 2026-09-16
 

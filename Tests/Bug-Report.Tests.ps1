@@ -121,7 +121,11 @@ Describe 'Batch static checks' {
     It 'Starts with @echo off and ends with a pause guard' -ForEach $script:BatFiles {
         $lines = [System.IO.File]::ReadAllLines($_.FullName) | Where-Object { $_.Trim() -ne '' }
         $lines[0] | Should -Be '@echo off'
-        $lines[-1] | Should -Match '^(if not defined NOPAUSE )?pause$'
+        if ($lines[-1] -eq 'exit /b %EXITCODE%') {
+            $lines[-2] | Should -Match '^(if not defined NOPAUSE )?pause$'
+        } else {
+            $lines[-1] | Should -Match '^(if not defined NOPAUSE )?pause$'
+        }
     }
     It 'Prefers the pwsh app alias, then PATH, then Windows PowerShell' -ForEach $script:BatFiles {
         $lines = [System.IO.File]::ReadAllLines($_.FullName)

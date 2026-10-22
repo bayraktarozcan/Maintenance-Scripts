@@ -30,13 +30,20 @@ Repair-specific logging:
   `ScanHealth`, ensure `wuauserv`/`bits` are started, DISM
   `RestoreHealth`, `AnalyzeComponentStore`,
   `StartComponentCleanup /ResetBase`, `sfc /scannow`, final
-  `AnalyzeComponentStore`. It also records a local start/end timestamp
-  (`yyyy-MM-dd HH:mm:ss.fff`), exit code, and elapsed milliseconds for
-  every step, then a nine-line summary and `TOTAL`. The overall status is
-  `FAILED`, `REVIEW REQUIRED`, `INDETERMINATE`, `SUCCESS (restart
-  required)`, or `SUCCESS`; missing evidence is never treated as success.
-  DISM `3010` means restart required, `net start` `2` means already
-  running, and SFC `1` means review.
+  `AnalyzeComponentStore`. It also records an Istanbul start/end timestamp
+  (`yyyy-MM-dd HH:mm:ss.fff`, UTC+03:00), exit code, and elapsed
+  milliseconds for every step, then a nine-line summary and `TOTAL`. The
+  overall status is `FAILED`, `REVIEW REQUIRED`, `INDETERMINATE`,
+  `SUCCESS (restart required)`, or `SUCCESS`; missing evidence is never
+  treated as success. The script exits `0` only for `SUCCESS` and
+  `SUCCESS (restart required)`; every other overall status exits `1`.
+  `sfc` output is decoded from UTF-16LE and appended as UTF-8, so the log
+  contains no NUL bytes from that stage.
+  DISM `3010` means restart required; a cleanup
+  recommendation from `AnalyzeComponentStore` requires review; `net
+  start` `2` is accepted only when `sc query` reports state `4` (running),
+  a missing service is a failure, and any other state requires review;
+  SFC `1` means review.
 - `Reset-Windows-Update.bat` (13 steps, needs admin): stop `wuauserv`,
   `bits`, `msiserver`, `cryptSvc`; delete `SoftwareDistribution` and
   `catroot2` contents; restart the services; `UsoClient StartScan`.
@@ -86,13 +93,20 @@ kapsar:
   `ScanHealth`, `wuauserv`/`bits` servislerinin çalıştığını sağlama, DISM
   `RestoreHealth`, `AnalyzeComponentStore`,
   `StartComponentCleanup /ResetBase`, `sfc /scannow`, son
-  `AnalyzeComponentStore`. Ayrıca her adım için yerel başlangıç/bitiş
-  damgası (`yyyy-MM-dd HH:mm:ss.fff`), çıkış kodu ve geçen milisaniyeyi,
-  ardından dokuz satırlık özet ve `TOTAL` satırını yazar. Genel durum
-  `FAILED`, `REVIEW REQUIRED`, `INDETERMINATE`, `SUCCESS (restart
-  required)` veya `SUCCESS` olur; eksik kanıt asla başarı sayılmaz.
-  DISM `3010` yeniden başlatma, `net start` `2` zaten çalışıyor, SFC `1`
-  inceleme anlamına gelir.
+  `AnalyzeComponentStore`. Ayrıca her adım için İstanbul saatine göre
+  başlangıç/bitiş damgası (`yyyy-MM-dd HH:mm:ss.fff`, UTC+03:00), çıkış
+  kodu ve geçen milisaniyeyi, ardından dokuz satırlık özet ve `TOTAL`
+  satırını yazar. Genel durum `FAILED`, `REVIEW REQUIRED`,
+  `INDETERMINATE`, `SUCCESS (restart required)` veya `SUCCESS` olur;
+  eksik kanıt asla başarı sayılmaz. Betik yalnızca `SUCCESS` ve
+  `SUCCESS (restart required)` için `0`, diğer tüm genel durumlarda `1`
+  ile çıkar. `sfc` çıktısı UTF-16LE'den çözülüp UTF-8 olarak eklenir;
+  böylece bu aşamadan günlüğe NUL baytı sızmaz.
+  DISM `3010` yeniden başlatma;
+  `AnalyzeComponentStore` temizlik önerisi inceleme gerektirir;
+  `net start` `2` yalnızca `sc query` durumu `4` (çalışıyor)
+  bildirdiğinde kabul edilir, eksik hizmet başarısız sayılır ve diğer
+  durumlar inceleme gerektirir; SFC `1` inceleme anlamına gelir.
 - `Reset-Windows-Update.bat` (13 adım, yönetici ister): `wuauserv`,
   `bits`, `msiserver`, `cryptSvc` servislerini durdurma;
   `SoftwareDistribution` ve `catroot2` içeriklerini silme; servisleri
