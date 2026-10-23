@@ -10,6 +10,9 @@
 
 ### Unreleased
 
+**Changed:**
+- The recommended and pinned PowerShell line is 7.6.8; the setup command requests that exact version from winget.
+
 ### v0.1.0.1 — 2026-10-23
 
 Reliability and hardening release: one PowerShell engine per launcher, evidence-based Repair reporting, a modern DNS command, a seven-check local gate, and complete bilingual documentation.
@@ -28,7 +31,7 @@ Reliability and hardening release: one PowerShell engine per launcher, evidence-
 - `Repair-Windows.bat` records per-stage start/end timestamps (UTC+03:00), exit codes, and elapsed milliseconds, then prints a nine-line summary, total time, and overall status; missing evidence reports `INDETERMINATE`, `net start` code 2 is accepted only when `sc query` reports the service running, and a DISM cleanup recommendation requires review.
 - `Clear-DnsClientCache.bat` clears an inherited `NOPAUSE` variable before parsing `/nopause`.
 - Link Check runs on Markdown pushes to `main` as well as weekly and on pull requests.
-- The recommended PowerShell release is 7.6.7; setup documentation names the dependency manifest and keeps WinGet at user scope.
+- The recommended PowerShell release is 7.6.8; setup documentation names the dependency manifest and keeps WinGet at user scope.
 - Documentation and governance now cover the project layer, release deprecation, the full root-document set, and Türkiye-pinned timestamps.
 
 **Removed:**
@@ -66,6 +69,9 @@ First release: personal Windows maintenance script collection.
 
 ### Yayınlanmamış
 
+**Değişen:**
+- Önerilen ve sabitlenen PowerShell satırı 7.6.8'dir; kurulum komutu bu tam sürümü winget'ten ister.
+
 ### v0.1.0.1 — 2026-10-23
 
 Güvenilirlik ve sağlamlaştırma sürümü: başlatıcı başına tek PowerShell motoru, kanıta dayalı Repair raporlaması, modern DNS komutu, yedi denetimli yerel geçit ve eksiksiz iki dilli belgeler.
@@ -84,7 +90,7 @@ Güvenilirlik ve sağlamlaştırma sürümü: başlatıcı başına tek PowerShe
 - `Repair-Windows.bat` her aşama için başlangıç/bitiş zaman damgası (UTC+03:00), çıkış kodu ve geçen milisaniyeyi kaydeder; ardından dokuz satırlık özet, toplam süre ve genel durum yazar; eksik kanıt `INDETERMINATE` bildirir, `net start` kod 2 yalnızca `sc query` hizmeti çalışıyor gösterdiğinde kabul edilir ve DISM temizlik önerisi inceleme gerektirir.
 - `Clear-DnsClientCache.bat`, `/nopause` bağımsız değişkenini ayrıştırmadan önce devralınan `NOPAUSE` değişkenini temizler.
 - Link Check, haftalık ve pull request'lerin yanı sıra `main` üzerindeki Markdown push'larında da çalışır.
-- Önerilen PowerShell sürümü 7.6.7'dir; kurulum belgeleri bağımlılık bildirimini adlandırır ve WinGet'i kullanıcı kapsamında tutar.
+- Önerilen PowerShell sürümü 7.6.8'dir; kurulum belgeleri bağımlılık bildirimini adlandırır ve WinGet'i kullanıcı kapsamında tutar.
 - Belgeler ve yönetişim artık proje katmanını, sürüm kullanımdan kaldırmayı, tam kök belge kümesini ve Türkiye saatine sabitlenmiş zaman damgalarını kapsar.
 
 **Kaldırılan:**

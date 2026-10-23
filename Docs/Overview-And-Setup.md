@@ -18,8 +18,10 @@ table and [Architecture](Architecture.md) for how they work.
 - Windows with `cmd.exe`, PowerShell 5.1+, and (for `WinGet-Upgrade.bat`)
   `winget`. The launchers prefer `pwsh` (the app alias under
   `%LOCALAPPDATA%\Microsoft\WindowsApps` first, then `PATH`) and fall back
-  to Windows PowerShell 5.1; PowerShell 7.6.7 is the recommended `pwsh`
-  line. The full host manifest and setup live in the project layer
+  to Windows PowerShell 5.1; PowerShell 7.6.8 is the recommended and pinned
+  `pwsh` line; the setup command requests that exact version from winget,
+  which must publish it before setup can complete.
+  The full host manifest and setup live in the project layer
   (`Dependencies`):
   `powershell -NoProfile -File Tools/Install-Dependencies.ps1`.
 - Administrator rights for `Repair-Windows.bat` and
@@ -61,7 +63,9 @@ dört `.bat` başlatıcı ile bir PowerShell HTML rapor motoru
 - `cmd.exe`, PowerShell 5.1+ ve (`WinGet-Upgrade.bat` için) `winget`
   bulunan Windows. Başlatıcılar `pwsh`'yi (önce `%LOCALAPPDATA%\Microsoft\WindowsApps`
   altındaki uygulama kısayolu, sonra `PATH`) yeğler, yoksa Windows PowerShell 5.1'e
-  düşer; önerilen `pwsh` sürümü 7.6.7'dir.
+  düşer; önerilen ve sabitlenen `pwsh` sürümü 7.6.8'dir; kurulum komutu
+  bu tam sürümü winget'ten ister, bu yüzden winget kaynağı 7.6.8'i
+  yayımlamadan kurulum tamamlanamaz.
   Tam konak bildirimi ve kurulum proje katmanındadır (`Dependencies`):
   `powershell -NoProfile -File Tools/Install-Dependencies.ps1`.
 - Yalnızca `Repair-Windows.bat` ve `Reset-Windows-Update.bat` yönetici

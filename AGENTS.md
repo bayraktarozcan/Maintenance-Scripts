@@ -480,7 +480,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=8734c5553300019898e156bd8d13df3a007c7e63 -->
+<!-- mirror-sync: sync-sha=bb65e39bd67b0549cf2daaa4a4b93d0a990d013c -->
 
 ---
 
@@ -720,13 +720,14 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 | Dependency | Version | Source |
 |------------|---------|--------|
 | Pester | 5.7.1 | PSGallery (`Install-Module -Scope CurrentUser`) |
-| PowerShell | 7.6.7 | winget `Microsoft.PowerShell` |
+| PowerShell | 7.6.8 | winget `Microsoft.PowerShell` |
 | gitleaks | 8.30.1 | winget `Gitleaks.Gitleaks` |
 | actionlint | 1.7.12 | winget `rhysd.actionlint` |
 | lychee | 0.24.2 | winget `lycheeverse.lychee` |
 | git, gh, winget | present | OS / GitHub CLI / App Installer |
 
 - Single setup command: `powershell -NoProfile -File Tools/Install-Dependencies.ps1` (`-Check` verifies without changing the host).
+- PowerShell 7.6.8 is the recommended and pinned line; the setup command requests that exact version from winget, so the winget source must publish 7.6.8 before setup can complete.
 - No approved project-scope exceptions: everything is global/user-global.
 
 ## Hidden layers - scratch directory name (named here once), cadence for clearing it
