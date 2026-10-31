@@ -725,14 +725,14 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 | Dependency | Version | Source |
 |------------|---------|--------|
 | Pester | 5.7.1 | PSGallery (`Install-Module -Scope CurrentUser`) |
-| PowerShell | 7.6.8 | winget `Microsoft.PowerShell` |
+| PowerShell | 7.6.9 | winget `Microsoft.PowerShell` |
 | gitleaks | 8.30.1 | winget `Gitleaks.Gitleaks` |
 | actionlint | 1.7.12 | winget `rhysd.actionlint` |
 | lychee | 0.24.2 | winget `lycheeverse.lychee` |
 | git, gh, winget | present | OS / GitHub CLI / App Installer |
 
 - Single setup command: `powershell -NoProfile -File Tools/Install-Dependencies.ps1` (`-Check` verifies without changing the host).
-- PowerShell 7.6.8 is the recommended and pinned line; the setup command requests that exact version from winget, so the winget source must publish 7.6.8 before setup can complete.
+- PowerShell 7.6.9 is the recommended and pinned line; the setup command requests that exact version from winget, so the winget source must publish 7.6.9 before setup can complete.
 - No approved project-scope exceptions: everything is global/user-global.
 
 ## Hidden layers - scratch directory name (named here once), cadence for clearing it
