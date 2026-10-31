@@ -487,7 +487,7 @@ Single page: OLED-friendly true black (`#000000`) background, low-blue-light sof
 - The verifier takes both paths as parameters and names neither, and a flag allows a missing mirror where it is intentionally absent, such as CI. A fixture suite pins the behavior: a clean pair, a CRLF mirror, each class of drift, the tolerated granularity, an ordered checklist that keeps, loses, reorders, and drops an anchor, and an absent mirror.
 - A mismatch means drift. Fix it by refreshing the mirror, then setting the reported value in both markers; never by editing one marker to match the other.
 
-<!-- mirror-sync: sync-sha=227c4ce66e4f93baf4a6f762e2240d3c21230109 -->
+<!-- mirror-sync: sync-sha=96eaa2fab258732c07427c04a46195cd3669a8df -->
 
 ---
 
@@ -641,3 +641,121 @@ Runtimes use the current LTS line (Node.js LTS, .NET LTS); build output goes thr
 - `.git/` is the **internal Git repository structure**, not a project config file.
 
 **Guiding rule:** "It looks special" does not mean "It is a standard special file." The meaning of any file is determined by the software that reads and interprets it.
+
+---
+
+# Betikler - project layer
+
+Project facts for this repository. Points at the universal rules above instead of restating them.
+
+## Layout - directory table: path, purpose
+
+| Path | Purpose |
+|------|---------|
+| `Scripts/Bug-Report.ps1` | Only runtime PowerShell logic; HTML report engine, UTF-8 with BOM |
+| `Scripts/*.bat` | Thin wrappers around system tools (`DISM`, `SFC`, `ipconfig`, `winget`); run tools inline |
+| `Tools/Check-Mojibake.ps1` | Developer-side encoding gate; rejects double-encoded text and invalid UTF-8, never makes network calls |
+| `Tools/Invoke-Gate.ps1` | Single local gate command running every CI-declared check |
+| `Tools/Install-Dependencies.ps1` | Single host dependency setup command (per-user scope, `-Check` verifies) |
+| `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`, `WinGet-Upgrade.Tests.ps1`, `Invoke-Gate.Tests.ps1`, `Install-Dependencies.Tests.ps1`, `Repair-Windows.Tests.ps1`) |
+| `.githooks/` | Bundled local hooks; enable with `git config core.hooksPath .githooks` |
+| `.github/` | GitHub quality gates |
+| `Docs/` | Tracked chapters: overview/setup, architecture, troubleshooting |
+| `Planning/` | Work plans and task tracking (assistant-managed) |
+| `Logs/<Name>/` | Runtime output, git-ignored; never committed; each script recreates its folder |
+| `Shortcuts/` | Generated locally per machine, git-ignored |
+| `AGENTS-TR.md` | Untracked local Turkish mirror for human review only; never committed |
+
+## Versions - scheme, current constants, where each is stated
+
+- Scheme: four-part (`v0.1.0.1`, 2026-10-23) stated in `CHANGELOG.md` headings.
+- No version constants in code; `CHANGELOG.md` is the single source.
+
+## Commands - setup, build, test, lint, the single local gate command
+
+Verification on Windows PowerShell 5.1 (Pester 5.7.1 installed):
+
+The single local gate command runs every check CI declares
+(Syntax, Whitespace, Mojibake, Commits, Pester, Hygiene, LinkCheck):
+
+```powershell
+powershell -NoProfile -File Tools/Invoke-Gate.ps1
+```
+
+Individual checks (the same ones the gate runs):
+
+```powershell
+# Regression tests
+powershell -NoProfile -Command "Invoke-Pester -Path ./Tests -Output Detailed"
+
+# Syntax check all PowerShell sources
+powershell -NoProfile -Command "[void][System.Management.Automation.Language.Parser]::ParseFile('Scripts/Bug-Report.ps1', [ref]$null, [ref]$errors); $errors"
+
+# Trailing-whitespace scan (matches the CI gate)
+git show --format= --unified=0 HEAD | Select-String -Pattern '^\+.*[ \t]+$'
+
+# Mojibake / encoding gate (tracked files; also covered by Pester)
+powershell -NoProfile -File Tools/Check-Mojibake.ps1 -Files
+
+# Enable the bundled local hooks
+git config core.hooksPath .githooks
+```
+
+`.bat` files are not covered by Pester; verify them with a dry review of quoted paths and `%ERRORLEVEL%` handling. The GitHub/GitLab validate gates run `Tools/Check-Mojibake.ps1` per push, and a weekly text audit scans the platforms' public fields.
+
+## Naming - per-directory convention table, named exemptions with reasons
+
+| Directory | Convention |
+|-----------|------------|
+| `Scripts/` | `PascalCase-With-Dashes` for `.bat` launchers (`Repair-Windows.bat`); `Bug-Report.ps1` follows the same shape |
+| `Tools/` | `Check-Mojibake.ps1` verb-noun PowerShell idiom |
+| `Tests/` | `<Subject>.Tests.ps1` mirroring the file under test |
+| Root docs | UPPER (`README.md`, `SECURITY.md`, `CHANGELOG.md`, `CODEOWNERS`, platform-fixed names) |
+
+Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Logs/` (runtime output, untracked).
+
+## Transport - per-remote transport and credential source, any pinned override with its reason
+
+- Fetch: `origin` → `https://github.com/bayraktarozcan/Maintenance-Scripts.git`; `gitlab` → `https://gitlab.com/bayraktarozcan/Maintenance-Scripts.git`.
+- Push: `origin` carries two push URLs (GitHub + GitLab); one `git push` publishes to both. `gitlab` pushes to GitLab. Verified with `git remote -v` and `git remote get-url --push --all origin`.
+- Credentials come from the OS credential store (IDE OAuth entries); never pasted, never committed.
+- Pinned override: HTTPS-only. Reason: the owner's explicit decision; no SSH keys are provisioned on this host (`~/.ssh` holds only `known_hosts`), so HTTPS with OS-vault OAuth is the strongest method this environment supports. Meets the floor (TLS 1.2+); the unsafe/legacy ban stands.
+- No mechanical `protocol.*.allow` pins are committed; verification is `git remote -v` plus a push showing each leg.
+
+## Dependencies - host dependency manifest, versions and sources, the single setup command, approved project-scope exceptions with reasons
+
+| Dependency | Version | Source |
+|------------|---------|--------|
+| Pester | 5.7.1 | PSGallery (`Install-Module -Scope CurrentUser`) |
+| PowerShell | 7.6.8 | winget `Microsoft.PowerShell` |
+| gitleaks | 8.30.1 | winget `Gitleaks.Gitleaks` |
+| actionlint | 1.7.12 | winget `rhysd.actionlint` |
+| lychee | 0.24.2 | winget `lycheeverse.lychee` |
+| git, gh, winget | present | OS / GitHub CLI / App Installer |
+
+- Single setup command: `powershell -NoProfile -File Tools/Install-Dependencies.ps1` (`-Check` verifies without changing the host).
+- PowerShell 7.6.8 is the recommended and pinned line; the setup command requests that exact version from winget, so the winget source must publish 7.6.8 before setup can complete.
+- No approved project-scope exceptions: everything is global/user-global.
+
+## Hidden layers - scratch directory name (named here once), cadence for clearing it
+
+- No scratch directory in use. Intermediates stay in `Logs/` (git-ignored, recreated per run) and are removed when the task ends.
+- Local-only layer: `AGENTS-TR.md` (git-ignored via `.gitignore`, never committed, never referenced from committed output beyond the ignore pattern). Whenever `AGENTS.md` changes, regenerate `AGENTS-TR.md` in the same session so the `sync-sha` value matches across both files.
+
+## Toolchain - overrides of the defaults in the appendix, compatibility floor
+
+- Compatibility floor: **Windows PowerShell 5.1** (no PowerShell 7-only syntax).
+- `.bat` launchers never pass `-ExecutionPolicy Bypass`; each resolves one engine per run (`%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe` when it starts, otherwise `pwsh` from PATH, otherwise Windows PowerShell 5.1) and uses it for timestamp, BOM, workload, and drain calls. `Bug-Report.ps1` is called separately (e.g. scheduled task) with `-NoProfile -ExecutionPolicy Bypass -File`.
+- `Bug-Report.ps1` writes output as UTF-8 **with BOM**; do not change encodings.
+- `.gitattributes` enforces `eol=crlf` for `.bat`/`.ps1` and `eol=lf` for `.yml`; `.editorconfig` mirrors those line-ending rules plus indentation.
+
+## Releases - procedure, hosts, parity checks
+
+- Release procedure: update `CHANGELOG.md`, run `Tools/Invoke-Gate.ps1`, commit, create annotated tag `vX.Y.Z.W`, push to both hosts, publish matching releases with the bilingual note, then prefix the previous release title with `[DEPRECATED]`; `CHANGELOG.md` keeps the history (`v0.1.0.1`).
+- `.gitlab-ci.yml` mirrors the GitHub quality gates and runs on GitLab CI. Pipelines trigger on pushes to `main`; the pipeline badge in `README.md` resolves to https://gitlab.com/bayraktarozcan/Maintenance-Scripts/-/pipelines.
+- Commit message style: English, imperative, with a `type:` prefix (`fix:`, `docs:`, `chore:`, `test:`); match the existing Conventional Commits history.
+
+## Bypasses - gates that do not hold by design, and what runs afterward
+
+- Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` is the sole exception (delegates to `winget`).
+- No protected-branch bypass is configured for this repository.
