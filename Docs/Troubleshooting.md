@@ -70,10 +70,11 @@ Microsoft Store. Install it, then re-run; the log captures the exact
 - Older pip versions (< 21.2) do not support `--format=json`. The script falls back to text parsing automatically.
 - If the fallback also returns nothing, all pip packages are up to date.
 
-### `npm outdated -g` shows packages but `npm update -g` does not update them
+### `npm outdated -g` shows packages but they remain after an Update-Components run
 
-- Global npm packages follow caret semver ranges. `npm update -g` only updates within the specified range. To force latest, run `npm install -g <pkg>@latest` manually.
-- The script uses `npm update -g` per npm best practice (see [npm update docs](https://docs.npmjs.com/cli/v10/commands/npm-update#updating-globally-installed-packages)).
+- `Update-Components.ps1` upgrades `npm` with `npm install --global npm@latest`, then upgrades each outdated global package with `npm install --global <pkg>@<latest>` (including major versions). After that it rechecks `npm outdated -g`.
+- A package still listed in `Results` as `Partially updated` means the latest install did not make that package current. Review the package detail in the log/report (for example native build failures, permissions, or a package that cannot be satisfied globally) and run `npm install -g <pkg>@latest` manually for diagnosis.
+- Major-version upgrades can change global CLI behavior; review the plan/details before running without `-Check`.
 
 <a id="tr"></a>
 
@@ -128,7 +129,8 @@ yakalanır.
 - Betik önce `pip list --outdated --format=json` dener. JSON kullanılamazsa veya boş dönerse metin çıktısına düşer ve `Package / Version / Latest / Type` tablosunu ayrıştırır.
 - Proxy, çevrimdışı ortam veya eski indeks boş sonuç verebilir; bağlantıyı doğrulamak için `py -m pip index versions <paket>` çalıştırın.
 
-### `npm outdated -g` paketleri gösteriyor ama `npm update -g` güncellemiyor
+### `npm outdated -g` paketleri gösteriyor ama Update-Components çalıştıktan sonra kalıyor
 
-- Global npm paketleri caret semver aralıklarını takip eder. `npm update -g` sadece belirtilen aralık içine günceller. En son sürüme zorlamak için `npm install -g <pkg>@latest` el ile çalıştırın.
-- Betik npm en iyi uygulaması olarak `npm update -g` kullanır (bkz. [npm update belgeleri](https://docs.npmjs.com/cli/v10/commands/npm-update#updating-globally-installed-packages)).
+- `Update-Components.ps1`, `npm`’i `npm install --global npm@latest` ile yükseltir; sonra eski kalan her global paketi `npm install --global <pkg>@<latest>` ile günceller (major sürümler dâhil). Ardından `npm outdated -g` ile yeniden kontrol eder.
+- `Results` içinde `Partially updated` olarak kalan bir paket, en son kurulumun o paketi güncel yapamadığı anlamına gelir. Günlük/rapordaki paket ayrıntısını inceleyin (ör. yerel derleme hatası, izin sorunu veya global olarak karşılanamayan paket) ve tanı için `npm install -g <pkg>@latest` komutunu el ile çalıştırın.
+- Major sürüm yükseltmeleri global CLI davranışını değiştirebilir; `-Check` olmadan çalıştırmadan önce plan/ayrıntıları gözden geçirin.

@@ -70,7 +70,7 @@ Repair-specific logging:
 - Builds plan table with columns: Component, Action, Current, Target, Details
 
 **Phase 2 — Execution (Result)**:
-- Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`, `pip install --upgrade <pkg>`, `npm update -g`
+- Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`, `pip install --upgrade <pkg>`, `npm install --global npm@latest`, and `npm install --global <pkg>@<latest>` for outdated globals
 - Tracks before/after versions per component
 - Builds result table with columns: Component, Status, Before, After
 - Overall failure tracking; exits 0 on full success, 1 otherwise
@@ -164,7 +164,7 @@ kapsar:
 - Plan tablosu oluşturur: Bileşen, Eylem, Mevcut, Hedef, Detay sütunları
 
 **Aşama 2 — Yürütme (Sonuç)**:
-- Plan başına güncellemeleri uygular: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`, `pip install --upgrade <pkg>`, `npm update -g`
+- Plan başına güncellemeleri uygular: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`, `pip install --upgrade <pkg>`, `npm install --global npm@latest` ve eski kalan global paketler için `npm install --global <pkg>@<latest>`
 - Bileşen başına önceki/sonraki sürümleri takip eder
 - Sonuç tablosu oluşturur: Bileşen, Durum, Önceki, Sonraki sütunları
 - Genel hata takibi; tam başarıda 0, aksi halde 1 ile çıkar

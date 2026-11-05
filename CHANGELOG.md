@@ -16,8 +16,10 @@
 
 **Changed:**
 - The recommended and pinned PowerShell line is 7.6.9; the setup command requests that exact version from winget.
-- `Update-Components.ps1` winget detection uses a hybrid path (optional `Microsoft.WinGet.Client`, fixed-width table parsing, `--upgrade-available`) and resolves Python winget IDs via candidates/query fallback; unparseable target versions are reported honestly (`Denetlenemedi`) instead of claiming up-to-date.
+- `Update-Components.ps1` winget detection uses a hybrid path (optional `Microsoft.WinGet.Client`, fixed-width table parsing, `--upgrade-available`) and resolves Python winget IDs via candidates/query fallback; unparseable target versions are reported honestly (`Unknown`) instead of claiming up-to-date.
 - `Update-Components.ps1` pip target detection prefers `pip install --dry-run --ignore-installed --report` JSON and falls back to `pip index versions` parsing (verified on pip 26.x); `--use-feature=fast-deps` is not used on pip 26.x.
+- `Update-Components.ps1` upgrades `npm` itself and upgrades each outdated global npm package to the latest available version via `npm install --global <pkg>@<latest>` (including major versions), then rechecks `npm outdated -g`; stale/ambiguous results are avoided by parsing `npm outdated -g --json` as an object keyed by package name.
+- `Update-Components.ps1` console output is English-only and includes live checking progress markers (including `Node.js/winget`).
 - Network-activity policy updated to list `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) as the only exceptions; user-facing docs, architecture, and troubleshooting updated.
 
 ### v0.1.0.1 — 2026-10-23
@@ -82,7 +84,7 @@ First release: personal Windows maintenance script collection.
 
 **Değişen:**
 - Önerilen ve sabitlenen PowerShell satırı 7.6.9'dur; kurulum komutu bu tam sürümü winget'ten ister.
-- `Update-Components.ps1` winget algılaması hibrit yol kullanır (opsiyonel `Microsoft.WinGet.Client`, sabit genişlikli tablo ayrıştırma, `--upgrade-available`) ve Python winget ID’lerini aday/sorgu fallback’iyle çözümler; ayrıştırılamayan hedef sürümler “güncel” iddia edilmez, `Denetlenemedi` olarak raporlanır.
+- `Update-Components.ps1` winget algılaması hibrit yol kullanır (opsiyonel `Microsoft.WinGet.Client`, sabit genişlikli tablo ayrıştırma, `--upgrade-available`) ve Python winget ID’lerini aday/sorgu fallback’iyle çözümler; ayrıştırılamayan hedef sürümler “güncel” iddia edilmez, `Unknown` olarak raporlanır.
 - `Update-Components.ps1` pip hedef sürümü önce `pip install --dry-run --ignore-installed --report` JSON’una, sonra `pip index versions` ayrıştırmasına bakar (pip 26.x’te doğrulandı); pip 26.x’te `--use-feature=fast-deps` kullanılmaz.
 - Ağ etkinliği politikası yalnızca `WinGet-Upgrade.bat` ve `Update-Components.bat` (`Tools/Update-Components.ps1` aracılığıyla) istisnalarını listeler; ilgili dokümanlar güncellendi.
 

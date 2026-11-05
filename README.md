@@ -46,6 +46,7 @@ Each script does one job: it runs commands in order and writes output both to th
 4. `Update-Components.bat` upgrades Python/pip and Node.js/npm global packages (user scope). It forwards arguments to `Tools/Update-Components.ps1`.
    Dry-run: `Scripts\Update-Components.bat -Check` or `powershell -NoProfile -File Tools/Update-Components.ps1 -Check`
    JSON report (CI/CD): add `-ReportPath Logs\Update-Components\run.json` (schema v1; works with `-Check` or a real run).
+   Note: global npm packages are upgraded to the latest available version (including major versions) after `npm outdated -g` is rechecked; review `-Check` output first because major upgrades can change global CLI behavior.
 
 ### Rules
 
@@ -87,6 +88,7 @@ Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ek
 4. `Update-Components.bat`, Python/pip ve Node.js/npm global paketlerini yükseltir (kullanıcı kapsamı). Bağımsız değişkenleri `Tools/Update-Components.ps1` betiğine iletir.
    Kuru çalıştırma: `Scripts\Update-Components.bat -Check` veya `powershell -NoProfile -File Tools/Update-Components.ps1 -Check`
    JSON raporu (CI/CD): `-ReportPath Logs\Update-Components\run.json` ekleyin (şema v1; `-Check` veya gerçek çalıştırmayla kullanılabilir).
+   Not: global npm paketleri, `npm outdated -g` yeniden kontrol edildikten sonra en son sürüme yükseltilir (major sürümler dâhil); major yükseltmeler global CLI davranışını değiştirebileceği için önce `-Check` çıktısını gözden geçirin.
 
 ### Kurallar
 

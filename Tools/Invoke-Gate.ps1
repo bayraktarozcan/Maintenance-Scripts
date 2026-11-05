@@ -7,7 +7,7 @@
 #   Commits    - Tools/Check-Mojibake.ps1 -Commits on HEAD (message/author)
 #   Pester     - ./Tests suite (requires Pester 5.7.1)
 #   Hygiene    - actionlint over .github/workflows (required)
-#   LinkCheck  - lychee over './**/*.md' (required; fetches URLs)
+# LinkCheck  - lychee over './**/*.md' (required; fetches URLs over the network)
 # Usage: powershell -NoProfile -File Tools/Invoke-Gate.ps1 [-List]
 # -List prints the check names without running them (for parity tests).
 # Exits 0 when every check passes, 1 otherwise.
@@ -89,6 +89,7 @@ Invoke-GateStep 'Hygiene' {
 }
 
 Invoke-GateStep 'LinkCheck' {
+    Write-Output "[note] LinkCheck fetches URLs over the network."
     if (-not (Get-Command lychee -ErrorAction SilentlyContinue)) {
         throw "lychee is not installed; run Tools/Install-Dependencies.ps1"
     }

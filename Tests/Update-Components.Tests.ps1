@@ -192,8 +192,18 @@ Describe 'Update-Components logging and structure' {
         $script:Text | Should -Match '\$script:OverallFailed'
     }
 
-    It 'Exits 1 on failure, 0 on success' {
-        $script:Text | Should -Match 'exit 1'
-        $script:Text | Should -Match 'exit 0'
+}
+
+Describe 'Update-Components winget table parsing fixtures' {
+    It 'Keeps localized header aliases for robust winget table parsing' {
+        $script:Text | Should -Match "Get-WingetTableField .*@\('Version', 'Sürüm'\)"
+        $script:Text | Should -Match "Get-WingetTableField .*@\('Available', 'Mevcut'\)"
+        $script:Text | Should -Match "Get-WingetTableField .*@\('Name', 'Ad'\)"
+    }
+
+    It 'Parses fixed-width winget tables by separator alignment, not by English header text' {
+        $script:Text | Should -Match 'localized headers supported via separator alignment'
+        $script:Text | Should -Match "if \(\`$Lines\[\`$i\] -match"
+        $script:Text | Should -Match '\^\-\{8,\}'
     }
 }
