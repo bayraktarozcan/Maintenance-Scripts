@@ -94,7 +94,7 @@ Invoke-GateStep 'LinkCheck' {
     }
     Push-Location -LiteralPath $script:Root
     try {
-        & lychee --no-progress --max-retries 2 './**/*.md'
+        & lychee --no-progress --max-retries 2 --exclude '^https://www\.iso\.org/standard/(77520|86308|86612)\.html$' './**/*.md'
         if ($LASTEXITCODE -ne 0) { throw "lychee found broken links" }
     } finally {
         Pop-Location

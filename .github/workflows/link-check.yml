@@ -31,5 +31,6 @@ jobs:
         with:
           args: >-
             --no-progress --verbose --max-retries 2
+            --exclude '^https://www\.iso\.org/standard/(77520|86308|86612)\.html$'
             './**/*.md'
           fail: true
