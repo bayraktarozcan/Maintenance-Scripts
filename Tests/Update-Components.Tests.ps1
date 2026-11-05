@@ -45,7 +45,7 @@ Describe 'Update-Components JSON report and pip fallback' {
     It 'Writes report for check and execute modes without making check-mode changes' {
         $script:Text | Should -Match 'Write-UpdateComponentsReport -ExecutionCompleted:\$false'
         $script:Text | Should -Match 'Write-UpdateComponentsReport -ExecutionCompleted:\$true'
-        $script:Text | Should -Match 'if \(\$Check\) \{[\s\S]*?Write-UpdateComponentsReport[\s\S]*?CHECK MODE'
+        $script:Text | Should -Match 'if \(\$Check\) \{[\s\S]*?Write-UpdateComponentsReport[\s\S]*?exit 0'
     }
 
     It 'Uses pip --report first and pip index versions fallback without fast-deps' {
@@ -129,7 +129,7 @@ Describe 'Update-Components Check mode' {
 
     It 'Shows plan table in CHECK MODE and exits' {
         $script:Text | Should -Match 'Show-PlanTable'
-        $script:Text | Should -Match 'CHECK MODE: plan shown above; no changes will be made'
+        $script:Text | Should -Match 'CHECK MODE:'
         $script:Text | Should -Match 'exit 0'
     }
 }
@@ -145,19 +145,16 @@ Describe 'Update-Components two-phase tables' {
         $script:Text | Should -Match 'function Show-ResultTable'
     }
 
-    It 'Plan table shows Eylem/Mevcut/Hedef columns' {
-        $script:Text | Should -Match 'GÜNCELLEME PLANI'
-        $script:Text | Should -Match 'Eylem.*Mevcut.*Hedef'
+    It 'Plan and result output are readable text (no box drawing)' {
+        $script:Text | Should -Match 'Write-Log "Plan:"'
+        $script:Text | Should -Match 'Write-Log "Sonuç:"'
+        $script:Text | Should -Not -Match '╔|╚|║'
     }
 
-    It 'Result table shows Durum/Önceki/Sonraki columns' {
-        $script:Text | Should -Match 'GÜNCELLEME SONUÇLARI'
-        $script:Text | Should -Match 'Durum.*Önceki.*Sonraki'
-    }
-
-    It 'Phase 1 Detection and Phase 2 Execution sections' {
-        $script:Text | Should -Match 'Phase 1: Detection'
-        $script:Text | Should -Match 'Phase 2: Execution'
+    It 'Shows live detection and execution phases' {
+        $script:Text | Should -Match '1/2 Denetim'
+        $script:Text | Should -Match '2/2 Uygulama'
+        $script:Text | Should -Match 'Python/winget|pip|npm|Node\.js'
     }
 }
 

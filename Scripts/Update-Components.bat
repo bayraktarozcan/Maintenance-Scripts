@@ -30,10 +30,7 @@ echo.
 echo. >> "%LOG%"
 echo ^> Update-Components.ps1 %*
 >>"%LOG%" echo ^> Update-Components.ps1 %*
-"%PSEXE%" -NoProfile -File "%SCRIPT%" %* > "%TEMP%\uc_out.tmp" 2>&1
-type "%TEMP%\uc_out.tmp"
-type "%TEMP%\uc_out.tmp" >> "%LOG%" 2>&1
-del "%TEMP%\uc_out.tmp" >nul 2>&1
+"%PSEXE%" -NoProfile -File "%SCRIPT%" %* 2>&1 | "%PSEXE%" -NoProfile -Command "$input | ForEach-Object { $_; [IO.File]::AppendAllText($env:LOG, $_ + [Environment]::NewLine, [Text.UTF8Encoding]::new($false)) }"
 echo.
 echo. >> "%LOG%"
 echo.

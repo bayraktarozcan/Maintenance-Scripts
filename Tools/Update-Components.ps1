@@ -93,8 +93,14 @@ $script:Result = @(
 
 function Write-Log {
     param([string]$Message, [string]$Level = 'INFO')
-    $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-    Write-Host "[$timestamp] [$Level] $Message"
+    $timestamp = Get-Date -Format 'HH:mm:ss'
+    if ($Level -eq 'DEBUG') {
+        Write-Host "[$timestamp] $Message" -ForegroundColor DarkGray
+    } elseif ($Level -eq 'WARN' -or $Level -eq 'ERROR') {
+        Write-Host "[$timestamp] [$Level] $Message" -ForegroundColor Yellow
+    } else {
+        Write-Host "[$timestamp] $Message"
+    }
 }
 
 function Test-Command {
@@ -422,50 +428,36 @@ function Set-Result {
 }
 
 function Show-PlanTable {
-    Write-Log "" 'INFO'
-    Write-Log "╔════════════════════════════════════════════════════════════════════════════════════════╗" 'INFO'
-    Write-Log "║                            GÜNCELLEME PLANI                                            ║" 'INFO'
-    Write-Log "╠═════════════════════════════════════════════════════════════════════════════════════════╣" 'INFO'
-    Write-Log "║ Bileşen              │ Eylem          │ Mevcut        │ Hedef          ║" 'INFO'
-    Write-Log "╠═════════════════════════════════════════════════════════════════════════════════════════╣" 'INFO'
+    Write-Log ""
+    Write-Log "Plan:"
     foreach ($row in $script:Plan) {
-        $comp = $row.Component.PadRight(20)
-        $act  = $row.Action.PadRight(14)
-        $cur  = $row.Current.PadRight(13)
-        $tgt  = $row.Target.PadRight(13)
-        Write-Log "║ $comp │ $act │ $cur │ $tgt ║" 'INFO'
+        $detail = if ($row.Details) { " ($($row.Details))" } else { '' }
+        Write-Log "  * $($row.Component): $($row.Action)  [$($row.Current) -> $($row.Target)]$detail"
     }
-    Write-Log "╚═════════════════════════════════════════════════════════════════════════════════════════╝" 'INFO'
-    Write-Log "" 'INFO'
+    Write-Log ""
 }
 
 function Show-ResultTable {
-    Write-Log "" 'INFO'
-    Write-Log "╔══════════════════════════════════════════════════════════════════════════════════════════╗" 'INFO'
-    Write-Log "║                            GÜNCELLEME SONUÇLARI                                          ║" 'INFO'
-    Write-Log "╠══════════════════════════════════════════════════════════════════════════════════════════╣" 'INFO'
-    Write-Log "║ Bileşen              │ Durum          │ Önceki        │ Sonraki        ║" 'INFO'
-    Write-Log "╠═════════════════════════════════════════════════════════════════════════════════════════╣" 'INFO'
+    Write-Log ""
+    Write-Log "Sonuç:"
     foreach ($row in $script:Result) {
-        $comp = $row.Component.PadRight(20)
-        $stat = $row.Status.PadRight(14)
-        $bef  = $row.Before.PadRight(13)
-        $aft  = $row.After.PadRight(13)
-        Write-Log "║ $comp │ $stat │ $bef │ $aft ║" 'INFO'
+        $detail = if ($row.Details) { " ($($row.Details))" } else { '' }
+        $after = if ($row.After) { $row.After } elseif ($row.Before) { $row.Before } else { '' }
+        Write-Log "  * $($row.Component): $($row.Status)  [$after]$detail"
     }
-    Write-Log "╚═════════════════════════════════════════════════════════════════════════════════════════╝" 'INFO'
-    Write-Log "" 'INFO'
+    Write-Log ""
 }
 
-Write-Log "Starting global package updates" 'INFO'
+Write-Log "Bileşen güncelleyici" 'INFO'
 if ($Check) { Write-Log "CHECK MODE: no changes will be made" 'INFO' }
 
 # ============================================================
 # PHASE 1: DETECTION — Build the PLAN (what WILL be updated)
 # ============================================================
-Write-Log "=== Phase 1: Detection (building update plan) ===" 'INFO'
+Write-Log "1/2 Denetim..." 'INFO'
 
 # --- Python runtime ---
+Write-Log "  - Python/winget" 'INFO'
 $pyWingetId = $null
 $pyCurrent = 'unknown'
 if (Test-Command 'winget' -and (Test-Command 'py')) {
@@ -488,6 +480,7 @@ if (Test-Command 'winget' -and (Test-Command 'py')) {
     Set-Plan 'Python runtime' 'Atlandı' '' '' $(if (-not (Test-Command 'winget')) { 'winget yok' } else { 'py yok' })
 }
 
+Write-Log "  - pip" 'INFO'
 # --- pip ---
 $pipCurrent = 'unknown'
 if (Test-Command 'py') {
@@ -560,6 +553,7 @@ if (Test-Command 'winget' -and (Test-Command 'node')) {
 }
 
 # --- npm ---
+Write-Log "  - npm" 'INFO'
 $npmCurrent = 'unknown'
 if (Test-Command 'npm') {
     $npmCurrent = Get-NpmVersion
@@ -602,7 +596,7 @@ if ($Check) {
 # ============================================================
 # PHASE 2: EXECUTION — Apply updates and build RESULTS
 # ============================================================
-Write-Log "=== Phase 2: Execution (applying updates) ===" 'INFO'
+Write-Log "2/2 Uygulama..." 'INFO'
 
 $script:OverallFailed = $false
 
@@ -735,7 +729,7 @@ Show-ResultTable
 $script:ExecutionCompleted = $true
 Write-UpdateComponentsReport -ExecutionCompleted:$true | Out-Null
 
-Write-Log "=== Update Summary ===" 'INFO'
+Write-Log "Özet" 'INFO'
 if ($script:OverallFailed) {
     Write-Log "Some updates failed or were skipped; review the log above" 'WARN'
     exit 1
