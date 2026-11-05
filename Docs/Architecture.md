@@ -50,7 +50,37 @@ Repair-specific logging:
 - `Clear-DnsClientCache.bat` (1 step): `Clear-DnsClientCache`.
 - `WinGet-Upgrade.bat` (2 steps): `winget source update`, then
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
-  This is the only script with network activity (delegated to `winget`).
+  This script has network activity (delegated to `winget`).
+- `Update-Components.bat` (launcher for `Tools/Update-Components.ps1`): resolves the PowerShell engine, sets up logging, forwards any arguments (including `-Check`), then calls the PS script which runs a two-phase update:
+  1. **Detection phase**: checks `winget` for Python/Node.js runtime updates, `pip`/`npm` for package manager self-updates, `pip list --outdated --format=json` and `npm outdated -g --json` for global packages. Builds a plan table.
+  2. **Execution phase**: applies updates and builds a result table. Runs entirely in user scope; never self-elevates. Supports `-Check` dry-run mode that shows the plan and exits.
+  Network activity: `winget list --id`, `pip`/`npm` registry queries.
+
+### Component updater engine
+
+`Tools/Update-Components.ps1` implements a two-phase update pipeline with structured logging and plan/result tables:
+
+**Phase 1 — Detection (Plan)**:
+- Python runtime: `winget list --id Python.Python.X.Y --exact` → available version
+- pip self: `pip install --upgrade --dry-run --ignore-installed --report` → JSON report for target version
+- pip packages: `pip list --outdated --format=json` → array of `{name, version, latest_version}`
+- Node.js runtime: `winget list --id OpenJS.NodeJS.LTS --exact` → available version
+- npm self: `npm view npm@latest version` → latest version
+- npm packages: `npm outdated -g --json` → array of `{name, current, wanted, latest}`
+- Builds plan table with columns: Component, Action, Current, Target, Details
+
+**Phase 2 — Execution (Result)**:
+- Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`, `pip install --upgrade <pkg>`, `npm update -g`
+- Tracks before/after versions per component
+- Builds result table with columns: Component, Status, Before, After
+- Overall failure tracking; exits 0 on full success, 1 otherwise
+
+**Conventions**:
+- UTF-8 BOM logs under `Logs/Update-Components/` with `index.txt` ledger
+- No elevation; all commands run in user scope
+- `-Check` mode: runs Phase 1 only, shows plan, exits 0
+- Winget "already up to date" negative exit codes treated as success
+- npm warning exit codes (1 with `npm warn` output) treated as success
 
 ### Report engine
 
@@ -114,7 +144,37 @@ kapsar:
 - `Clear-DnsClientCache.bat` (1 adım): `Clear-DnsClientCache`.
 - `WinGet-Upgrade.bat` (2 adım): `winget source update`, sonra
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
-  Ağ etkinliği olan tek betik budur (`winget`'e delege edilir).
+  Ağ etkinliği olan betiklerden biridir (`winget`'e delege edilir).
+- `Update-Components.bat` (`Tools/Update-Components.ps1` başlatıcısı): PowerShell motorunu çözümler, günlüklemeyi kurar, bağımsız değişkenleri (`-Check` dâhil) iletir, PS betiğini çağırır. PS betiği iki aşamalı güncelleme çalıştırır:
+  1. **Tespit aşaması**: Python/Node.js çalışma zamanı güncellemeleri için `winget list --id`, pip/npm için paket yöneticisi kendini-güncelleme, `pip list --outdated --format=json` ve `npm outdated -g --json` ile global paketler. Plan tablosu oluşturur.
+  2. **Yürütme aşaması**: Güncellemeleri uygular ve sonuç tablosu oluşturur. Tamamen kullanıcı kapsamında koşur; asla kendini yükseltmez. `-Check` kuru çalıştırma (dry-run) modu planı gösterip çıkar.
+  Ağ etkinliği: `winget list --id`, `pip`/`npm` kayıt sorguları.
+
+### Bileşen güncelleyici motoru
+
+`Tools/Update-Components.ps1` yapılandırılmış günlükleme ve plan/sonuç tabloları ile iki aşamalı güncelleme işlem hattı uygular:
+
+**Aşama 1 — Tespit (Plan)**:
+- Python çalışma zamanı: `winget list --id Python.Python.X.Y --exact` → mevcut sürüm
+- pip kendisi: `pip install --upgrade --dry-run --ignore-installed --report` → JSON raporu hedef sürüm için
+- pip paketleri: `pip list --outdated --format=json` → `{name, version, latest_version}` dizisi
+- Node.js çalışma zamanı: `winget list --id OpenJS.NodeJS.LTS --exact` → mevcut sürüm
+- npm kendisi: `npm view npm@latest version` → en son sürüm
+- npm paketleri: `npm outdated -g --json` → `{name, current, wanted, latest}` dizisi
+- Plan tablosu oluşturur: Bileşen, Eylem, Mevcut, Hedef, Detay sütunları
+
+**Aşama 2 — Yürütme (Sonuç)**:
+- Plan başına güncellemeleri uygular: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`, `pip install --upgrade <pkg>`, `npm update -g`
+- Bileşen başına önceki/sonraki sürümleri takip eder
+- Sonuç tablosu oluşturur: Bileşen, Durum, Önceki, Sonraki sütunları
+- Genel hata takibi; tam başarıda 0, aksi halde 1 ile çıkar
+
+**Kurallar**:
+- `Logs/Update-Components/` altına UTF-8 BOM'lu günlükler ve `index.txt` defteri
+- Yükseltme yok; tüm komutlar kullanıcı kapsamında koşur
+- `-Check` modu: sadece Aşama 1 çalışır, plan gösterilir, 0 ile çıkar
+- Winget "zaten güncel" negatif çıkış kodları başarı sayılır
+- npm uyarı çıkış kodları (1 + `npm warn` çıktısı) başarı sayılır
 
 ### Rapor motoru
 

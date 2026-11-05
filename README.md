@@ -32,16 +32,20 @@ Each script does one job: it runs commands in order and writes output both to th
 | `Repair-Windows.bat` | DISM + SFC + WinSxS maintenance (includes ResetBase) |
 | `Reset-Windows-Update.bat` | Reset Windows Update components |
 | `Clear-DnsClientCache.bat` | Flush DNS cache |
-| `WinGet-Upgrade.bat` | Upgrade all packages |
+| `WinGet-Upgrade.bat` | Upgrade all packages (winget) |
+| `Update-Components.bat` | Upgrade Python/pip and Node.js/npm global packages |
 | `Bug-Report.ps1` | Event log HTML report (`-Period Daily, Weekly, Monthly`) |
 
 ### Usage
-
+ 
 1. Run `Scripts/<name>.bat` as administrator (right-click → Run as administrator); only `Repair-Windows.bat` and `Reset-Windows-Update.bat` require it.
 2. Each script logs under `Logs/<Script-Name>/`; every folder keeps an `index.txt` run ledger.
 3. `Bug-Report.ps1` runs on a schedule:
    `pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
    (use `powershell.exe` on a host without PowerShell 7)
+4. `Update-Components.bat` upgrades Python/pip and Node.js/npm global packages (user scope). It forwards arguments to `Tools/Update-Components.ps1`; dry-run mode:
+   `Scripts\Update-Components.bat -Check`
+   or `powershell -NoProfile -File Tools/Update-Components.ps1 -Check`
 
 ### Rules
 
@@ -69,16 +73,20 @@ Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ek
 | `Repair-Windows.bat` | DISM + SFC + WinSxS bakımı (ResetBase dahil) |
 | `Reset-Windows-Update.bat` | Windows Update bileşenlerini sıfırlama |
 | `Clear-DnsClientCache.bat` | DNS önbelleğini temizleme |
-| `WinGet-Upgrade.bat` | Tüm paketleri yükseltme |
+| `WinGet-Upgrade.bat` | Tüm paketleri yükseltme (winget) |
+| `Update-Components.bat` | Python/pip ve Node.js/npm global paketlerini yükseltme |
 | `Bug-Report.ps1` | Olay günlüğü HTML raporu (`-Period Daily, Weekly, Monthly`) |
 
 ### Kullanım
-
+ 
 1. `Scripts/` klasöründeki betiği yönetici olarak çalıştırın (sağ tık → Yönetici olarak çalıştır); bunu yalnızca `Repair-Windows.bat` ve `Reset-Windows-Update.bat` gerektirir.
 2. Her betik günlüğünü `Logs/<Betik-Adı>/` altına yazar; her klasörde `index.txt` koşu dökümünü tutar.
 3. `Bug-Report.ps1` Zamanlayıcı ile koşar:
    `pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
    (PowerShell 7 yoksa `powershell.exe` kullanın)
+4. `Update-Components.bat`, Python/pip ve Node.js/npm global paketlerini yükseltir (kullanıcı kapsamı). Bağımsız değişkenleri `Tools/Update-Components.ps1` betiğine iletir; kuru çalıştırma (dry-run) modu:
+   `Scripts\Update-Components.bat -Check`
+   veya `powershell -NoProfile -File Tools/Update-Components.ps1 -Check`
 
 ### Kurallar
 

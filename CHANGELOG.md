@@ -10,8 +10,13 @@
 
 ### Unreleased
 
+**Added:**
+- `Update-Components.bat` / `Tools/Update-Components.ps1` — user-scope updater for Python/pip and Node.js/npm global packages, with `-Check` dry-run, plan/result tables, and `Scripts/Update-Components.bat -Check` argument forwarding.
+- Static Pester coverage for `Update-Components.ps1` and `Update-Components.bat` launcher contract.
+
 **Changed:**
 - The recommended and pinned PowerShell line is 7.6.9; the setup command requests that exact version from winget.
+- Network-activity policy updated to list `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) as the only exceptions; user-facing docs, architecture, and troubleshooting updated.
 
 ### v0.1.0.1 — 2026-10-23
 

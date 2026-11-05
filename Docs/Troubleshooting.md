@@ -39,10 +39,26 @@ Logs are UTF-8 with BOM. Open them in an editor that honors the BOM
 consoles, redirect to the log file and read it there.
 
 ### `winget` not found
-
+ 
 `WinGet-Upgrade.bat` needs the App Installer (`winget`) from the
 Microsoft Store. Install it, then re-run; the log captures the exact
 `winget` error text.
+
+### `Update-Components.ps1` reports "Python launcher (py) not found" / "npm not found" / "winget not found"
+
+- The script checks for `py`, `npm`, and `winget` via `Get-Command`. If one is missing, that component is skipped and marked `Atlandı` (Skipped) in the plan/result tables.
+- Install the missing tool: Python from winget (`Python.Python.3.15`), Node.js from winget (`OpenJS.NodeJS.LTS`), or winget itself from the Microsoft Store.
+- The script exits 0 only if all requested components succeed; missing tools mark the overall run as failed unless `-Check` is used.
+
+### `pip list --outdated --format=json` fails or returns nothing
+
+- Older pip versions (< 21.2) do not support `--format=json`. The script falls back to text parsing automatically.
+- If the fallback also returns nothing, all pip packages are up to date.
+
+### `npm outdated -g` shows packages but `npm update -g` does not update them
+
+- Global npm packages follow caret semver ranges. `npm update -g` only updates within the specified range. To force latest, run `npm install -g <pkg>@latest` manually.
+- The script uses `npm update -g` per npm best practice (see [npm update docs](https://docs.npmjs.com/cli/v10/commands/npm-update#updating-globally-installed-packages)).
 
 <a id="tr"></a>
 
@@ -81,7 +97,23 @@ Günlükler BOM'lu UTF-8'dir. BOM'a saygı duyan bir düzenleyicide açın
 konsollarda çıktıyı günlük dosyasına yönlendirip oradan okuyun.
 
 ### `winget` bulunamıyor
-
+ 
 `WinGet-Upgrade.bat`, Microsoft Store'dan App Installer (`winget`)
 ister. Kurup yeniden çalıştırın; tam `winget` hata metni günlükte
 yakalanır.
+
+### `Update-Components.ps1` "Python launcher (py) not found" / "npm not found" / "winget not found" bildiriyor
+
+- Betik `py`, `npm` ve `winget` komutlarını `Get-Command` ile kontrol eder. Biri yoksa ilgili bileşen atlanır ve plan/sonuç tablolarında `Atlandı` olarak işaretlenir.
+- Eksik aracı kurun: Python winget'ten (`Python.Python.3.15`), Node.js winget'ten (`OpenJS.NodeJS.LTS`), veya winget'i Microsoft Store'dan.
+- Betik, tüm istenen bileşenler başarılı olduğunda 0 ile çıkar; eksik araçlar `-Check` kullanılmadıkça genel çalışmayı başarısız sayar.
+
+### `pip list --outdated --format=json` başarısız oluyor ya da boş dönüyor
+
+- Eski pip sürümleri (< 21.2) `--format=json` desteklemez. Betik otomatik olarak metin ayrıştırmaya (fallback) düşer.
+- Fallback da boş dönüyorsa tüm pip paketleri zaten günceldir.
+
+### `npm outdated -g` paketleri gösteriyor ama `npm update -g` güncellemiyor
+
+- Global npm paketleri caret semver aralıklarını takip eder. `npm update -g` sadece belirtilen aralık içine günceller. En son sürüme zorlamak için `npm install -g <pkg>@latest` el ile çalıştırın.
+- Betik npm en iyi uygulaması olarak `npm update -g` kullanır (bkz. [npm update belgeleri](https://docs.npmjs.com/cli/v10/commands/npm-update#updating-globally-installed-packages)).

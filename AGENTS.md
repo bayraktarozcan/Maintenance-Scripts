@@ -755,7 +755,7 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 
 ## Bypasses - gates that do not hold by design, and what runs afterward
 
-- Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` is the sole exception (delegates to `winget`).
+- Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) are the only exceptions: they delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; they never upload or transmit user data and write no registry keys.
 - No protected-branch bypass is configured for this repository.
 
-<!-- mirror-sync: sync-sha=0a6420ea944ee3aef1c6ec54f940f934dd60416d -->
+<!-- mirror-sync: sync-sha=a6b5254a3c331cc09eb113fe7f3900a379390431 -->
