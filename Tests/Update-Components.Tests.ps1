@@ -2,7 +2,7 @@
 # Runtime behavior is verified manually; these tests pin the standing
 # contract: no self-elevation, no execution-policy bypass, UTF-8 BOM logging,
 # -Check mode, two-phase Plan/Result tables, Python/Node runtime updates via winget,
-# robust winget table parsing (--upgrade-available + fixed-width + honest Denetlenemedi),
+# robust winget table parsing (--upgrade-available + fixed-width + honest Unknown status),
 # Python winget ID resolution (Get-PythonWingetId/Resolve-PythonWingetPackage),
 # pip JSON fallback text parsing, npm post-update recheck, and command patterns.
 # Never executes the script or package managers.
@@ -92,8 +92,10 @@ Describe 'Update-Components command patterns' {
         $script:Text | Should -Match '@\(.+install.+--global.+npm@latest'
     }
 
-    It 'Updates global npm packages' {
-        $script:Text | Should -Match '@\(.+update.+--global'
+    It 'Upgrades global npm packages to latest' {
+        $script:Text | Should -Match 'npm.+install.+--global.+\$name@\$toVer'
+        $script:Text | Should -Match 'Get-NpmOutdatedGlobal'
+        $script:Text | Should -Not -Match "npm', @\('update', '--global'\)"
     }
 
     It 'Upgrades Node.js LTS via winget' {
@@ -109,8 +111,8 @@ Describe 'Update-Components command patterns' {
         $script:Text | Should -Match 'function Get-WingetPackageStatus'
         $script:Text | Should -Match '--upgrade-available'
         $script:Text | Should -Match 'Microsoft\.WinGet\.Client'
-        $script:Text | Should -Match 'Denetlenemedi'
-        $script:Text | Should -Match 'hedef sürüm denetlenemedi'
+        $script:Text | Should -Match "'Unknown'|Unknown"
+        $script:Text | Should -Match 'target version not determined'
     }
 
     It 'Retains Check-WingetUpdateAvailable compatibility wrapper' {
@@ -147,13 +149,13 @@ Describe 'Update-Components two-phase tables' {
 
     It 'Plan and result output are readable text (no box drawing)' {
         $script:Text | Should -Match 'Write-Log "Plan:"'
-        $script:Text | Should -Match 'Write-Log "Sonuç:"'
+        $script:Text | Should -Match 'Write-Log "Results:"'
         $script:Text | Should -Not -Match '╔|╚|║'
     }
 
     It 'Shows live detection and execution phases' {
-        $script:Text | Should -Match '1/2 Denetim'
-        $script:Text | Should -Match '2/2 Uygulama'
+        $script:Text | Should -Match '1/2 Checking'
+        $script:Text | Should -Match '2/2 Applying'
         $script:Text | Should -Match 'Python/winget|pip|npm|Node\.js'
     }
 }
