@@ -24,11 +24,36 @@ Describe 'Update-Components static hygiene' {
 
     It 'Uses CmdletBinding and Stop error action' {
         $script:Text | Should -Match '\[CmdletBinding\(\)\]'
-        $script:Text | Should -Match '\$ErrorActionPreference = .Stop.'
+        $script:Text | Should -Match '\$ErrorActionPreference\s*=\s*.Stop.'
     }
 
-    It 'Declares -Check switch parameter' {
+    It 'Declares -Check and -ReportPath parameters' {
         $script:Text | Should -Match '\[switch\]\$Check'
+        $script:Text | Should -Match '\[string\]\$ReportPath'
+    }
+}
+
+Describe 'Update-Components JSON report and pip fallback' {
+    It 'Defines JSON report writer and schema fields' {
+        $script:Text | Should -Match 'function Write-UpdateComponentsReport'
+        $script:Text | Should -Match 'schemaVersion\s*=\s*1'
+        $script:Text | Should -Match 'executionCompleted'
+        $script:Text | Should -Match "ConvertTo-Json -Depth 8"
+        $script:Text | Should -Match 'JSON report written'
+    }
+
+    It 'Writes report for check and execute modes without making check-mode changes' {
+        $script:Text | Should -Match 'Write-UpdateComponentsReport -ExecutionCompleted:\$false'
+        $script:Text | Should -Match 'Write-UpdateComponentsReport -ExecutionCompleted:\$true'
+        $script:Text | Should -Match 'if \(\$Check\) \{[\s\S]*?Write-UpdateComponentsReport[\s\S]*?CHECK MODE'
+    }
+
+    It 'Uses pip --report first and pip index versions fallback without fast-deps' {
+        $script:Text | Should -Match 'pip install --upgrade --dry-run --ignore-installed --report'
+        $script:Text | Should -Match "function Get-LatestFromIndexVersions"
+        $script:Text | Should -Match 'py -m pip index versions pip'
+        $script:Text | Should -Match 'fast-deps is not a supported --use-feature on pip 26\.x'
+        $script:Text | Should -Not -Match '--use-feature(?:=|\s+)fast-deps'
     }
 }
 

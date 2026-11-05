@@ -50,10 +50,11 @@ folder on first use; runtime output lives under `Logs/<Name>/` and is never
 committed (see [`.gitignore`](../.gitignore)). For local development hooks,
 see [CONTRIBUTING.md](../CONTRIBUTING.md).
  
-`Update-Components.ps1` runs directly (dry-run with `-Check`):
- 
+`Update-Components.ps1` runs directly (dry-run with `-Check`), and can emit a JSON report for CI/CD (`schemaVersion` 1, `mode`, `plan`, `result`, `success`):
+
 ```powershell
 powershell -NoProfile -File Tools/Update-Components.ps1 -Check
+powershell -NoProfile -File Tools/Update-Components.ps1 -Check -ReportPath Logs/Update-Components/report.json
 ```
 
 <a id="tr"></a>

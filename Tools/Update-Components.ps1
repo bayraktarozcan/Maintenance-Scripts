@@ -14,14 +14,62 @@
 
 .EXAMPLE
     powershell -NoProfile -File Tools/Update-Components.ps1 -Check
+
+.EXAMPLE
+    powershell -NoProfile -File Tools/Update-Components.ps1 -ReportPath Logs\Update-Components\run.json
 #>
 
 [CmdletBinding()]
 param(
-    [switch]$Check
+    [switch]$Check,
+    [string]$ReportPath
 )
 
 $ErrorActionPreference = 'Stop'
+
+function Get-LatestFromIndexVersions {
+    param([string]$Text)
+    # pip index versions output (pip 26.x): "Available versions: 26.3, 26.2.2, ..."
+    $m = [regex]::Match([string]$Text, '(?im)^(?:Available versions|LATEST)\s*:\s*([^\r\n,]+)')
+    if ($m.Success) { return $m.Groups[1].Value.Trim() }
+    $m = [regex]::Match([string]$Text, '(?im)Available versions\s*:\s*([^\r\n,]+)')
+    if ($m.Success) { return $m.Groups[1].Value.Trim() }
+    return $null
+}
+
+function Write-UpdateComponentsReport {
+    param([bool]$ExecutionCompleted)
+    $report = [ordered]@{
+        schemaVersion       = 1
+        tool                = 'Update-Components'
+        timestamp           = (Get-Date).ToString('o')
+        mode                = $(if ($Check) { 'check' } else { 'execute' })
+        executionCompleted  = $ExecutionCompleted
+        host                = [ordered]@{
+            machine    = $env:COMPUTERNAME
+            user       = $env:USERNAME
+            psVersion  = $PSVersionTable.PSVersion.ToString()
+            pipVersion = $(if (Test-Command 'py') { Get-PipVersion } else { $null })
+        }
+        plan                = @($script:Plan | ForEach-Object { [ordered]@{ component=$_.Component; action=$_.Action; current=$_.Current; target=$_.Target; details=$_.Details } })
+        result              = @($script:Result | ForEach-Object { [ordered]@{ component=$_.Component; status=$_.Status; before=$_.Before; after=$_.After; details=$_.Details } })
+        success             = (-not $script:OverallFailed)
+        exitCode            = $(if ($script:OverallFailed) { 1 } else { 0 })
+    }
+    if (-not $ReportPath) { return $report }
+    try {
+        $rp = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ReportPath)
+        $dir = [System.IO.Path]::GetDirectoryName($rp)
+        if ($dir -and -not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        $json = $report | ConvertTo-Json -Depth 8
+        [System.IO.File]::WriteAllText($rp, $json, [System.Text.UTF8Encoding]::new($false))
+        Write-Log "JSON report written: $rp" 'INFO'
+    } catch {
+        Write-Log "Failed to write JSON report ($ReportPath): $($_.Exception.Message)" 'WARN'
+        $script:OverallFailed = $true
+    }
+    return $report
+}
 
 # Plan collector (what WILL be updated - detection phase)
 $script:Plan = @(
@@ -446,28 +494,34 @@ if (Test-Command 'py') {
     $pipCurrent = Get-PipVersion
     # Check if pip upgrade available - use pip install --upgrade --dry-run --report for reliable JSON
     $pipLatest = $null
+    $pipLatestSource = $null
     try {
-        $reportPath = [System.IO.Path]::GetTempFileName()
-        $out = py -m pip install --upgrade --dry-run --ignore-installed --report $reportPath pip 2>&1
-        if ($LASTEXITCODE -eq 0 -and (Test-Path $reportPath)) {
-            $report = Get-Content $reportPath -Raw | ConvertFrom-Json
-            if ($report.install -and $report.install.Count -gt 0) {
-                $pipLatest = $report.install[0].requested_version
-            }
+        $pipReportTemp = [System.IO.Path]::GetTempFileName()
+        $out = py -m pip install --upgrade --dry-run --ignore-installed --report $pipReportTemp pip 2>&1
+        if ($LASTEXITCODE -eq 0 -and (Test-Path $pipReportTemp)) {
+            $pipReport = Get-Content $pipReportTemp -Raw | ConvertFrom-Json
+            $inst = @($pipReport.install) | Where-Object { $_.metadata.name -eq 'pip' } | Select-Object -First 1
+            if (-not $inst -and $pipReport.install -and $pipReport.install.Count -gt 0) { $inst = $pipReport.install[0] }
+            if ($inst -and $inst.metadata.version) { $pipLatest = [string]$inst.metadata.version; $pipLatestSource = 'pip --report' }
         }
-        Remove-Item $reportPath -ErrorAction SilentlyContinue
-    } catch { }
+        Remove-Item $pipReportTemp -ErrorAction SilentlyContinue
+    } catch { Remove-Item $pipReportTemp -ErrorAction SilentlyContinue }
     if (-not $pipLatest) {
-        # Fallback: check via pip index versions
+        # Fallback: pip index versions (verified pip 26.x: "Available versions: <latest>, ...").
+        # fast-deps is not a supported --use-feature on pip 26.x; avoid speculative flags.
         try {
-            $out = py -m pip index versions pip 2>$null | Select-String -Pattern 'Available versions:\s+([\d.]+)'
-            if ($out) { $pipLatest = $out.Matches[0].Groups[1].Value }
+            $idxOut = (py -m pip index versions pip 2>&1 | Out-String)
+            $pipLatest = Get-LatestFromIndexVersions -Text $idxOut
+            if ($pipLatest) { $pipLatestSource = 'pip index versions' }
         } catch { }
     }
+    $pipDetail = if ($pipLatestSource) { "kaynak: $pipLatestSource" } else { 'pip hedef sürümü denetlenemedi' }
     if ($pipLatest -and $pipLatest -ne $pipCurrent) {
-        Set-Plan 'pip' 'Güncellenecek' $pipCurrent $pipLatest
+        Set-Plan 'pip' 'Güncellenecek' $pipCurrent $pipLatest $pipDetail
+    } elseif ($pipLatest) {
+        Set-Plan 'pip' 'Zaten güncel' $pipCurrent $pipCurrent $pipDetail
     } else {
-        Set-Plan 'pip' 'Zaten güncel' $pipCurrent $pipCurrent
+        Set-Plan 'pip' 'Denetlenemedi' $pipCurrent '' $pipDetail
     }
 } else {
     Set-Plan 'pip' 'Atlandı' '' '' 'py yok'
@@ -540,6 +594,7 @@ if (Test-Command 'npm') {
 Show-PlanTable
 
 if ($Check) {
+    Write-UpdateComponentsReport -ExecutionCompleted:$false | Out-Null
     Write-Log "CHECK MODE: plan shown above; no changes will be made" 'INFO'
     exit 0
 }
@@ -676,6 +731,9 @@ if ($npmPkgRow.Action -eq 'Güncellenecek') {
 # FINAL: Show results
 # ============================================================
 Show-ResultTable
+
+$script:ExecutionCompleted = $true
+Write-UpdateComponentsReport -ExecutionCompleted:$true | Out-Null
 
 Write-Log "=== Update Summary ===" 'INFO'
 if ($script:OverallFailed) {

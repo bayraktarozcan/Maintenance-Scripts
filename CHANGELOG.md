@@ -11,11 +11,13 @@
 ### Unreleased
 
 **Added:**
-- `Update-Components.bat` / `Tools/Update-Components.ps1` — user-scope updater for Python/pip and Node.js/npm global packages, with `-Check` dry-run, plan/result tables, and `Scripts/Update-Components.bat -Check` argument forwarding.
+- `Update-Components.bat` / `Tools/Update-Components.ps1` — user-scope updater for Python/pip and Node.js/npm global packages, with `-Check` dry-run, plan/result tables, `-ReportPath <file>` JSON report (schema v1, `check`/`execute`, `plan`/`result`), and `Scripts/Update-Components.bat -Check` argument forwarding.
 - Static Pester coverage for `Update-Components.ps1` and `Update-Components.bat` launcher contract.
 
 **Changed:**
 - The recommended and pinned PowerShell line is 7.6.9; the setup command requests that exact version from winget.
+- `Update-Components.ps1` winget detection uses a hybrid path (optional `Microsoft.WinGet.Client`, fixed-width table parsing, `--upgrade-available`) and resolves Python winget IDs via candidates/query fallback; unparseable target versions are reported honestly (`Denetlenemedi`) instead of claiming up-to-date.
+- `Update-Components.ps1` pip target detection prefers `pip install --dry-run --ignore-installed --report` JSON and falls back to `pip index versions` parsing (verified on pip 26.x); `--use-feature=fast-deps` is not used on pip 26.x.
 - Network-activity policy updated to list `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) as the only exceptions; user-facing docs, architecture, and troubleshooting updated.
 
 ### v0.1.0.1 — 2026-10-23
@@ -74,8 +76,15 @@ First release: personal Windows maintenance script collection.
 
 ### Yayınlanmamış
 
+**Eklenen:**
+- `Update-Components.bat` / `Tools/Update-Components.ps1` — Python/pip ve Node.js/npm global paketleri için kullanıcı kapsamı güncelleyici; `-Check` kuru çalıştırma, plan/sonuç tabloları, `-ReportPath <dosya>` JSON raporu (şema v1, `check`/`execute`, `plan`/`result`) ve `.bat` bağımsız değişken iletimi.
+- `Update-Components.ps1` ve başlatıcı sözleşmesi için statik Pester kapsamı.
+
 **Değişen:**
-- Önerilen ve sabitlenen PowerShell satırı 7.6.9'dir; kurulum komutu bu tam sürümü winget'ten ister.
+- Önerilen ve sabitlenen PowerShell satırı 7.6.9'dur; kurulum komutu bu tam sürümü winget'ten ister.
+- `Update-Components.ps1` winget algılaması hibrit yol kullanır (opsiyonel `Microsoft.WinGet.Client`, sabit genişlikli tablo ayrıştırma, `--upgrade-available`) ve Python winget ID’lerini aday/sorgu fallback’iyle çözümler; ayrıştırılamayan hedef sürümler “güncel” iddia edilmez, `Denetlenemedi` olarak raporlanır.
+- `Update-Components.ps1` pip hedef sürümü önce `pip install --dry-run --ignore-installed --report` JSON’una, sonra `pip index versions` ayrıştırmasına bakar (pip 26.x’te doğrulandı); pip 26.x’te `--use-feature=fast-deps` kullanılmaz.
+- Ağ etkinliği politikası yalnızca `WinGet-Upgrade.bat` ve `Update-Components.bat` (`Tools/Update-Components.ps1` aracılığıyla) istisnalarını listeler; ilgili dokümanlar güncellendi.
 
 ### v0.1.0.1 — 2026-10-23
 

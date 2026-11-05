@@ -50,8 +50,23 @@ Microsoft Store. Install it, then re-run; the log captures the exact
 - Install the missing tool: Python from winget (`Python.Python.3.15`), Node.js from winget (`OpenJS.NodeJS.LTS`), or winget itself from the Microsoft Store.
 - The script exits 0 only if all requested components succeed; missing tools mark the overall run as failed unless `-Check` is used.
 
-### `pip list --outdated --format=json` fails or returns nothing
+### `pip index versions` fallback / `--use-feature=fast-deps`
 
+- `pip index versions pip` is used only as a fallback when `pip install --upgrade --dry-run --ignore-installed --report` cannot determine the latest pip version (network/index issues). `Get-LatestFromIndexVersions` parses `Available versions: <latest>, ...` (verified on pip 26.x).
+- `--use-feature=fast-deps` is not supported on pip 26.x (`pip install --help` shows no `fast-deps` feature); the script does not pass speculative `--use-feature` flags.
+
+### `Update-Components.ps1` JSON report for CI/CD
+
+- Use `-ReportPath <file>` to write a UTF-8 JSON report (`schemaVersion` 1) with `mode` (`check`/`execute`), `executionCompleted`, `host`, `plan`, `result`, `success`, and `exitCode`. `-Check -ReportPath ...` produces a check-mode report without applying changes.
+
+### `pip index versions` fallback / `--use-feature=fast-deps` (TR)
+
+- `pip index versions pip`, yalnızca `pip install --upgrade --dry-run --ignore-installed --report` ile en son pip sürümü belirlenemediğinde (ağ/index) fallback olarak kullanılır. `Get-LatestFromIndexVersions`, `Available versions: <en son>, ...` biçimini ayrıştırır (pip 26.x’te doğrulandı).
+- `--use-feature=fast-deps`, pip 26.x’te desteklenmez; betik spekülatif `--use-feature` bayrakları geçmez.
+
+### `Update-Components.ps1` CI/CD JSON raporu (TR)
+
+- `-ReportPath <dosya>` UTF-8 JSON raporu (şema v1) üretir: `mode` (`check`/`execute`), `executionCompleted`, `host`, `plan`, `result`, `success`, `exitCode`. `-Check -ReportPath ...` değişiklik uygulamadan check modu raporu üretir.
 - Older pip versions (< 21.2) do not support `--format=json`. The script falls back to text parsing automatically.
 - If the fallback also returns nothing, all pip packages are up to date.
 
@@ -110,8 +125,8 @@ yakalanır.
 
 ### `pip list --outdated --format=json` başarısız oluyor ya da boş dönüyor
 
-- Eski pip sürümleri (< 21.2) `--format=json` desteklemez. Betik otomatik olarak metin ayrıştırmaya (fallback) düşer.
-- Fallback da boş dönüyorsa tüm pip paketleri zaten günceldir.
+- Betik önce `pip list --outdated --format=json` dener. JSON kullanılamazsa veya boş dönerse metin çıktısına düşer ve `Package / Version / Latest / Type` tablosunu ayrıştırır.
+- Proxy, çevrimdışı ortam veya eski indeks boş sonuç verebilir; bağlantıyı doğrulamak için `py -m pip index versions <paket>` çalıştırın.
 
 ### `npm outdated -g` paketleri gösteriyor ama `npm update -g` güncellemiyor
 
