@@ -414,7 +414,7 @@ function Get-WingetPackageStatus {
     }
     # Fallback: parse raw head for diagnostics; never claim up-to-date from unparseable output.
     $head = (($ua.Output -split "`r?`n" | Where-Object { $_ -and $_ -notmatch '^-+$' } | Select-Object -First 3) -join ' | ')
-    Write-Log "winget ($primaryId): hedef sürüm alanı ayrıştırılamadı; ham başlık: $head" 'DEBUG'
+    Write-Log "winget ($primaryId): target version field not parsed; raw header: $head" 'DEBUG'
     $result.Note = "target version not determined (unparseable output)"
     return $result
 }
@@ -508,7 +508,7 @@ if (Test-Command 'winget' -and (Test-Command 'py')) {
     if ($pyStatus.Id) { $pyWingetId = $pyStatus.Id }
     $pyDetail = "winget: $pyWingetId$(if ($pyStatus.Source) { "; source: $($pyStatus.Source)" })"
     if ($pyStatus.Available -and $pyStatus.Available -ne $pyCurrent) {
-        Set-Plan 'Python runtime' 'Güncellenecek' $pyCurrent $pyStatus.Available $pyDetail
+        Set-Plan 'Python runtime' 'Update available' $pyCurrent $pyStatus.Available $pyDetail
     } elseif ($pyStatus.Parseable -and ($pyStatus.NoUpgradeMatch -or -not $pyStatus.Available -or $pyStatus.Available -eq $pyCurrent)) {
         Set-Plan 'Python runtime' 'Up to date' $pyCurrent $pyCurrent $pyDetail
     } elseif (-not $pyWingetId) {
@@ -551,7 +551,7 @@ if (Test-Command 'py') {
     }
     $pipDetail = if ($pipLatestSource) { "source: $pipLatestSource" } else { 'pip target version not determined' }
     if ($pipLatest -and $pipLatest -ne $pipCurrent) {
-        Set-Plan 'pip' 'Güncellenecek' $pipCurrent $pipLatest $pipDetail
+        Set-Plan 'pip' 'Update available' $pipCurrent $pipLatest $pipDetail
     } elseif ($pipLatest) {
         Set-Plan 'pip' 'Up to date' $pipCurrent $pipCurrent $pipDetail
     } else {
@@ -566,7 +566,7 @@ if (Test-Command 'py') {
     $outdated = Get-PipOutdated
     if ($outdated -and $outdated.Count -gt 0) {
         $details = ($outdated | ForEach-Object { "$($_.name) $($_.version)→$($_.latest_version)" }) -join ', '
-        Set-Plan 'pip packages' 'Güncellenecek' "$($outdated.Count) package(s)" "$($outdated.Count) package(s)" $details
+        Set-Plan 'pip packages' 'Update available' "$($outdated.Count) package(s)" "$($outdated.Count) package(s)" $details
     } else {
         Set-Plan 'pip packages' 'Up to date' '0 packages' '0 packages'
     }
@@ -575,6 +575,8 @@ if (Test-Command 'py') {
 }
 
 # --- Node.js runtime ---
+Write-Log "  - Node.js/winget" 'INFO'
+
 $nodeCurrent = 'unknown'
 $nodeWingetId = 'OpenJS.NodeJS.LTS'
 if (Test-Command 'winget' -and (Test-Command 'node')) {
@@ -583,7 +585,7 @@ if (Test-Command 'winget' -and (Test-Command 'node')) {
     if ($nodeStatus.Id) { $nodeWingetId = $nodeStatus.Id }
     $nodeDetail = "winget: $nodeWingetId$(if ($nodeStatus.Source) { "; source: $($nodeStatus.Source)" })"
     if ($nodeStatus.Available -and $nodeStatus.Available -ne $nodeCurrent) {
-        Set-Plan 'Node.js runtime' 'Güncellenecek' $nodeCurrent $nodeStatus.Available $nodeDetail
+        Set-Plan 'Node.js runtime' 'Update available' $nodeCurrent $nodeStatus.Available $nodeDetail
     } elseif ($nodeStatus.Parseable -and ($nodeStatus.NoUpgradeMatch -or -not $nodeStatus.Available -or $nodeStatus.Available -eq $nodeCurrent)) {
         Set-Plan 'Node.js runtime' 'Up to date' $nodeCurrent $nodeCurrent $nodeDetail
     } else {
@@ -605,7 +607,7 @@ if (Test-Command 'npm') {
         if ($out) { $npmLatest = $out.Trim() }
     } catch { }
     if ($npmLatest -and $npmLatest -ne $npmCurrent) {
-        Set-Plan 'npm' 'Güncellenecek' $npmCurrent $npmLatest
+        Set-Plan 'npm' 'Update available' $npmCurrent $npmLatest
     } else {
         Set-Plan 'npm' 'Up to date' $npmCurrent $npmCurrent
     }
@@ -618,7 +620,7 @@ if (Test-Command 'npm') {
     $npmOutdated = Get-NpmOutdatedGlobal
     if ($npmOutdated -and $npmOutdated.Count -gt 0) {
         $details = ($npmOutdated | ForEach-Object { "$($_.name) $($_.current)→$($_.latest)" }) -join ', '
-        Set-Plan 'npm packages' 'Güncellenecek' "$($npmOutdated.Count) package(s)" "$($npmOutdated.Count) package(s)" $details
+        Set-Plan 'npm packages' 'Update available' "$($npmOutdated.Count) package(s)" "$($npmOutdated.Count) package(s)" $details
     } else {
         Set-Plan 'npm packages' 'Up to date' '0 packages' '0 packages'
     }
@@ -644,7 +646,7 @@ $script:OverallFailed = $false
 
 # --- Python runtime ---
 $pyRow = $script:Plan | Where-Object { $_.Component -eq 'Python runtime' }
-if ($pyRow.Action -eq 'Güncellenecek') {
+if ($pyRow.Action -eq 'Update available') {
     $pyExecId = if ($pyWingetId) { $pyWingetId } else { 'Python.Python' }
     Write-Log "Updating Python runtime via winget ($pyExecId)..." 'INFO'
     $pyUpgrade = Run-Command 'winget' @('upgrade', '--id', $pyExecId, '--exact', '--accept-source-agreements', '--accept-package-agreements') "Python runtime ($pyExecId)"
@@ -662,7 +664,7 @@ if ($pyRow.Action -eq 'Güncellenecek') {
 
 # --- pip ---
 $pipRow = $script:Plan | Where-Object { $_.Component -eq 'pip' }
-if ($pipRow.Action -eq 'Güncellenecek') {
+if ($pipRow.Action -eq 'Update available') {
     Write-Log "Upgrading pip..." 'INFO'
     $pipUpgrade = Run-Command 'py' @('-m', 'pip', 'install', '--upgrade', 'pip') 'pip upgrade'
     $pipAfter = Get-PipVersion
@@ -679,7 +681,7 @@ if ($pipRow.Action -eq 'Güncellenecek') {
 
 # --- pip packages ---
 $pipPkgRow = $script:Plan | Where-Object { $_.Component -eq 'pip packages' }
-if ($pipPkgRow.Action -eq 'Güncellenecek') {
+if ($pipPkgRow.Action -eq 'Update available') {
     Write-Log "Checking for outdated pip packages..." 'INFO'
     $outdated = Get-PipOutdated
     if ($outdated -and $outdated.Count -gt 0) {
@@ -708,7 +710,7 @@ if ($pipPkgRow.Action -eq 'Güncellenecek') {
 
 # --- Node.js runtime ---
 $nodeRow = $script:Plan | Where-Object { $_.Component -eq 'Node.js runtime' }
-if ($nodeRow.Action -eq 'Güncellenecek') {
+if ($nodeRow.Action -eq 'Update available') {
     $nodeExecId = if ($nodeWingetId) { $nodeWingetId } else { 'OpenJS.NodeJS.LTS' }
     Write-Log "Checking for Node.js LTS update via winget ($nodeExecId)..." 'INFO'
     $wingetUpgrade = Run-Command 'winget' @('upgrade', '--id', $nodeExecId, '--exact', '--accept-source-agreements', '--accept-package-agreements') 'Node.js LTS winget upgrade'
@@ -726,7 +728,7 @@ if ($nodeRow.Action -eq 'Güncellenecek') {
 
 # --- npm ---
 $npmRow = $script:Plan | Where-Object { $_.Component -eq 'npm' }
-if ($npmRow.Action -eq 'Güncellenecek') {
+if ($npmRow.Action -eq 'Update available') {
     Write-Log "Upgrading npm..." 'INFO'
     $npmUpgrade = Run-Command 'npm' @('install', '--global', 'npm@latest') 'npm self-upgrade'
     $npmAfter = Get-NpmVersion
@@ -743,7 +745,7 @@ if ($npmRow.Action -eq 'Güncellenecek') {
 
 # --- npm packages ---
 $npmPkgRow = $script:Plan | Where-Object { $_.Component -eq 'npm packages' }
-if ($npmPkgRow.Action -eq 'Güncellenecek') {
+if ($npmPkgRow.Action -eq 'Update available') {
     Write-Log "Updating global npm packages to latest..." 'INFO'
     $npmOutdatedNow = Get-NpmOutdatedGlobal
     $npmPkgDetails = @()
