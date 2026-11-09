@@ -1,10 +1,11 @@
 ﻿<#
 .SYNOPSIS
-    Updates global Python (pip) and Node.js (npm) packages to their latest versions.
+    Updates global Python (pip), pipx-managed, and Node.js (npm) packages to their latest versions.
 
 .DESCRIPTION
-    This script updates globally installed packages for Python and Node.js:
+    This script updates globally installed packages for Python, pipx, and Node.js:
     - Python: upgrades Python runtime (via winget), upgrades pip itself, then upgrades all outdated packages via pip list --outdated
+    - pipx: lists pipx itself and pipx-managed packages via `pipx list --json`, checks latest via `pip index versions`, upgrades pipx itself via `pipx upgrade pipx` and packages via `pipx upgrade-all`
     - Node.js: upgrades Node.js runtime (via winget), upgrades npm itself, then upgrades global packages to latest
 
     Follows the project conventions: no elevation, per-user scope only, UTF-8 output.
@@ -75,7 +76,8 @@ function Write-UpdateComponentsReport {
 $script:Plan = @(
     @{ Component = 'Python runtime';     Action = 'Skip';    Current = ''; Target = ''; Details = '' }
     @{ Component = 'pip';                Action = 'Skip';    Current = ''; Target = ''; Details = '' }
-    @{ Component = 'pip packages';       Action = 'Skip';    Current = ''; Target = ''; Details = '' }
+@{ Component = 'pip packages';       Action = 'Skip';    Current = ''; Target = ''; Details = '' }
+    @{ Component = 'pipx';             Action = 'Skip';    Current = ''; Target = ''; Details = '' }
     @{ Component = 'Node.js runtime';    Action = 'Skip';    Current = ''; Target = ''; Details = '' }
     @{ Component = 'npm';                Action = 'Skip';    Current = ''; Target = ''; Details = '' }
     @{ Component = 'npm packages';       Action = 'Skip';    Current = ''; Target = ''; Details = '' }
@@ -85,7 +87,8 @@ $script:Plan = @(
 $script:Result = @(
     @{ Component = 'Python runtime';     Status = 'Skipped'; Before = ''; After = ''; Details = '' }
     @{ Component = 'pip';                Status = 'Skipped'; Before = ''; After = ''; Details = '' }
-    @{ Component = 'pip packages';       Status = 'Skipped'; Before = ''; After = ''; Details = '' }
+@{ Component = 'pip packages';       Status = 'Skipped'; Before = ''; After = ''; Details = '' }
+    @{ Component = 'pipx';             Status = 'Skipped'; Before = ''; After = ''; Details = '' }
     @{ Component = 'Node.js runtime';    Status = 'Skipped'; Before = ''; After = ''; Details = '' }
     @{ Component = 'npm';                Status = 'Skipped'; Before = ''; After = ''; Details = '' }
     @{ Component = 'npm packages';       Status = 'Skipped'; Before = ''; After = ''; Details = '' }
@@ -351,6 +354,47 @@ function Get-PipOutdated {
     return $outdated
 }
 
+function Get-PipxList {
+    # Returns pipx-managed packages as array of {Name, Version}.
+    # pipx packages live in isolated venvs and are invisible to pip list --outdated.
+    if (-not (Test-Command 'py')) { return @() }
+    try {
+        $json = py -m pipx list --json 2>$null | Out-String
+        if (-not $json -or $json.Trim() -eq '' -or $json.Trim() -eq '{}') { return @() }
+        $obj = $json | ConvertFrom-Json
+        $items = @()
+        if ($obj.venvs) {
+            foreach ($name in $obj.venvs.PSObject.Properties.Name) {
+                $venv = $obj.venvs.$name
+                $pkg = $venv.metadata.main_package
+                $items += [pscustomobject]@{
+                    Name   = [string]$pkg.package
+                    Version = [string]$pkg.package_version
+                }
+            }
+        }
+        return @($items)
+    } catch {
+        Write-Log "pipx list failed: $($_.Exception.Message)" 'WARN'
+        return @()
+    }
+}
+
+function Get-PipxLatestVersion {
+    param([string]$Package)
+    # Queries PyPI index for the latest version of a pipx-managed package (non-mutating).
+    if (-not (Test-Command 'py')) { return $null }
+    try {
+        $idxOut = py -m pip index versions $Package 2>&1 | Out-String
+        $ver = Get-LatestFromIndexVersions -Text $idxOut
+        if ($ver) { return $ver }
+        # Fallback: first line "pkgname (latest)"
+        $first = ($idxOut -split "`r?`n" | Where-Object { $_ -match '^\S+\s*\(\S+\)' } | Select-Object -First 1)
+        if ($first -match '\(\s*([\d.]+)\s*\)') { return $matches[1] }
+    } catch { }
+    return $null
+}
+
 function Get-NpmOutdatedGlobal {
     # Returns array of outdated global npm packages.
     # npm outdated -g --json returns an object keyed by package name:
@@ -574,6 +618,49 @@ if (Test-Command 'py') {
     Set-Plan 'pip packages' 'Skipped' '' '' 'py not found'
 }
 
+# --- pipx ---
+Write-Log "  - pipx" 'INFO'
+
+if (Test-Command 'py') {
+    $pipxCurrent = 'unknown'
+    $pipxLatest = $null
+    $pipxPkgs = Get-PipxList
+    $pipxOutdatedPkgs = @()
+    foreach ($pkg in @($pipxPkgs)) {
+        $latest = Get-PipxLatestVersion -Package $pkg.Name
+        if ($latest -and $latest -ne $pkg.Version) {
+            $pipxOutdatedPkgs += [pscustomobject]@{
+                name   = $pkg.Name
+                version = $pkg.Version
+                latest = $latest
+            }
+        }
+    }
+    try {
+        $pipxVerOut = py -m pipx --version 2>&1
+        if ($pipxVerOut -match '([\d.]+)') { $pipxCurrent = $matches[1] }
+        $pipxLatest = Get-PipxLatestVersion -Package 'pipx'
+    } catch { }
+    $pipxHasUpdates = $false
+    $pipxDetails = @()
+    if ($pipxLatest -and $pipxLatest -ne $pipxCurrent) {
+        $pipxHasUpdates = $true
+        $pipxDetails += "pipx $pipxCurrent→$pipxLatest"
+    }
+    if ($pipxOutdatedPkgs -and $pipxOutdatedPkgs.Count -gt 0) {
+        $pipxHasUpdates = $true
+        $pipxDetails += "$($pipxOutdatedPkgs.Count) package(s) outdated"
+    }
+    $installedCount = @($pipxPkgs).Count
+    if ($pipxHasUpdates) {
+        Set-Plan 'pipx' 'Update available' "$installedCount package(s) + pipx $pipxCurrent" "$installedCount package(s) + pipx $pipxLatest" ($pipxDetails -join ', ')
+    } else {
+        Set-Plan 'pipx' 'Up to date' "$installedCount package(s) + pipx $pipxCurrent" "$installedCount package(s) + pipx $pipxCurrent"
+    }
+} else {
+    Set-Plan 'pipx' 'Skipped' '' '' 'py not found'
+}
+
 # --- Node.js runtime ---
 Write-Log "  - Node.js/winget" 'INFO'
 
@@ -706,6 +793,58 @@ if ($pipPkgRow.Action -eq 'Update available') {
     }
 } else {
     Set-Result 'pip packages' $pipPkgRow.Action "$($pipPkgRow.Current)" "$($pipPkgRow.Target)" $pipPkgRow.Details
+}
+
+# --- pipx ---
+$pipxRow = $script:Plan | Where-Object { $_.Component -eq 'pipx' }
+if ($pipxRow.Action -eq 'Update available') {
+    Write-Log "Checking for pipx and pipx-managed package updates..." 'INFO'
+    $pipxPkgs = Get-PipxList
+    $pipxPkgsDetails = @()
+    $pipxFailed = $false
+
+    # Upgrade pipx itself first.
+    $pipxCurrent = 'unknown'
+    try {
+        $pipxVerOut = py -m pipx --version 2>&1
+        if ($pipxVerOut -match '([\d.]+)') { $pipxCurrent = $matches[1] }
+    } catch { }
+    $pipxLatest = Get-PipxLatestVersion -Package 'pipx'
+    if ($pipxLatest -and $pipxLatest -ne $pipxCurrent) {
+        Write-Log "Upgrading pipx ($pipxCurrent -> $pipxLatest)..." 'INFO'
+        $result = Run-Command 'py' @('-m', 'pipx', 'upgrade', 'pipx') "pipx upgrade pipx"
+        if ($result -eq 0) {
+            $pipxPkgsDetails += "pipx $pipxCurrent→$pipxLatest"
+        } else {
+            $pipxPkgsDetails += "pipx FAILED"
+            $pipxFailed = $true
+            $script:OverallFailed = $true
+        }
+    }
+
+    # Upgrade all pipx-managed packages.
+    $pipxOutdatedPkgs = @()
+    foreach ($pkg in @($pipxPkgs)) {
+        $latest = Get-PipxLatestVersion -Package $pkg.Name
+        if (-not $latest -or $latest -eq $pkg.Version) { continue }
+        $pipxOutdatedPkgs += $pkg
+    }
+    if ($pipxOutdatedPkgs -and $pipxOutdatedPkgs.Count -gt 0) {
+        Write-Log "Upgrading $($pipxOutdatedPkgs.Count) pipx package(s) via pipx upgrade-all..." 'INFO'
+        $result = Run-Command 'py' @('-m', 'pipx', 'upgrade-all') "pipx upgrade-all"
+        if ($result -eq 0) {
+            $pipxPkgsDetails += ($pipxOutdatedPkgs | ForEach-Object { "$($_.name) $($_.version)→$(Get-PipxLatestVersion -Package $_.name)" }) -join ', '
+        } else {
+            $pipxPkgsDetails += "pipx upgrade-all FAILED"
+            $pipxFailed = $true
+            $script:OverallFailed = $true
+        }
+    }
+
+    $status = if ($pipxFailed) { 'Partially updated' } else { 'Updated' }
+    Set-Result 'pipx' $status "$($pipxRow.Current)" "$($pipxPkgsDetails.Count) processed" ($pipxPkgsDetails -join ', ')
+} else {
+    Set-Result 'pipx' $pipxRow.Action "$($pipxRow.Current)" "$($pipxRow.Target)" $pipxRow.Details
 }
 
 # --- Node.js runtime ---

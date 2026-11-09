@@ -33,7 +33,7 @@ Each script does one job: it runs commands in order and writes output both to th
 | `Reset-Windows-Update.bat` | Reset Windows Update components |
 | `Clear-DnsClientCache.bat` | Flush DNS cache |
 | `WinGet-Upgrade.bat` | Upgrade all packages (winget) |
-| `Update-Components.bat` | Upgrade Python/pip and Node.js/npm global packages |
+| `Update-Components.bat` | Upgrade Python/pip, pipx itself and pipx-managed packages, and Node.js/npm global packages |
 | `Bug-Report.ps1` | Event log HTML report (`-Period Daily, Weekly, Monthly`) |
 
 ### Usage
@@ -43,7 +43,7 @@ Each script does one job: it runs commands in order and writes output both to th
 3. `Bug-Report.ps1` runs on a schedule:
    `pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
    (use `powershell.exe` on a host without PowerShell 7)
-4. `Update-Components.bat` upgrades Python/pip and Node.js/npm global packages (user scope). It forwards arguments to `Tools/Update-Components.ps1`.
+4. `Update-Components.bat` upgrades Python/pip, pipx itself and pipx-managed packages, and Node.js/npm global packages (user scope). It forwards arguments to `Tools/Update-Components.ps1`.
    Dry-run: `Scripts\Update-Components.bat -Check` or `powershell -NoProfile -File Tools/Update-Components.ps1 -Check`
    JSON report (CI/CD): add `-ReportPath Logs\Update-Components\run.json` (schema v1; works with `-Check` or a real run).
    Note: global npm packages are upgraded to the latest available version (including major versions) after `npm outdated -g` is rechecked; review `-Check` output first because major upgrades can change global CLI behavior.
@@ -75,7 +75,7 @@ Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ek
 | `Reset-Windows-Update.bat` | Windows Update bileşenlerini sıfırlama |
 | `Clear-DnsClientCache.bat` | DNS önbelleğini temizleme |
 | `WinGet-Upgrade.bat` | Tüm paketleri yükseltme (winget) |
-| `Update-Components.bat` | Python/pip ve Node.js/npm global paketlerini yükseltme |
+| `Update-Components.bat` | Python/pip, pipx ve Node.js/npm global paketlerini yükseltme |
 | `Bug-Report.ps1` | Olay günlüğü HTML raporu (`-Period Daily, Weekly, Monthly`) |
 
 ### Kullanım
@@ -85,7 +85,7 @@ Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ek
 3. `Bug-Report.ps1` Zamanlayıcı ile koşar:
    `pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
    (PowerShell 7 yoksa `powershell.exe` kullanın)
-4. `Update-Components.bat`, Python/pip ve Node.js/npm global paketlerini yükseltir (kullanıcı kapsamı). Bağımsız değişkenleri `Tools/Update-Components.ps1` betiğine iletir.
+4. `Update-Components.bat`, Python/pip, pipx kendi kendine ve pipx yönetimli paketleri, ve Node.js/npm global paketlerini yükseltir (kullanıcı kapsamı). Bağımsız değişkenleri `Tools/Update-Components.ps1` betiğine iletir.
    Kuru çalıştırma: `Scripts\Update-Components.bat -Check` veya `powershell -NoProfile -File Tools/Update-Components.ps1 -Check`
    JSON raporu (CI/CD): `-ReportPath Logs\Update-Components\run.json` ekleyin (şema v1; `-Check` veya gerçek çalıştırmayla kullanılabilir).
    Not: global npm paketleri, `npm outdated -g` yeniden kontrol edildikten sonra en son sürüme yükseltilir (major sürümler dâhil); major yükseltmeler global CLI davranışını değiştirebileceği için önce `-Check` çıktısını gözden geçirin.

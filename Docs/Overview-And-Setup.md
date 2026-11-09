@@ -30,9 +30,7 @@ table and [Architecture](Architecture.md) for how they work.
   except the two admin scripts above (see [SECURITY.md](../SECURITY.md)).
 - `Bug-Report.ps1` reads the System and Application event logs, so the
   scheduling account needs permission to read them.
-- `Update-Components.ps1` requires `py` (Python launcher), `npm`, and
-  optionally `winget` (for Python/Node.js runtime upgrades); it runs
-  entirely in user scope and never self-elevates.
+- `Update-Components.ps1` requires `py` (Python launcher), `npm`, `pipx` (installed via `py -m pip install pipx`), and optionally `winget` (for Python/Node.js runtime upgrades); it runs entirely in user scope and never self-elevates.
 
 ### Setup
  
@@ -86,9 +84,7 @@ beş `.bat` başlatıcı ile bir PowerShell HTML rapor motoru
   [SECURITY.md](../SECURITY.md)).
 - `Bug-Report.ps1`, System ve Application olay günlüklerini okur; bu yüzden
   zamanlayan hesabın bunları okuma izni olmalıdır.
-- `Update-Components.ps1` için `py` (Python başlatıcı), `npm` ve
-  isteğe bağlı `winget` (Python/Node.js çalışma zamanı yükseltmeleri için)
-  gerekir; tamamen kullanıcı kapsamında koşur ve asla kendini yükseltmez.
+- `Update-Components.ps1` için `py` (Python başlatıcı), `npm`, `pipx` (`py -m pip install pipx` ile kurulur) ve isteğe bağlı `winget` (Python/Node.js çalışma zamanı yükseltmeleri için) gerekir; tamamen kullanıcı kapsamında koşur ve asla kendini yükseltmez.
 
 ### Kurulum
  

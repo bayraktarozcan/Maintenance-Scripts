@@ -52,9 +52,9 @@ Repair-specific logging:
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
   This script has network activity (delegated to `winget`).
 - `Update-Components.bat` (launcher for `Tools/Update-Components.ps1`): resolves the PowerShell engine, sets up logging, forwards any arguments (including `-Check`), then calls the PS script which runs a two-phase update:
-  1. **Detection phase**: checks `winget` for Python/Node.js runtime updates, `pip`/`npm` for package manager self-updates, `pip list --outdated --format=json` and `npm outdated -g --json` for global packages. Builds a plan table.
+  1. **Detection phase**: checks `winget` for Python/Node.js runtime updates, `pip`/`npm` for package manager self-updates, `pip list --outdated --format=json` and `npm outdated -g --json` for global packages, and `pipx list --json` + `pip index versions` for pipx itself and pipx-managed packages. Builds a plan table.
   2. **Execution phase**: applies updates and builds a result table. Runs entirely in user scope; never self-elevates. Supports `-Check` dry-run mode that shows the plan and exits.
-  Network activity: `winget list --id`, `pip`/`npm` registry queries.
+  Network activity: `winget list --id`, `pip`/`npm`/`pipx` registry queries.
 
 ### Component updater engine
 
@@ -64,13 +64,14 @@ Repair-specific logging:
 - Python runtime: `winget list --id Python.Python.X.Y --exact` → available version
 - pip self: `pip install --upgrade --dry-run --ignore-installed --report` → JSON report for target version
 - pip packages: `pip list --outdated --format=json` → array of `{name, version, latest_version}`
+- pipx: `pipx list --json` → pipx itself and installed packages; `pip index versions <pkg>` → latest version; pipx packages live in isolated venvs and are invisible to `pip list --outdated`
 - Node.js runtime: `winget list --id OpenJS.NodeJS.LTS --exact` → available version
 - npm self: `npm view npm@latest version` → latest version
 - npm packages: `npm outdated -g --json` → array of `{name, current, wanted, latest}`
 - Builds plan table with columns: Component, Action, Current, Target, Details
 
 **Phase 2 — Execution (Result)**:
-- Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`, `pip install --upgrade <pkg>`, `npm install --global npm@latest`, and `npm install --global <pkg>@<latest>` for outdated globals
+- Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`, `pip install --upgrade <pkg>`, `pipx upgrade pipx` + `pipx upgrade-all`, `npm install --global npm@latest`, and `npm install --global <pkg>@<latest>` for outdated globals
 - Tracks before/after versions per component
 - Builds result table with columns: Component, Status, Before, After
 - Overall failure tracking; exits 0 on full success, 1 otherwise
@@ -146,9 +147,9 @@ kapsar:
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
   Ağ etkinliği olan betiklerden biridir (`winget`'e delege edilir).
 - `Update-Components.bat` (`Tools/Update-Components.ps1` başlatıcısı): PowerShell motorunu çözümler, günlüklemeyi kurar, bağımsız değişkenleri (`-Check` dâhil) iletir, PS betiğini çağırır. PS betiği iki aşamalı güncelleme çalıştırır:
-  1. **Tespit aşaması**: Python/Node.js çalışma zamanı güncellemeleri için `winget list --id`, pip/npm için paket yöneticisi kendini-güncelleme, `pip list --outdated --format=json` ve `npm outdated -g --json` ile global paketler. Plan tablosu oluşturur.
+  1. **Tespit aşaması**: Python/Node.js çalışma zamanı güncellemeleri için `winget list --id`, pip/npm için paket yöneticisi kendini-güncelleme, `pip list --outdated --format=json` ve `npm outdated -g --json` ile global paketler, `pipx list --json` + `pip index versions` ile pipx kendi kendine ve pipx yönetimli paketler. Plan tablosu oluşturur.
   2. **Yürütme aşaması**: Güncellemeleri uygular ve sonuç tablosu oluşturur. Tamamen kullanıcı kapsamında koşur; asla kendini yükseltmez. `-Check` kuru çalıştırma (dry-run) modu planı gösterip çıkar.
-  Ağ etkinliği: `winget list --id`, `pip`/`npm` kayıt sorguları.
+  Ağ etkinliği: `winget list --id`, `pip`/`npm`/`pipx` kayıt sorguları.
 
 ### Bileşen güncelleyici motoru
 
@@ -158,13 +159,14 @@ kapsar:
 - Python çalışma zamanı: `winget list --id Python.Python.X.Y --exact` → mevcut sürüm
 - pip kendisi: `pip install --upgrade --dry-run --ignore-installed --report` → JSON raporu hedef sürüm için
 - pip paketleri: `pip list --outdated --format=json` → `{name, version, latest_version}` dizisi
+- pipx: `pipx list --json` → pipx kendi kendine ve yüklü paketler; `pip index versions <pkg>` → en son sürüm; pipx paketleri izole ortamda yaşadığı için `pip list --outdated`'a görünmez
 - Node.js çalışma zamanı: `winget list --id OpenJS.NodeJS.LTS --exact` → mevcut sürüm
 - npm kendisi: `npm view npm@latest version` → en son sürüm
 - npm paketleri: `npm outdated -g --json` → `{name, current, wanted, latest}` dizisi
 - Plan tablosu oluşturur: Bileşen, Eylem, Mevcut, Hedef, Detay sütunları
 
 **Aşama 2 — Yürütme (Sonuç)**:
-- Plan başına güncellemeleri uygular: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`, `pip install --upgrade <pkg>`, `npm install --global npm@latest` ve eski kalan global paketler için `npm install --global <pkg>@<latest>`
+- Plan başına güncellemeleri uygular: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`, `pip install --upgrade <pkg>`, `pipx upgrade pipx` + `pipx upgrade-all`, `npm install --global npm@latest` ve eski kalan global paketler için `npm install --global <pkg>@<latest>`
 - Bileşen başına önceki/sonraki sürümleri takip eder
 - Sonuç tablosu oluşturur: Bileşen, Durum, Önceki, Sonraki sütunları
 - Genel hata takibi; tam başarıda 0, aksi halde 1 ile çıkar
