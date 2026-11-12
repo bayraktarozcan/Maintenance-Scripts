@@ -202,7 +202,7 @@ Describe 'Update-Components winget table parsing fixtures' {
     }
 
     It 'Parses fixed-width winget tables by separator alignment, not by English header text' {
-        $script:Text | Should -Match 'localized headers supported via separator alignment'
+        $script:Text | Should -Match 'Column boundaries are derived from the'
         $script:Text | Should -Match "if \(\`$Lines\[\`$i\] -match"
         $script:Text | Should -Match '\^\-\{8,\}'
     }

@@ -54,6 +54,7 @@ Reliability and hardening release: one PowerShell engine per launcher, evidence-
 - `Repair-Windows.bat` exits `1` for every overall status except `SUCCESS` and `SUCCESS (restart required)`; its SFC output is decoded from UTF-16LE before being appended, eliminating NUL bytes in the log.
 - `Bug-Report.ps1` writes reports as UTF-8 with BOM again, matching the v0.1.0.0 behavior.
 - Documentation security posture, launcher claims, Turkish grammar, and Windows Update / WinGet guidance are corrected.
+- `Update-Components.ps1` `ConvertFrom-WingetTable` no longer returns empty rows when winget's separator line is one continuous run of dashes; column boundaries are now derived from the header line's whitespace gaps, and `Get-WingetPackageStatus` adds a regex fallback that extracts the Available version from raw output, so Node.js (and other packages) are detected instead of reporting `Unknown`.
 
 ### v0.1.0.1 — 2026-10-23
 
@@ -127,6 +128,7 @@ Güvenilirlik ve sağlamlaştırma sürümü: başlatıcı başına tek PowerShe
 - `Repair-Windows.bat`, `SUCCESS` ve `SUCCESS (restart required)` dışındaki her genel durumda `1` ile çıkar; SFC çıktısı eklenmeden önce UTF-16LE'den çözülür ve günlükteki NUL baytları kaldırılır.
 - `Bug-Report.ps1` raporları v0.1.0.0 davranışına uygun olarak yeniden UTF-8 BOM ile yazar.
 - Belgelerde güvenlik duruşu, başlatıcı iddiaları, Türkçe dilbilgisi ve Windows Update / WinGet yönlendirmesi düzeltildi.
+- `Update-Components.ps1`'deki `ConvertFrom-WingetTable`, winget'in ayıracı satırı tek bir çizgi olduğunda boş dizi döndürmüyor; sütun sınırları başlık satırındaki boşluklardan çıkarılıyor ve `Get-WingetPackageStatus` ham çıktının Available sürümünü regex ile çıkarmak için bir yedek ekledi, böylece Node.js ve diğer paketler `Unknown` yerine algılanıyor.
 
 ### v0.1.0.0 — 2026-09-16
 

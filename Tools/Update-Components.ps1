@@ -161,24 +161,28 @@ function Run-Command {
 
 function ConvertFrom-WingetTable {
     param([string[]]$Lines)
-    # Parses fixed-width winget table output (localized headers supported via separator alignment).
+    # Parses fixed-width winget table output. Column boundaries are derived from the
+    # header line (whitespace gaps between tokens), not from the separator, because
+    # winget's separator is a single continuous run of dashes with no internal gaps.
     $sepIndex = -1
     for ($i = 0; $i -lt $Lines.Count; $i++) {
         if ($Lines[$i] -match '^-{8,}') { $sepIndex = $i; break }
     }
     if ($sepIndex -lt 1) { return @() }
     $header = $Lines[$sepIndex - 1]
-    $sep = $Lines[$sepIndex]
-    $bounds = @()
-    $m = [regex]::Matches($sep, '-+')
-    foreach ($x in $m) { $bounds += [pscustomobject]@{ Start = $x.Index; End = $x.Index + $x.Length } }
-    if ($bounds.Count -lt 2) { return @() }
+    $colStarts = @()
+    $inWhitespace = $true
+    for ($i = 0; $i -lt $header.Length; $i++) {
+        if ([char]::IsWhiteSpace($header[$i])) { $inWhitespace = $true; continue }
+        if ($inWhitespace) { $colStarts += $i; $inWhitespace = $false }
+    }
+    if ($colStarts.Count -lt 2) { return @() }
     $cols = @()
-    for ($c = 0; $c -lt $bounds.Count; $c++) {
-        $start = $bounds[$c].Start
-        $end = if ($c -lt $bounds.Count - 1) { $bounds[$c + 1].Start } else { [Math]::Max($header.Length, $sep.Length) }
-        $len = [Math]::Max(0, [Math]::Min($end, $header.Length) - $start)
-        $name = if ($len -gt 0 -and $start -lt $header.Length) { $header.Substring($start, $len).Trim() } else { '' }
+    for ($c = 0; $c -lt $colStarts.Count; $c++) {
+        $start = $colStarts[$c]
+        $end = if ($c -lt $colStarts.Count - 1) { $colStarts[$c + 1] } else { $header.Length }
+        $len = [Math]::Max(0, $end - $start)
+        $name = if ($len -gt 0) { $header.Substring($start, $len).Trim() } else { '' }
         $cols += [pscustomobject]@{ Name = $name; Start = $start; End = $end }
     }
     $rows = @()
@@ -455,6 +459,19 @@ function Get-WingetPackageStatus {
         if ($inst) { $result.Installed = $inst }
         if ($avail) { $result.Available = $avail; $result.Parseable = $true; $result.Source = 'winget --upgrade-available' }
         return $result
+    }
+    # Regex fallback: extract Available version from raw output when structured parsing fails.
+    $rawLine = $ua.Output -split "`r?`n" | Where-Object { $_ -match [regex]::Escape($primaryId) } | Select-Object -First 1
+    if ($rawLine) {
+        $verRe = '\d+(?:\.\d+)+(?:[-\+][A-Za-z0-9.\-]+)?'
+        $m = [regex]::Match($rawLine, ([regex]::Escape($primaryId) + '\s+(' + $verRe + ')\s+(' + $verRe + ')'))
+        if ($m.Success) {
+            if (-not $result.Installed) { $result.Installed = $m.Groups[1].Value }
+            $result.Available = $m.Groups[2].Value
+            $result.Parseable = $true
+            $result.Source = 'winget --upgrade-available (regex)'
+            return $result
+        }
     }
     # Fallback: parse raw head for diagnostics; never claim up-to-date from unparseable output.
     $head = (($ua.Output -split "`r?`n" | Where-Object { $_ -and $_ -notmatch '^-+$' } | Select-Object -First 3) -join ' | ')
