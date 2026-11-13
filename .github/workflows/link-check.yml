@@ -30,7 +30,7 @@ jobs:
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
           args: >-
-            --no-progress --verbose --max-retries 2
+            --no-progress --max-retries 2
             --exclude '^https://www\.iso\.org/standard/(77520|86308|86612)\.html$'
             './**/*.md'
           fail: true
