@@ -759,4 +759,4 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 - Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) are the only exceptions: they delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; they never upload or transmit user data and write no registry keys.
 - No protected-branch bypass is configured for this repository.
 
-<!-- mirror-sync: sync-sha=e311d513e06ea473db4a2ead1352c1839e5c06aa -->
+<!-- mirror-sync: sync-sha=ebd166811eaf7d8e476f60a893aeef6a55ba49c6 -->
