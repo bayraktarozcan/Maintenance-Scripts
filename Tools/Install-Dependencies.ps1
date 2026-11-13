@@ -1,8 +1,8 @@
 ﻿# Maintenance Scripts - host dependency setup
 # Installs (or verifies with -Check) every host-side dependency named in the
 # project layer ("Dependencies"), at per-user global scope, never elevated:
-#   Pester 5.7.1, PowerShell 7.6.9, gitleaks 8.30.1, actionlint 1.7.12,
-#   lychee 0.24.2, plus presence checks for git, gh, and winget.
+#   Pester 5.7.1, PowerShell 7+ (latest 7.x from winget), gitleaks 8.30.1,
+#   actionlint 1.7.12, lychee 0.24.2, plus presence checks for git, gh, and winget.
 # Usage: powershell -NoProfile -File Tools/Install-Dependencies.ps1 [-Check]
 # -Check reports OK/MISSING per dependency and exits 1 when anything is
 # missing or version-mismatched, without changing the host.
@@ -30,10 +30,22 @@ function Test-ToolVersion([string]$Command, [string[]]$Arguments, [string]$Patte
 }
 
 function Test-PwshVersion([string]$Version) {
+    # Exact-version check (kept for callers that pin a specific build).
     $cmd = Get-Command pwsh -ErrorAction SilentlyContinue
     if (-not $cmd) { return $false }
     $out = & $cmd -NoProfile -Command '$PSVersionTable.PSVersion.ToString()' 2>&1 | Out-String
     return ($out.Trim() -eq $Version)
+}
+
+function Test-Pwsh7OrNewer {
+    # PowerShell 7+ is the floor; any current 7.x build satisfies it, so the
+    # host is not pinned to a single release that can go end-of-life.
+    $cmd = Get-Command pwsh -ErrorAction SilentlyContinue
+    if (-not $cmd) { return $false }
+    $out = & $cmd -NoProfile -Command '$PSVersionTable.PSVersion.Major' 2>&1 | Out-String
+    $n = 0
+    if ([int]::TryParse($out.Trim(), [ref]$n)) { return $n -ge 7 }
+    return $false
 }
 
 function Install-Winget([string]$Id, [string]$Version) {
@@ -67,9 +79,9 @@ Install-Dependency 'Pester 5.7.1' `
     { Test-ModuleVersion 'Pester' '5.7.1' } `
     { Install-Module Pester -RequiredVersion 5.7.1 -Force -SkipPublisherCheck -Scope CurrentUser }
 
-Install-Dependency 'PowerShell 7.6.9' `
-    { Test-PwshVersion '7.6.9' } `
-    { Install-Winget 'Microsoft.PowerShell' '7.6.9' }
+Install-Dependency 'PowerShell 7+' `
+    { Test-Pwsh7OrNewer } `
+    { Install-Winget 'Microsoft.PowerShell' }
 
 Install-Dependency 'gitleaks 8.30.1' `
     { Test-ToolVersion 'gitleaks' @('version') '(?m)^8\.30\.1$' } `

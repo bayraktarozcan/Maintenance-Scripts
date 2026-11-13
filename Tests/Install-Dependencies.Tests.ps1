@@ -17,12 +17,10 @@ Describe 'Install-Dependencies manifest' {
         $script:Text | Should -Match "'Pester 5\.7\.1'"
     }
 
-    It 'Pins PowerShell 7.6.9' {
-        $script:Text | Should -Match "'PowerShell 7\.6\.9'"
-    }
-
-    It 'Requests the exact PowerShell version from winget' {
-        $script:Text | Should -Match "Install-Winget 'Microsoft\.PowerShell' '7\.6\.9'"
+    It 'Requires PowerShell 7+' {
+        $script:Text | Should -Match "'PowerShell 7\+'"
+        $script:Text | Should -Match 'Test-Pwsh7OrNewer'
+        $script:Text | Should -Match "Install-Winget 'Microsoft\.PowerShell'"
     }
 
     It 'Pins gitleaks 8.30.1' {

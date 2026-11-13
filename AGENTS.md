@@ -726,14 +726,14 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 | Dependency | Version | Source |
 |------------|---------|--------|
 | Pester | 5.7.1 | PSGallery (`Install-Module -Scope CurrentUser`) |
-| PowerShell | 7.6.9 | winget `Microsoft.PowerShell` |
+| PowerShell | 7+ (latest 7.x) | winget `Microsoft.PowerShell` |
 | gitleaks | 8.30.1 | winget `Gitleaks.Gitleaks` |
 | actionlint | 1.7.12 | winget `rhysd.actionlint` |
 | lychee | 0.24.2 | winget `lycheeverse.lychee` |
 | git, gh, winget | present | OS / GitHub CLI / App Installer |
 
 - Single setup command: `powershell -NoProfile -File Tools/Install-Dependencies.ps1` (`-Check` verifies without changing the host).
-- PowerShell 7.6.9 is the recommended and pinned line; the setup command requests that exact version from winget, so the winget source must publish 7.6.9 before setup can complete.
+- PowerShell 7+ is the recommended floor; the setup command installs the latest 7.x from winget without pinning to a single release, so the host is not tied to a build that can go end-of-life. The compatibility floor (Windows PowerShell 5.1) still governs script syntax, not the installed runtime.
 - No approved project-scope exceptions: everything is global/user-global.
 
 ## Hidden layers - scratch directory name (named here once), cadence for clearing it
