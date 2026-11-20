@@ -19,7 +19,7 @@ jobs:
     name: Scan platform text fields for mojibake
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@main
 
       - name: Fetch GitHub metadata and releases
         env:
