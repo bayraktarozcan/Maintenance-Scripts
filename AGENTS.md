@@ -652,9 +652,10 @@ Project facts for this repository. Points at the universal rules above instead o
 | `Scripts/Bug-Report.ps1` | Only runtime PowerShell logic; HTML report engine, UTF-8 with BOM |
 | `Scripts/*.bat` | Thin wrappers around system tools (`DISM`, `SFC`, `ipconfig`, `winget`); run tools inline |
 | `Tools/Check-Mojibake.ps1` | Developer-side encoding gate; rejects double-encoded text and invalid UTF-8, never makes network calls |
+| `Tools/verify_mirror.py` | Developer-side mirror verifier: sync-sha + structure parity; `--selftest` runs its fixture suite, `--allow-missing` is the CI case; never makes network calls |
 | `Tools/Invoke-Gate.ps1` | Single local gate command running every CI-declared check |
 | `Tools/Install-Dependencies.ps1` | Single host dependency setup command (per-user scope, `-Check` verifies) |
-| `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`, `WinGet-Upgrade.Tests.ps1`, `Invoke-Gate.Tests.ps1`, `Install-Dependencies.Tests.ps1`, `Repair-Windows.Tests.ps1`) |
+| `Tests/` | Pester suites (`Bug-Report.Tests.ps1`, `Check-Mojibake.Tests.ps1`, `WinGet-Upgrade.Tests.ps1`, `Invoke-Gate.Tests.ps1`, `Install-Dependencies.Tests.ps1`, `Repair-Windows.Tests.ps1`, `Verify-Mirror.Tests.ps1`) |
 | `.githooks/` | Bundled local hooks; enable with `git config core.hooksPath .githooks` |
 | `.github/` | GitHub quality gates |
 | `Docs/` | Tracked chapters: overview/setup, architecture, troubleshooting |
@@ -757,4 +758,4 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 - Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) are the only exceptions: they delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; they never upload or transmit user data and write no registry keys.
 - No protected-branch bypass is configured for this repository.
 
-<!-- mirror-sync: sync-sha=7fd72fa6f130d11aab5d18d709ff2bc3cbf3a11a -->
+<!-- mirror-sync: sync-sha=69e464afe220162cae22b45dd56bc82c3ea937ed -->
