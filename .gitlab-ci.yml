@@ -15,7 +15,7 @@ variables:
 
 .ps_base: &ps_base
   image:
-    name: mcr.microsoft.com/powershell:7.5-ubuntu-22.04@sha256:a3affe99603400235501b8da8be5f9e40152d4db6557f698a91da0280f9e1469
+    name: mcr.microsoft.com/powershell:7.5-ubuntu-22.04
     entrypoint: [""]
 
 validate:
@@ -62,7 +62,7 @@ quality:
 
 .golang_base: &golang_base
   image:
-    name: golang:1.25-alpine@sha256:1ae0735f00daffa3aaf1363a5184c0d2dc55c78e3db4ec70241cdac97bf84b59
+    name: golang:1.25-alpine
     entrypoint: [""]
 
 hygiene:
