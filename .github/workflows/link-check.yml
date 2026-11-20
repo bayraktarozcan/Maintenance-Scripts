@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@main
       - name: Check links
-        uses: lycheeverse/lychee-action@main
+        uses: lycheeverse/lychee-action@master
         with:
           args: >-
             --no-progress --max-retries 2
