@@ -34,7 +34,8 @@ Describe 'verify_mirror.py' {
             return
         }
         # A temp copy with a corrupted marker must produce a nonzero exit.
-        $tmp = Join-Path $script:Root 'Logs\mirror-tamper.tmp.md'
+        # Use the OS temp dir: Logs/ is gitignored and absent in a fresh CI checkout.
+        $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ('mirror-tamper-' + [guid]::NewGuid().ToString('N') + '.md')
         $text = Get-Content -LiteralPath $canonical -Raw -Encoding UTF8
         $text = $text -replace 'sync-sha=[0-9a-f]{40}', ('sync-sha=' + ('0' * 40))
         [System.IO.File]::WriteAllText($tmp, $text, (New-Object System.Text.UTF8Encoding($false)))
@@ -53,7 +54,7 @@ Describe 'verify_mirror.py' {
             Set-ItResult -Skipped -Because 'canonical document is absent'
             return
         }
-        $missing = Join-Path $script:Root 'Logs\mirror-absent.tmp.md'
+        $missing = Join-Path ([System.IO.Path]::GetTempPath()) ('mirror-absent-' + [guid]::NewGuid().ToString('N') + '.md')
         Remove-Item -LiteralPath $missing -Force -ErrorAction SilentlyContinue
         $null = & $script:Python $script:Verifier $canonical $missing --allow-missing 2>&1
         $LASTEXITCODE | Should -Be 0
