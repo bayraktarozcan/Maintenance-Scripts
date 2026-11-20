@@ -81,6 +81,11 @@ $script:Plan = @(
     @{ Component = 'Node.js runtime';    Action = 'Skip';    Current = ''; Target = ''; Details = '' }
     @{ Component = 'npm';                Action = 'Skip';    Current = ''; Target = ''; Details = '' }
     @{ Component = 'npm packages';       Action = 'Skip';    Current = ''; Target = ''; Details = '' }
+    @{ Component = 'gitleaks';           Action = 'Skip';    Current = ''; Target = ''; Details = '' }
+    @{ Component = 'actionlint';         Action = 'Skip';    Current = ''; Target = ''; Details = '' }
+    @{ Component = 'lychee';             Action = 'Skip';    Current = ''; Target = ''; Details = '' }
+    @{ Component = 'PowerShell 7';       Action = 'Skip';    Current = ''; Target = ''; Details = '' }
+    @{ Component = 'Pester';             Action = 'Skip';    Current = ''; Target = ''; Details = '' }
 )
 
 # Result collector (what WAS updated - execution phase)
@@ -92,6 +97,11 @@ $script:Result = @(
     @{ Component = 'Node.js runtime';    Status = 'Skipped'; Before = ''; After = ''; Details = '' }
     @{ Component = 'npm';                Status = 'Skipped'; Before = ''; After = ''; Details = '' }
     @{ Component = 'npm packages';       Status = 'Skipped'; Before = ''; After = ''; Details = '' }
+    @{ Component = 'gitleaks';           Status = 'Skipped'; Before = ''; After = ''; Details = '' }
+    @{ Component = 'actionlint';         Status = 'Skipped'; Before = ''; After = ''; Details = '' }
+    @{ Component = 'lychee';             Status = 'Skipped'; Before = ''; After = ''; Details = '' }
+    @{ Component = 'PowerShell 7';       Status = 'Skipped'; Before = ''; After = ''; Details = '' }
+    @{ Component = 'Pester';             Status = 'Skipped'; Before = ''; After = ''; Details = '' }
 )
 
 function Write-Log {
@@ -732,6 +742,64 @@ if (Test-Command 'npm') {
     Set-Plan 'npm packages' 'Skipped' '' '' 'npm not found'
 }
 
+# --- Host tools (winget: gitleaks, actionlint, lychee, PowerShell 7) ---
+Write-Log "  - host tools (winget)" 'INFO'
+
+$script:HostToolWingetIds = @{
+    'gitleaks'  = 'Gitleaks.Gitleaks'
+    'actionlint' = 'rhysd.actionlint'
+    'lychee'    = 'lycheeverse.lychee'
+}
+foreach ($tool in @('gitleaks', 'actionlint', 'lychee')) {
+    $tid = $script:HostToolWingetIds[$tool]
+    if (-not (Test-Command 'winget') -or -not (Test-Command $tool)) {
+        Set-Plan $tool 'Skipped' '' '' $(if (-not (Test-Command 'winget')) { 'winget not found' } else { "$tool not found" })
+        continue
+    }
+    $tCur = & $tool @('--version') 2>&1 | Out-String
+    if ($tCur -match '(\d+\.\d+\.\d+)') { $tCur = $matches[1] } else { $tCur = 'unknown' }
+    $tStatus = Get-WingetPackageStatus -CandidateIds @($tid) -ExpectedVersion $tCur
+    if ($tStatus.Available -and $tStatus.Available -ne $tCur) {
+        Set-Plan $tool 'Update available' $tCur $tStatus.Available "winget: $tid"
+    } elseif ($tStatus.Parseable -and ($tStatus.NoUpgradeMatch -or -not $tStatus.Available -or $tStatus.Available -eq $tCur)) {
+        Set-Plan $tool 'Up to date' $tCur $tCur "winget: $tid"
+    } else {
+        Set-Plan $tool 'Unknown' $tCur '' "winget: $tid; $($tStatus.Note)"
+    }
+}
+
+# PowerShell 7+ (winget, latest 7.x)
+if (Test-Command 'winget') {
+    $pwshCur = if (Test-Command 'pwsh') { (& pwsh -NoProfile -Command '$PSVersionTable.PSVersion.ToString()' 2>&1 | Out-String).Trim() } else { 'not installed' }
+    $pwshStatus = Get-WingetPackageStatus -CandidateIds @('Microsoft.PowerShell') -ExpectedVersion $pwshCur
+    if ($pwshStatus.Available -and $pwshStatus.Available -ne $pwshCur) {
+        Set-Plan 'PowerShell 7' 'Update available' $pwshCur $pwshStatus.Available 'winget: Microsoft.PowerShell'
+    } elseif ($pwshStatus.Parseable) {
+        Set-Plan 'PowerShell 7' 'Up to date' $pwshCur $pwshCur 'winget: Microsoft.PowerShell'
+    } else {
+        Set-Plan 'PowerShell 7' 'Unknown' $pwshCur '' "winget: Microsoft.PowerShell; $($pwshStatus.Note)"
+    }
+} else {
+    Set-Plan 'PowerShell 7' 'Skipped' '' '' 'winget not found'
+}
+
+# --- Pester (PowerShell module, latest from PSGallery) ---
+Write-Log "  - Pester (PSGallery)" 'INFO'
+if (Test-Command 'pwsh') {
+    $pesterCur = (& pwsh -NoProfile -Command "(Get-Module -ListAvailable Pester | Sort-Object Version -Descending | Select-Object -First 1).Version.ToString()" 2>&1 | Out-String).Trim()
+    if (-not $pesterCur) { $pesterCur = 'not installed' }
+    $pesterLatest = (& pwsh -NoProfile -Command "(Find-Module Pester -ErrorAction SilentlyContinue).Version.ToString()" 2>&1 | Out-String).Trim()
+    if ($pesterLatest -and $pesterLatest -ne $pesterCur) {
+        Set-Plan 'Pester' 'Update available' $pesterCur $pesterLatest 'PSGallery latest'
+    } elseif ($pesterLatest) {
+        Set-Plan 'Pester' 'Up to date' $pesterCur $pesterCur 'PSGallery latest'
+    } else {
+        Set-Plan 'Pester' 'Unknown' $pesterCur '' 'PSGallery lookup failed'
+    }
+} else {
+    Set-Plan 'Pester' 'Skipped' '' '' 'pwsh not found'
+}
+
 # Show the plan
 Show-PlanTable
 
@@ -930,6 +998,39 @@ if ($npmPkgRow.Action -eq 'Update available') {
     }
 } else {
     Set-Result 'npm packages' $npmPkgRow.Action "$($npmPkgRow.Current)" "$($npmPkgRow.Target)" $npmPkgRow.Details
+}
+
+# --- Host tools (winget upgrade to latest) ---
+foreach ($tool in @('gitleaks', 'actionlint', 'lychee', 'PowerShell 7')) {
+    $hRow = $script:Plan | Where-Object { $_.Component -eq $tool }
+    if ($hRow.Action -ne 'Update available') {
+        Set-Result $tool $hRow.Action $hRow.Current $hRow.Current $hRow.Details
+        continue
+    }
+    $hid = if ($tool -eq 'PowerShell 7') { 'Microsoft.PowerShell' } else { $script:HostToolWingetIds[$tool] }
+    Write-Log "Upgrading $tool via winget ($hid)..." 'INFO'
+    $hUpgrade = Run-Command 'winget' @('upgrade', '--id', $hid, '--exact', '--accept-source-agreements', '--accept-package-agreements') "$tool winget upgrade"
+    if ($hUpgrade -eq 0) {
+        Set-Result $tool 'Updated' $hRow.Current $hRow.Target
+    } else {
+        Set-Result $tool 'Error' $hRow.Current '' 'winget upgrade failed'
+        $script:OverallFailed = $true
+    }
+}
+
+# --- Pester (Update-Module to latest) ---
+$pesterRow = $script:Plan | Where-Object { $_.Component -eq 'Pester' }
+if ($pesterRow.Action -eq 'Update available') {
+    Write-Log "Updating Pester to latest from PSGallery..." 'INFO'
+    $pesterUpgrade = Run-Command 'pwsh' @('-NoProfile', '-Command', 'Update-Module Pester -Force -ErrorAction Stop') 'Pester Update-Module'
+    if ($pesterUpgrade -eq 0) {
+        Set-Result 'Pester' 'Updated' $pesterRow.Current $pesterRow.Target
+    } else {
+        Set-Result 'Pester' 'Error' $pesterRow.Current '' 'Update-Module failed'
+        $script:OverallFailed = $true
+    }
+} else {
+    Set-Result 'Pester' $pesterRow.Action $pesterRow.Current $pesterRow.Current $pesterRow.Details
 }
 
 # ============================================================
