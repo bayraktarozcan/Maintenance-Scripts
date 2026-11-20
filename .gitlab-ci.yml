@@ -1,6 +1,6 @@
 # Maintenance Scripts - GitLab CI
 # Mirror of the GitHub quality gates: validate, quality, hygiene, link check, secret scan.
-# Base images use their current tags; checksum-verified binary downloads stay pinned.
+# Base images and tools use their latest tags/versions.
 
 stages:
   - validate
@@ -15,7 +15,7 @@ variables:
 
 .ps_base: &ps_base
   image:
-    name: mcr.microsoft.com/powershell:7.5-ubuntu-22.04
+    name: mcr.microsoft.com/powershell:latest
     entrypoint: [""]
 
 validate:
@@ -49,7 +49,7 @@ quality:
   <<: *ps_base
   stage: quality
   script:
-    - pwsh -NoProfile -Command "Install-Module Pester -RequiredVersion 5.7.1 -Force -SkipPublisherCheck -Scope CurrentUser"
+    - pwsh -NoProfile -Command "Install-Module Pester -Force -SkipPublisherCheck -Scope CurrentUser"
     - |
       pwsh -NoProfile -Command '
         $cfg = New-PesterConfiguration
@@ -62,14 +62,14 @@ quality:
 
 .golang_base: &golang_base
   image:
-    name: golang:1.25-alpine
+    name: golang:alpine
     entrypoint: [""]
 
 hygiene:
   <<: *golang_base
   stage: hygiene
   script:
-    - go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+    - go install github.com/rhysd/actionlint/cmd/actionlint@latest
     - "$(go env GOPATH)/bin/actionlint -color"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -78,10 +78,8 @@ linkcheck:
   <<: *golang_base
   stage: linkcheck
   script:
-    - wget -q -O /tmp/lychee.tar.gz https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.2/lychee-x86_64-unknown-linux-musl.tar.gz
-    - echo "73657a111819a30c47c08352896796f23d64e4eb2b3ed39b6d32149241566fc5  /tmp/lychee.tar.gz" | sha256sum -c -
-    - tar -xzf /tmp/lychee.tar.gz -C /tmp
-    - /tmp/lychee-x86_64-unknown-linux-musl/lychee --no-progress --max-retries 2 --exclude '^https://www\.iso\.org/standard/(77520|86308|86612)\.html$' './**/*.md'
+    - go install github.com/lycheeverse/lychee/cmd/lychee@latest
+    - $(go env GOPATH)/bin/lychee --no-progress --max-retries 2 --exclude '^https://www\.iso\.org/standard/(77520|86308|86612)\.html$' './**/*.md'
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
@@ -90,7 +88,7 @@ secret_scan:
   stage: secret
   script:
     - apk add --no-cache git
-    - go install github.com/zricethezav/gitleaks/v8@v8.30.1
+    - go install github.com/zricethezav/gitleaks/v8@latest
     - $(go env GOPATH)/bin/gitleaks git --redact --exit-code 1
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'

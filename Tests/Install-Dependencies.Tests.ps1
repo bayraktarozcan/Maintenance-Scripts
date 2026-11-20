@@ -1,6 +1,6 @@
-﻿# Pester 5 static tests for Tools/Install-Dependencies.ps1.
+﻿# Pester static tests for Tools/Install-Dependencies.ps1.
 # Installation itself is verified manually; these tests pin the manifest
-# (exact versions, per-user scope, side-effect-free -Check) so it cannot
+# (latest versions, per-user scope, side-effect-free -Check) so it cannot
 # rot silently. Never installs anything.
 
 BeforeAll {
@@ -13,8 +13,10 @@ BeforeAll {
 }
 
 Describe 'Install-Dependencies manifest' {
-    It 'Pins Pester 5.7.1' {
-        $script:Text | Should -Match "'Pester 5\.7\.1'"
+    It 'Uses latest Pester (no version pin)' {
+        $script:Text | Should -Match "Install-Module Pester -Force"
+        $script:Text | Should -Not -Match 'RequiredVersion'
+        $script:Text | Should -Not -Match "'Pester [0-9]"
     }
 
     It 'Requires PowerShell 7+' {
@@ -23,16 +25,24 @@ Describe 'Install-Dependencies manifest' {
         $script:Text | Should -Match "Install-Winget 'Microsoft\.PowerShell'"
     }
 
-    It 'Pins gitleaks 8.30.1' {
-        $script:Text | Should -Match "'gitleaks 8\.30\.1'"
+    It 'Installs gitleaks at latest' {
+        $script:Text | Should -Match "Install-Winget 'Gitleaks\.Gitleaks'"
+        $script:Text | Should -Not -Match "'gitleaks [0-9]"
     }
 
-    It 'Pins actionlint 1.7.12' {
-        $script:Text | Should -Match "'actionlint 1\.7\.12'"
+    It 'Installs actionlint at latest' {
+        $script:Text | Should -Match "Install-Winget 'rhysd\.actionlint'"
+        $script:Text | Should -Not -Match "'actionlint [0-9]"
     }
 
-    It 'Pins lychee 0.24.2' {
-        $script:Text | Should -Match "'lychee 0\.24\.2'"
+    It 'Installs lychee at latest' {
+        $script:Text | Should -Match "Install-Winget 'lycheeverse\.lychee'"
+        $script:Text | Should -Not -Match "'lychee [0-9]"
+    }
+
+    It 'Uses exact-version probes nowhere' {
+        $script:Text | Should -Not -Match 'Test-ModuleVersion|Test-ToolVersion|Test-PwshVersion'
+        $script:Text | Should -Not -Match '--exact'
     }
 
     It 'Supports a side-effect-free -Check switch' {

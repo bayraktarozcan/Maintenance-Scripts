@@ -1,14 +1,15 @@
 ﻿# Maintenance Scripts - host dependency setup
 # Installs (or verifies with -Check) every host-side dependency named in the
 # project layer ("Dependencies"), at per-user global scope, never elevated:
-#   Pester 5.7.1, PowerShell 7+ (latest 7.x from winget), gitleaks 8.30.1,
-#   actionlint 1.7.12, lychee 0.24.2, plus presence checks for git, gh, and winget.
+#   Pester, PowerShell 7+ (latest 7.x from winget), gitleaks, actionlint,
+#   lychee - all at their latest version - plus presence checks for git, gh,
+#   and winget.
 # Usage: powershell -NoProfile -File Tools/Install-Dependencies.ps1 [-Check]
 # -Check reports OK/MISSING per dependency and exits 1 when anything is
-# missing or version-mismatched, without changing the host.
-# Sources are official only (PSGallery, winget community repository) with
-# exact versions; winget verifies installer hashes. Never makes changes
-# outside the per-user scope and never triggers elevation.
+# missing, without changing the host.
+# Sources are official only (PSGallery, winget community repository); winget
+# verifies installer hashes. Never makes changes outside the per-user scope
+# and never triggers elevation.
 [CmdletBinding()]
 param(
     [switch]$Check
@@ -17,24 +18,12 @@ param(
 $script:Winget = 'winget'
 $script:Failed = 0
 
-function Test-ModuleVersion([string]$Name, [string]$Version) {
-    $found = Get-Module -ListAvailable -Name $Name | Where-Object { $_.Version -eq $Version }
-    return ($null -ne $found)
+function Test-ModulePresent([string]$Name) {
+    return ($null -ne (Get-Module -ListAvailable -Name $Name))
 }
 
-function Test-ToolVersion([string]$Command, [string[]]$Arguments, [string]$Pattern) {
-    $cmd = Get-Command $Command -ErrorAction SilentlyContinue
-    if (-not $cmd) { return $false }
-    $out = (& $cmd @Arguments 2>&1 | Out-String).Replace("`r", '')
-    return ($out -match $Pattern)
-}
-
-function Test-PwshVersion([string]$Version) {
-    # Exact-version check (kept for callers that pin a specific build).
-    $cmd = Get-Command pwsh -ErrorAction SilentlyContinue
-    if (-not $cmd) { return $false }
-    $out = & $cmd -NoProfile -Command '$PSVersionTable.PSVersion.ToString()' 2>&1 | Out-String
-    return ($out.Trim() -eq $Version)
+function Test-ToolPresent([string]$Command) {
+    return ($null -ne (Get-Command $Command -ErrorAction SilentlyContinue))
 }
 
 function Test-Pwsh7OrNewer {
@@ -48,9 +37,8 @@ function Test-Pwsh7OrNewer {
     return $false
 }
 
-function Install-Winget([string]$Id, [string]$Version) {
-    $arguments = @('install', '--exact', '--id', $Id, '--accept-source-agreements', '--accept-package-agreements')
-    if ($Version) { $arguments += @('--version', $Version) }
+function Install-Winget([string]$Id) {
+    $arguments = @('install', '--id', $Id, '--accept-source-agreements', '--accept-package-agreements')
     & $script:Winget @arguments
     if ($LASTEXITCODE -ne 0) { throw ("winget install failed for " + $Id) }
 }
@@ -75,24 +63,24 @@ function Install-Dependency([string]$Name, [scriptblock]$Probe, [scriptblock]$Se
     }
 }
 
-Install-Dependency 'Pester 5.7.1' `
-    { Test-ModuleVersion 'Pester' '5.7.1' } `
-    { Install-Module Pester -RequiredVersion 5.7.1 -Force -SkipPublisherCheck -Scope CurrentUser }
+Install-Dependency 'Pester' `
+    { Test-ModulePresent 'Pester' } `
+    { Install-Module Pester -Force -SkipPublisherCheck -Scope CurrentUser }
 
 Install-Dependency 'PowerShell 7+' `
     { Test-Pwsh7OrNewer } `
     { Install-Winget 'Microsoft.PowerShell' }
 
-Install-Dependency 'gitleaks 8.30.1' `
-    { Test-ToolVersion 'gitleaks' @('version') '(?m)^8\.30\.1$' } `
+Install-Dependency 'gitleaks' `
+    { Test-ToolPresent 'gitleaks' } `
     { Install-Winget 'Gitleaks.Gitleaks' }
 
-Install-Dependency 'actionlint 1.7.12' `
-    { Test-ToolVersion 'actionlint' @('--version') '(?m)^1\.7\.12$' } `
+Install-Dependency 'actionlint' `
+    { Test-ToolPresent 'actionlint' } `
     { Install-Winget 'rhysd.actionlint' }
 
-Install-Dependency 'lychee 0.24.2' `
-    { Test-ToolVersion 'lychee' @('--version') 'lychee 0\.24\.2' } `
+Install-Dependency 'lychee' `
+    { Test-ToolPresent 'lychee' } `
     { Install-Winget 'lycheeverse.lychee' }
 
 Install-Dependency 'git' `

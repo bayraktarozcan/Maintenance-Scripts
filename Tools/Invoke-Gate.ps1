@@ -5,7 +5,7 @@
 #   Whitespace - trailing-whitespace scan of added lines (HEAD)
 #   Mojibake   - Tools/Check-Mojibake.ps1 -Files (tracked files)
 #   Commits    - Tools/Check-Mojibake.ps1 -Commits on HEAD (message/author)
-#   Pester     - ./Tests suite (requires Pester 5.7.1)
+#   Pester     - ./Tests suite (latest Pester)
 #   Hygiene    - actionlint over .github/workflows (required)
 # LinkCheck  - lychee over './**/*.md' (required; fetches URLs over the network)
 # Usage: powershell -NoProfile -File Tools/Invoke-Gate.ps1 [-List]
@@ -69,8 +69,7 @@ Invoke-GateStep 'Commits' {
 }
 
 Invoke-GateStep 'Pester' {
-    $pester = Get-Module -ListAvailable -Name Pester | Where-Object { $_.Version -eq '5.7.1' }
-    if (-not $pester) { throw "Pester 5.7.1 is not installed" }
+    if (-not (Get-Module -ListAvailable -Name Pester)) { throw "Pester is not installed" }
     $result = Invoke-Pester -Path (Join-Path $script:Root 'Tests') -Output Detailed -PassThru
     if ($result.FailedCount -gt 0) { throw ($result.FailedCount.ToString() + " failing tests") }
 }

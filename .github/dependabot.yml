@@ -1,4 +1,5 @@
-# Dependabot: keep GitHub Actions current on a weekly cadence.
+# Dependabot: github-actions ecosystem is configured for historical parity;
+# action refs use default branches (@main/@master), so they never need bumps.
 # Commit messages follow Conventional Commits (chore(deps)).
 version: 2
 updates:
