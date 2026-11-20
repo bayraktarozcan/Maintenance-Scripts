@@ -1,6 +1,6 @@
 # Maintenance Scripts - GitLab CI
 # Mirror of the GitHub quality gates: validate, quality, hygiene, link check, secret scan.
-# Images and tools are pinned for reproducible runs.
+# Base images use their current tags; checksum-verified binary downloads stay pinned.
 
 stages:
   - validate

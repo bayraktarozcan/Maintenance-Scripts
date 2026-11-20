@@ -386,12 +386,11 @@ Repository management and dependency conventions.
 
 - **Security files.** `SECURITY.md` (vulnerability reporting) lives at the repository root; GitHub's security features expect it there.
 - **Dependabot.** Configured in `.github/dependabot.yml`; a weekly cadence is preferred to avoid daily PR pile-ups; commit messages follow Conventional Commits (`chore(deps)`).
-- **CodeQL.** A `.github/workflows/codeql.yml` runs on every push and weekly. It is free for public repositories; private repositories need GitHub's paid code-security product. Where CodeQL is unavailable, a secret scanner (for example gitleaks) and the language's own static analysis stand in.
-- **Auto-approve.** Only trusted usernames may be auto-approved, after status checks pass, logged, with minimal permissions (`contents: write`, `pull-requests: write`).
+- **CodeQL.** CodeQL runs via GitHub's default code-scanning setup (configured for this repository, weekly schedule, `actions` language); there is no `.github/workflows/codeql.yml` file. It is free for public repositories; private repositories need GitHub's paid code-security product. Where CodeQL is unavailable, a secret scanner (for example gitleaks) and the language's own static analysis stand in.
 - **Workflow hardening.** Every workflow sets the narrowest `permissions:` it needs. Third-party actions use the latest version and are kept current by Dependabot. Reference each action by its default branch (`@main`, or `@master` where that is the repository's default) so it always resolves to current code. The repository setting `sha_pinning_required` must be `false` for these unpinned refs to start; when an action's ref cannot be resolved, check the action repository's default branch and use that name.
 - **Dependency currency.** Runtime and build dependencies use the latest version; dev dependencies may use flexible ranges (`>=`, `^`); lockfiles are committed; updates go through Dependabot. A new dependency is justified (need, maintenance state, license) before it is added. Types: **Runtime** (needed to run the app, for example flask, react), **Dev** (development-time only, for example pytest, eslint), **Build** (compile-time only, for example typescript, webpack).
 - **Currency without exception.** Everything is kept current at all times, and there is no exception: dependencies, runtimes, toolchains, build and CI tooling, third-party actions, base images, and the host software the project relies on. A new version is accepted without further question: the build and the tests are the only gate. If it breaks CI, the fix goes forward (adapt the code, replace the component), never back: no rolling the bump back. Security fixes do not wait for the update cadence. Currency is verified by a scheduled check, not discovered by an incident. Nothing old stays in the project, and a component that cannot be brought current is a defect to be fixed, not an exception to be recorded.
-- **Standard workflow triggers.** Test on `push` and `pull_request` (unit tests, lint, type check); Build on `push` to `main`; Release on tag `v*`; CodeQL on push and weekly; Dependabot weekly.
+- **Standard workflow triggers.** Test on `push` and `pull_request` (unit tests, lint, type check); Build on `push` to `main`; Release on tag `v*`; CodeQL weekly via default setup; Dependabot weekly.
 - **Machine-maintained logs.** Recurring git and audit events (dependency updates, PR journals, version checks) are logged by the workflow itself via API, never by hand; human intervention is not required.
 - **New-repository checklist.** The bootstrap order is the rule, not a suggestion: the ignore file comes first so nothing private is swept into the first commit, then the root documents, then the landing page, then the hidden layers, and only then version control.
   - [ ] `.gitignore` written first, with the hidden layers already named in it?
@@ -399,8 +398,7 @@ Repository management and dependency conventions.
   - [ ] `index.html` landing page added, where the project has one?
   - [ ] `._dont_migrate_` placed in each hidden layer, created from the universal layer downward and never the reverse, all covered by the single root ignore pattern?
   - [ ] `.github/dependabot.yml` configured?
-  - [ ] `.github/workflows/codeql.yml` added?
-  - [ ] `.github/workflows/` auto-approve workflow added?
+  - [ ] `CodeQL` code scanning enabled (default setup or a workflow)?
   - [ ] `.github/workflows/` workflows for recurring git operations written?
   - [ ] `.github/pull_request_template.md`, `RELEASE-NOTE-TEMPLATE.md`, and `CODEOWNERS` added?
   - [ ] `.editorconfig` and `.gitattributes` added, plus `.gitlab-ci.yml` when the origin has a second push URL?
@@ -759,4 +757,4 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 - Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) are the only exceptions: they delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; they never upload or transmit user data and write no registry keys.
 - No protected-branch bypass is configured for this repository.
 
-<!-- mirror-sync: sync-sha=a4597268a09d55d91e516c6af8308c9bd05da05e -->
+<!-- mirror-sync: sync-sha=7fd72fa6f130d11aab5d18d709ff2bc3cbf3a11a -->
