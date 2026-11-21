@@ -675,7 +675,7 @@ Project facts for this repository. Points at the universal rules above instead o
 | `Planning/` | Work plans and task tracking (assistant-managed) |
 | `Logs/<Name>/` | Runtime output, git-ignored; never committed; each script recreates its folder |
 | `Shortcuts/` | Generated locally per machine, git-ignored |
-| `AGENTS-TR.md` | Untracked local Turkish mirror for human review only; never committed |
+| Untracked local mirror | Turkish mirror for human review only; gitignored, never committed or named in tracked output |
 
 ## Versions - Scheme, Current Constants, Where Each Is Stated
 
@@ -751,7 +751,7 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 ## Hidden Layers - Scratch Directory Name (Named Here Once), Cadence for Clearing It
 
 - No scratch directory in use. Intermediates stay in `Logs/` (git-ignored, recreated per run) and are removed when the task ends.
-- Local-only layer: `AGENTS-TR.md` (git-ignored via `.gitignore`, never committed, never referenced from committed output beyond the ignore pattern). Whenever `AGENTS.md` changes, regenerate `AGENTS-TR.md` in the same session so the `sync-sha` value matches across both files.
+- Local-only layer: a gitignored Turkish mirror (never committed, never named in tracked output beyond the ignore pattern). Whenever this file changes, regenerate that mirror in the same session so the `sync-sha` value matches across both markers.
 
 ## Toolchain - Overrides of the Defaults in the Appendix, Compatibility Floor
 
@@ -771,4 +771,4 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 - Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) are the only exceptions: they delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; they never upload or transmit user data and write no registry keys.
 - No protected-branch bypass is configured for this repository.
 
-<!-- mirror-sync: sync-sha=60f809de5f9be20ef4331b29c7506f9c15e8fbfc -->
+<!-- mirror-sync: sync-sha=f3e80d90cba977ea54263b79b2c3740043822eea -->
