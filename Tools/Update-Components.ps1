@@ -490,6 +490,28 @@ function Get-WingetPackageStatus {
     return $result
 }
 
+function Compare-ToolVersion {
+    param([string]$Candidate, [string]$Current)
+    # Numeric, component-wise comparison with missing components read as zero:
+    # 7.7.0 and 7.7.0.0 are the same version. pwsh reports three components
+    # while winget reports four, so a plain string comparison claims an update
+    # on every run. [version] cannot be used: it reads an unspecified
+    # component as -1, which makes 7.7.0 smaller than 7.7.0.0.
+    # Returns Newer / Same / Older / Unknown.
+    $shape = '^\d{1,9}(\.\d{1,9}){0,3}$'
+    if ($Candidate -notmatch $shape -or $Current -notmatch $shape) { return 'Unknown' }
+    $candidateParts = @($Candidate.Split('.') | ForEach-Object { [int]$_ })
+    $currentParts = @($Current.Split('.') | ForEach-Object { [int]$_ })
+    $count = [Math]::Max($candidateParts.Count, $currentParts.Count)
+    for ($i = 0; $i -lt $count; $i++) {
+        $candidatePart = if ($i -lt $candidateParts.Count) { $candidateParts[$i] } else { 0 }
+        $currentPart = if ($i -lt $currentParts.Count) { $currentParts[$i] } else { 0 }
+        if ($candidatePart -gt $currentPart) { return 'Newer' }
+        if ($candidatePart -lt $currentPart) { return 'Older' }
+    }
+    return 'Same'
+}
+
 function Check-WingetUpdateAvailable {
     param([string]$Id)
     # Compatibility wrapper: returns available version or $null; callers must treat $null as unknown, not current.
@@ -578,9 +600,10 @@ if (Test-Command 'winget' -and (Test-Command 'py')) {
     $pyStatus = Get-WingetPackageStatus -CandidateIds @($pyWingetId, 'Python.PythonInstallManager') -NameQuery $(if ($pyCurrent -match '^(\d+\.\d+)') { "Python $($matches[1])" } else { 'Python' }) -ExpectedVersion $pyCurrent
     if ($pyStatus.Id) { $pyWingetId = $pyStatus.Id }
     $pyDetail = "winget: $pyWingetId$(if ($pyStatus.Source) { "; source: $($pyStatus.Source)" })"
-    if ($pyStatus.Available -and $pyStatus.Available -ne $pyCurrent) {
+    $pyCmp = Compare-ToolVersion -Candidate $pyStatus.Available -Current $pyCurrent
+    if ($pyCmp -eq 'Newer') {
         Set-Plan 'Python runtime' 'Update available' $pyCurrent $pyStatus.Available $pyDetail
-    } elseif ($pyStatus.Parseable -and ($pyStatus.NoUpgradeMatch -or -not $pyStatus.Available -or $pyStatus.Available -eq $pyCurrent)) {
+    } elseif ($pyCmp -in @('Same', 'Older') -or ($pyStatus.NoUpgradeMatch -and -not $pyStatus.Available)) {
         Set-Plan 'Python runtime' 'Up to date' $pyCurrent $pyCurrent $pyDetail
     } elseif (-not $pyWingetId) {
         Set-Plan 'Python runtime' 'Skipped' $pyCurrent '' 'Version not detected / winget ID not found'
@@ -698,9 +721,10 @@ if (Test-Command 'winget' -and (Test-Command 'node')) {
     $nodeStatus = Get-WingetPackageStatus -CandidateIds @('OpenJS.NodeJS.LTS') -ExpectedVersion $nodeCurrent
     if ($nodeStatus.Id) { $nodeWingetId = $nodeStatus.Id }
     $nodeDetail = "winget: $nodeWingetId$(if ($nodeStatus.Source) { "; source: $($nodeStatus.Source)" })"
-    if ($nodeStatus.Available -and $nodeStatus.Available -ne $nodeCurrent) {
+    $nodeCmp = Compare-ToolVersion -Candidate $nodeStatus.Available -Current $nodeCurrent
+    if ($nodeCmp -eq 'Newer') {
         Set-Plan 'Node.js runtime' 'Update available' $nodeCurrent $nodeStatus.Available $nodeDetail
-    } elseif ($nodeStatus.Parseable -and ($nodeStatus.NoUpgradeMatch -or -not $nodeStatus.Available -or $nodeStatus.Available -eq $nodeCurrent)) {
+    } elseif ($nodeCmp -in @('Same', 'Older') -or ($nodeStatus.NoUpgradeMatch -and -not $nodeStatus.Available)) {
         Set-Plan 'Node.js runtime' 'Up to date' $nodeCurrent $nodeCurrent $nodeDetail
     } else {
         Set-Plan 'Node.js runtime' 'Unknown' $nodeCurrent '' "$nodeDetail; $($nodeStatus.Note)"
@@ -759,9 +783,10 @@ foreach ($tool in @('gitleaks', 'actionlint', 'lychee')) {
     $tCur = & $tool @('--version') 2>&1 | Out-String
     if ($tCur -match '(\d+\.\d+\.\d+)') { $tCur = $matches[1] } else { $tCur = 'unknown' }
     $tStatus = Get-WingetPackageStatus -CandidateIds @($tid) -ExpectedVersion $tCur
-    if ($tStatus.Available -and $tStatus.Available -ne $tCur) {
+    $tCmp = Compare-ToolVersion -Candidate $tStatus.Available -Current $tCur
+    if ($tCmp -eq 'Newer') {
         Set-Plan $tool 'Update available' $tCur $tStatus.Available "winget: $tid"
-    } elseif ($tStatus.Parseable -and ($tStatus.NoUpgradeMatch -or -not $tStatus.Available -or $tStatus.Available -eq $tCur)) {
+    } elseif ($tCmp -in @('Same', 'Older') -or ($tStatus.NoUpgradeMatch -and -not $tStatus.Available)) {
         Set-Plan $tool 'Up to date' $tCur $tCur "winget: $tid"
     } else {
         Set-Plan $tool 'Unknown' $tCur '' "winget: $tid; $($tStatus.Note)"
@@ -772,9 +797,10 @@ foreach ($tool in @('gitleaks', 'actionlint', 'lychee')) {
 if (Test-Command 'winget') {
     $pwshCur = if (Test-Command 'pwsh') { (& pwsh -NoProfile -Command '$PSVersionTable.PSVersion.ToString()' 2>&1 | Out-String).Trim() } else { 'not installed' }
     $pwshStatus = Get-WingetPackageStatus -CandidateIds @('Microsoft.PowerShell') -ExpectedVersion $pwshCur
-    if ($pwshStatus.Available -and $pwshStatus.Available -ne $pwshCur) {
+    $pwshCmp = Compare-ToolVersion -Candidate $pwshStatus.Available -Current $pwshCur
+    if ($pwshCmp -eq 'Newer') {
         Set-Plan 'PowerShell 7' 'Update available' $pwshCur $pwshStatus.Available 'winget: Microsoft.PowerShell'
-    } elseif ($pwshStatus.Parseable) {
+    } elseif ($pwshCmp -in @('Same', 'Older') -or ($pwshStatus.NoUpgradeMatch -and -not $pwshStatus.Available)) {
         Set-Plan 'PowerShell 7' 'Up to date' $pwshCur $pwshCur 'winget: Microsoft.PowerShell'
     } else {
         Set-Plan 'PowerShell 7' 'Unknown' $pwshCur '' "winget: Microsoft.PowerShell; $($pwshStatus.Note)"

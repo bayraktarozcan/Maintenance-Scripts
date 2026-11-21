@@ -122,6 +122,50 @@ Describe 'Update-Components command patterns' {
     }
 }
 
+Describe 'Update-Components host tools' {
+    BeforeAll {
+        $tokens = $null
+        $errors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseFile($script:PsPath, [ref]$tokens, [ref]$errors)
+        $definition = $ast.Find({
+            param($node)
+            $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Compare-ToolVersion'
+        }, $true)
+        if (-not $definition) { throw 'Compare-ToolVersion not found' }
+        . ([scriptblock]::Create($definition.Extent.Text))
+    }
+
+    It 'Covers gitleaks, actionlint, lychee, PowerShell 7 and Pester' {
+        $script:Text | Should -Match '\$script:HostToolWingetIds = @\{'
+        $script:Text | Should -Match "'gitleaks'\s*=\s*'Gitleaks\.Gitleaks'"
+        $script:Text | Should -Match "'actionlint'\s*=\s*'rhysd\.actionlint'"
+        $script:Text | Should -Match "'lychee'\s*=\s*'lycheeverse\.lychee'"
+        $script:Text | Should -Match "foreach \(\`$tool in @\('gitleaks', 'actionlint', 'lychee'\)\)"
+        $script:Text | Should -Match "Set-Plan 'PowerShell 7'"
+        $script:Text | Should -Match "Set-Plan 'Pester'"
+    }
+
+    It 'Compares versions numerically instead of as raw strings' {
+        $script:Text | Should -Match 'function Compare-ToolVersion'
+        $script:Text | Should -Not -Match 'Available\s+-ne\s+\$'
+        $script:Text | Should -Match 'Compare-ToolVersion -Candidate \$tStatus\.Available'
+        $script:Text | Should -Match 'Compare-ToolVersion -Candidate \$pwshStatus\.Available'
+    }
+
+    It 'Upgrades host tools through exact winget IDs' {
+        $script:Text | Should -Match "Run-Command 'winget' @\('upgrade', '--id', \`$hid, '--exact'"
+    }
+
+    It 'Treats trailing zero components as the same version' {
+        Compare-ToolVersion -Candidate '7.7.0.0' -Current '7.7.0' | Should -Be 'Same'
+        Compare-ToolVersion -Candidate '7.7.0' -Current '7.7.0.0' | Should -Be 'Same'
+        Compare-ToolVersion -Candidate '7.7.1' -Current '7.7.0.0' | Should -Be 'Newer'
+        Compare-ToolVersion -Candidate '7.6.9' -Current '7.7.0' | Should -Be 'Older'
+        Compare-ToolVersion -Candidate '' -Current '7.7.0' | Should -Be 'Unknown'
+        Compare-ToolVersion -Candidate 'not installed' -Current '7.7.0' | Should -Be 'Unknown'
+    }
+}
+
 Describe 'Update-Components Check mode' {
     It 'Respects -Check switch in Run-Command' {
         $script:Text | Should -Match 'if \(\$Check\)'
