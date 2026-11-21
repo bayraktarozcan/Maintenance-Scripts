@@ -15,7 +15,7 @@ BeforeAll {
 
     function Find-StaleVersions {
         param([string]$Text, [string]$Current)
-        return @([regex]::Matches($Text, 'v0\.1\.1\.\d+') |
+        return @([regex]::Matches($Text, 'v\d+\.\d+\.\d+\.\d+') |
             ForEach-Object { $_.Value } | Where-Object { $_ -cne $Current } | Select-Object -Unique)
     }
 }
@@ -56,9 +56,11 @@ Describe 'Version parity' {
         }
     }
 
-    It 'Detects a planted stale version' {
+    It 'Detects a planted stale version from any minor line' {
         $current = Get-CanonicalVersion
-        $stale = if ($current -eq 'v0.1.1.2') { 'v0.1.1.1' } else { 'v0.1.1.2' }
-        Find-StaleVersions -Text "Scheme: four-part ($stale)" -Current $current | Should -Contain $stale
+        foreach ($stale in @('v0.1.1.1', 'v9.9.9.9')) {
+            Find-StaleVersions -Text "Scheme: four-part ($stale)" -Current $current | Should -Contain $stale
+        }
+        Find-StaleVersions -Text "Scheme: four-part ($current)" -Current $current | Should -BeNullOrEmpty
     }
 }
