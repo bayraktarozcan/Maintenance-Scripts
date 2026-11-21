@@ -110,10 +110,10 @@ Describe 'Published release hygiene' {
         if (Test-Path -LiteralPath $script:Changelog) { Remove-Item -LiteralPath $script:Changelog -Force }
     }
 
-    It 'has a tracked guard with the six named checks' {
+    It 'has a tracked guard with the seven named checks' {
         Test-Path -LiteralPath $script:Script | Should -BeTrue
         $text = [IO.File]::ReadAllText($script:Script)
-        foreach ($name in @('pair-count', 'title-format', 'body-structure', 'no-garbage', 'cross-host', 'changelog-coverage')) {
+        foreach ($name in @('pair-count', 'title-format', 'body-structure', 'no-garbage', 'cross-host', 'changelog-coverage', 'note-generator')) {
             $text | Should -Match $name
         }
     }
@@ -191,6 +191,12 @@ Describe 'Published release hygiene' {
         } finally {
             [IO.File]::WriteAllText($script:Changelog, $original)
         }
+    }
+
+    It 'The generator emits canonical bilingual notes for the current tag' {
+        $generator = Join-Path $script:Root 'Tools/Build-ReleaseNotes.ps1'
+        $problems = @(Test-NoteGenerator -CurrentTag 'v0.1.1.2' -GeneratorPath $generator -RepoRoot $script:Root)
+        $problems | Should -BeNullOrEmpty
     }
 
     It 'Reads GitLab without a write-capable credential' {

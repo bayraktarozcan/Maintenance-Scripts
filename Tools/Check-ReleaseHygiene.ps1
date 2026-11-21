@@ -130,6 +130,27 @@ function Test-ChangelogCoverage {
     return @()
 }
 
+function Test-NoteGenerator {
+    param([string]$CurrentTag, [string]$GeneratorPath, [string]$RepoRoot)
+    if (-not (Test-Path -LiteralPath $GeneratorPath)) { return @('note-generator: Build-ReleaseNotes.ps1 missing') }
+    $tmp = Join-Path ([IO.Path]::GetTempPath()) ('note-gen-' + [guid]::NewGuid().ToString('N') + '.md')
+    try {
+        $null = & $GeneratorPath -Version $CurrentTag.TrimStart('v', 'V') -Current -Output $tmp -Root $RepoRoot
+        $body = [IO.File]::ReadAllText($tmp)
+        $required = @('### Summary', '### Added', '### Files', '### Documentation',
+            '### Özet', '### Eklenenler', '### Dosyalar', '### Belgelendirme')
+        $missing = @($required | Where-Object { -not $body.Contains($_) })
+        if ($missing.Count -gt 0) { return @('note-generator: missing ' + ($missing -join ', ')) }
+        if ($body -notmatch '(?ms)^### Summary\s*\n+-\s+\S') { return @('note-generator: empty English summary') }
+        if ($body -notmatch '(?ms)^### Özet\s*\n+-\s+\S') { return @('note-generator: empty Turkish summary') }
+        return @()
+    } catch {
+        return @("note-generator: $_")
+    } finally {
+        if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Force }
+    }
+}
+
 function Test-ReleaseSet {
     param([object[]]$GitHub, [object[]]$GitLab, [string]$CurrentTag, [string]$ChangelogPath)
     $problems = @()
@@ -213,7 +234,10 @@ function Invoke-Main {
         $gl = @(Get-ReleasesFromApi 'GitLab' | ForEach-Object { Convert-ToRelease $_ 'GitLab' })
     }
     $problems = @(Test-ReleaseSet -GitHub $gh -GitLab $gl -CurrentTag $current -ChangelogPath $ChangelogPath)
-    $names = @('pair-count', 'title-format', 'body-structure', 'no-garbage', 'cross-host', 'changelog-coverage')
+    $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+    $generator = Join-Path $PSScriptRoot 'Build-ReleaseNotes.ps1'
+    $problems += @(Test-NoteGenerator -CurrentTag $current -GeneratorPath $generator -RepoRoot $repoRoot)
+    $names = @('pair-count', 'title-format', 'body-structure', 'no-garbage', 'cross-host', 'changelog-coverage', 'note-generator')
     foreach ($name in $names) {
         $hits = @($problems | Where-Object { $_ -like "$name*" })
         if ($hits.Count -eq 0) { Write-Host "PASS $name"; continue }
