@@ -6,6 +6,8 @@
 
 ## English
 
+The product of this repository is the `Scripts/` directory — the maintenance launchers and the HTML report engine that users run. `Tools/` and `Tests/` are project components: developer/CI tooling and verification suites. Nothing here builds or bundles the product into `Scripts/`; it is shipped as-is.
+
 ### Shared Launcher Harness
 
 All four `.bat` files follow the same harness, verified by
@@ -102,6 +104,8 @@ System/Application toggles). See
 <a id="tr"></a>
 
 ## Türkçe
+
+Bu deponun ürünü `Scripts/` dizinidir — kullanıcıların çalıştırdığı bakım başlatıcıları ve HTML rapor motoru. `Tools/` ve `Tests/` proje bileşenleridir: geliştirici/CI araçları ve doğrulama paketleri. Ürün `Scripts/` içine derlenmez veya paketlenmez; olduğu gibi teslim edilir.
 
 ### Ortak Başlatıcı İskeleti
 

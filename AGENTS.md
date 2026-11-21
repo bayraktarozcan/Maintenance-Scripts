@@ -660,6 +660,8 @@ Project facts for this repository. Points at the universal rules above instead o
 
 ## Layout - Directory Table: Path, Purpose
 
+The shipped product is the `Scripts/` directory only: maintenance launchers and the report engine that users run. `Tools/` and `Tests/` are project components — developer/CI tooling and verification suites for this repository. This project does not compile, bundle, or generate files into `Scripts/`; do not place product scripts in the component directories or component tooling in `Scripts/`.
+
 | Path | Purpose |
 |------|---------|
 | `Scripts/Bug-Report.ps1` | Only runtime PowerShell logic; HTML report engine, UTF-8 with BOM |
@@ -775,4 +777,4 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 - Do not add scripts that make network calls or persist elevated privileges. Four named exceptions exist: `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; `Tools/Check-PythonFloor.ps1` and `Tools/Check-ReleaseHygiene.ps1` make read-only HTTPS GETs to the Python release calendar and the public GitHub/GitLab APIs. None uploads user data, writes registry keys, or holds a credential; the two checks use no token and fail closed on transport errors.
 - The active `main-guard` ruleset lists the repository owner (`User` actor `86029038`, `bypass_mode: always`) in `bypass_actors`, so that actor can push to `main` directly and the ruleset rules are skipped for it. The rules are `deletion`, `non_fast_forward`, `required_linear_history`, `required_status_checks` and `pull_request`; classic branch protection also reports `allow_force_pushes: true` and `enforce_admins: false`. CI and the second host's pipeline therefore run after the push rather than gating it; the local gate is the pre-push control.
 
-<!-- mirror-sync: sync-sha=a6146e15fda64bbb538be580930bdd09c1641254 -->
+<!-- mirror-sync: sync-sha=28ef179710ee2d8ce24e8e31cff811ecf8094825 -->
