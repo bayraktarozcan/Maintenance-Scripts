@@ -25,6 +25,40 @@ BeforeAll {
     }
 }
 
+Describe 'GitLab CI mirror' {
+    BeforeAll {
+        $script:GitLabPath = [System.IO.Path]::Combine($script:Root, '.gitlab-ci.yml')
+        $script:GitLabText = [System.IO.File]::ReadAllText($script:GitLabPath)
+    }
+
+    It 'Mirrors every quality gate job' {
+        foreach ($job in @('validate', 'quality', 'hygiene', 'linkcheck', 'secret_scan', 'text_audit')) {
+            $script:GitLabText | Should -Match ('(?m)^' + $job + ':') -Because "$job must run on GitLab too"
+        }
+    }
+
+    It 'Resolves images and tools at latest instead of pinning them' {
+        $script:GitLabText | Should -Match 'powershell:latest'
+        $script:GitLabText | Should -Match 'golang:alpine'
+        $script:GitLabText | Should -Match 'alpine:latest'
+        $script:GitLabText | Should -Not -Match '@v\d+\.'
+        $script:GitLabText | Should -Not -Match ':\d+\.\d+(\.\d+)?\s*$'
+    }
+
+    It 'Installs Go tools at latest' {
+        $script:GitLabText | Should -Match 'actionlint/cmd/actionlint@latest'
+        $script:GitLabText | Should -Match 'gitleaks/v8@latest'
+    }
+
+    It 'Installs lychee from its checksum-verified release, not as a Go module' {
+        $script:GitLabText | Should -Not -Match 'go install \S*lychee'
+        $script:GitLabText | Should -Match 'lycheeverse/lychee/releases/latest'
+        $script:GitLabText | Should -Match 'sha256sum -c'
+        $script:GitLabText | Should -Match 'x86_64-unknown-linux-musl'
+        $script:GitLabText | Should -Match 'aarch64-unknown-linux-musl'
+    }
+}
+
 Describe 'Invoke-Gate' {
     It 'Reports exactly the mapped check names' {
         $names = & $script:PsExe -NoProfile -File $script:GatePath -List

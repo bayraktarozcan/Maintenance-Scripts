@@ -65,6 +65,11 @@ quality:
     name: golang:alpine
     entrypoint: [""]
 
+.alpine_base: &alpine_base
+  image:
+    name: alpine:latest
+    entrypoint: [""]
+
 hygiene:
   <<: *golang_base
   stage: hygiene
@@ -75,11 +80,34 @@ hygiene:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
 linkcheck:
-  <<: *golang_base
+  <<: *alpine_base
   stage: linkcheck
   script:
-    - go install github.com/lycheeverse/lychee/cmd/lychee@latest
-    - $(go env GOPATH)/bin/lychee --no-progress --max-retries 2 --exclude '^https://www\.iso\.org/standard/(77520|86308|86612)\.html$' './**/*.md'
+    # lychee is a Rust binary, not a Go module: resolve the latest release
+    # at run time and verify its published checksum before executing it.
+    - apk add --no-cache curl ca-certificates
+    - |
+      set -eu
+      arch=$(uname -m)
+      case "$arch" in
+        x86_64)  target=x86_64-unknown-linux-musl ;;
+        aarch64) target=aarch64-unknown-linux-musl ;;
+        *) echo "Unsupported architecture: $arch"; exit 1 ;;
+      esac
+      tag=$(curl -fsSL https://api.github.com/repos/lycheeverse/lychee/releases/latest \
+        | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -n1)
+      test -n "$tag"
+      asset="lychee-${target}.tar.gz"
+      base="https://github.com/lycheeverse/lychee/releases/download/${tag}/${asset}"
+      curl -fsSL "$base" -o "/tmp/${asset}"
+      curl -fsSL "${base}.sha256" -o "/tmp/${asset}.sha256"
+      cd /tmp
+      sha256sum -c "${asset}.sha256"
+      tar -xzf "$asset"
+      cp "lychee-${target}/lychee" /usr/local/bin/lychee
+      chmod 0755 /usr/local/bin/lychee
+      lychee --version
+    - lychee --no-progress --max-retries 2 --exclude '^https://www\.iso\.org/standard/(77520|86308|86612)\.html$' './**/*.md'
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
