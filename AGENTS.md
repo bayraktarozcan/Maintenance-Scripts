@@ -769,6 +769,6 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 ## Bypasses - Gates That Do Not Hold by Design, and What Runs Afterward
 
 - Do not add scripts that make network calls or persist elevated privileges. Four named exceptions exist: `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; `Tools/Check-PythonFloor.ps1` and `Tools/Check-ReleaseHygiene.ps1` make read-only HTTPS GETs to the Python release calendar and the public GitHub/GitLab APIs. None uploads user data, writes registry keys, or holds a credential; the two checks use no token and fail closed on transport errors.
-- No protected-branch bypass is configured for this repository.
+- The active `main-guard` ruleset lists the repository owner (`User` actor `86029038`, `bypass_mode: always`) in `bypass_actors`, so that actor can push to `main` directly and the ruleset rules are skipped for it. The rules are `deletion`, `non_fast_forward`, `required_linear_history`, `required_status_checks` and `pull_request`; classic branch protection also reports `allow_force_pushes: true` and `enforce_admins: false`. CI and the second host's pipeline therefore run after the push rather than gating it; the local gate is the pre-push control.
 
-<!-- mirror-sync: sync-sha=8a78f3f99ba2e2a492b0930cfbce9f802e045313 -->
+<!-- mirror-sync: sync-sha=e056bba8729caa698764c99505350fb09ca3cd8d -->
