@@ -35,6 +35,7 @@ Latest-version policy across CI and tooling: third-party actions resolve current
 
 **Changed:**
 - `Update-Components.ps1` detects pipx itself via `pipx --version` and pipx-managed packages via `pipx list --json` + `pip index versions`; upgrades pipx itself via `pipx upgrade pipx` and all pipx-managed packages via `pipx upgrade-all`. Component appears as `pipx` to match `pip`/`npm` naming.
+- The recommended and pinned PowerShell line is 7.6.9; the setup command requests this exact version from winget.
 - `Update-Components.ps1` winget detection uses a hybrid path (optional `Microsoft.WinGet.Client`, fixed-width table parsing, `--upgrade-available`) and resolves Python winget IDs via candidates/query fallback; unparseable target versions are reported honestly (`Unknown`) instead of claiming up-to-date.
 - `Update-Components.ps1` pip target detection prefers `pip install --dry-run --ignore-installed --report` JSON and falls back to `pip index versions` parsing (verified on pip 26.x); `--use-feature=fast-deps` is not used on pip 26.x.
 - `Update-Components.ps1` upgrades `npm` itself and upgrades each outdated global npm package to the latest available version via `npm install --global <pkg>@<latest>` (including major versions), then rechecks `npm outdated -g`; stale/ambiguous results are avoided by parsing `npm outdated -g --json` as an object keyed by package name.
@@ -44,6 +45,37 @@ Latest-version policy across CI and tooling: third-party actions resolve current
 ### V0.1.0.1 — 2026-10-23
 
 Reliability and hardening release: one PowerShell engine per launcher, evidence-based Repair reporting, a modern DNS command, a seven-check local gate, and complete bilingual documentation.
+
+**Added:**
+- `Clear-DnsClientCache.bat` — flushes the DNS cache with the `Clear-DnsClientCache` cmdlet; replaces `IPConfig-FlushDNS.bat`, needs no elevation, and supports `/nopause`.
+- `Bug-Report.ps1` filters — searchable text, System/Application toggles, date range, and dropdown checkbox lists for event IDs and providers, with a select-all control and live labels.
+- `Tools/Invoke-Gate.ps1` — one local gate running the seven checks CI declares: Syntax, Whitespace, Mojibake, Commits, Pester, Hygiene, LinkCheck.
+- `Tools/Check-Mojibake.ps1` — encoding gate for tracked files, commit messages, and JSON payloads; bundled Git hooks and CI text audits use it.
+- `Tools/Install-Dependencies.ps1` — one host dependency setup command with `-Check` verification.
+- Bilingual guides under `Docs/` (overview/setup, architecture, troubleshooting), repository policy and ownership files, pull request template, and local Git hooks.
+- GitLab CI mirror, weekly Dependabot updates, scheduled release-text audit, and Pester suites for the repair, report, gate, encoding, dependency, and WinGet helpers.
+
+**Changed:**
+- `.bat` launchers resolve one PowerShell engine per run (`pwsh` app alias, `pwsh` from PATH, then Windows PowerShell 5.1) and reuse it for timestamps, BOM checks, workload, and drain calls.
+- `Repair-Windows.bat` records per-stage start/end timestamps (UTC+03:00), exit codes, and elapsed milliseconds, then prints a nine-line summary, total time, and overall status; missing evidence reports `INDETERMINATE`, `net start` code 2 is accepted only when `sc query` reports the service running, and a DISM cleanup recommendation requires review.
+- `Clear-DnsClientCache.bat` clears an inherited `NOPAUSE` variable before parsing `/nopause`.
+- Link Check runs on Markdown pushes to `main` as well as weekly and on pull requests.
+- The recommended PowerShell release is 7.6.7; setup documentation names the dependency manifest and keeps WinGet at user scope.
+- Documentation and governance now cover the project layer, release deprecation, the full root-document set, and Türkiye-pinned timestamps.
+
+**Removed:**
+- `Scripts/IPConfig-FlushDNS.bat` — replaced by the UAC-free `Clear-DnsClientCache.bat`.
+
+**Fixed:**
+- Launcher timestamps no longer break when the PowerShell path contains `(` or `&`.
+- The local gate fails when `actionlint` or `lychee` is missing instead of reporting a skipped check and exiting 0; its header now states that LinkCheck fetches URLs.
+- `Invoke-Gate.Tests.ps1` maps every gate check to its workflow step and pins the workflow file set.
+- `Repair-Windows.bat` exits `1` for every overall status except `SUCCESS` and `SUCCESS (restart required)`; its SFC output is decoded from UTF-16LE before being appended, eliminating NUL bytes in the log.
+- `Bug-Report.ps1` writes reports as UTF-8 with BOM again, matching the v0.1.0.0 behavior.
+- Documentation security posture, launcher claims, Turkish grammar, and Windows Update / WinGet guidance are corrected.
+- `Update-Components.ps1` `ConvertFrom-WingetTable` no longer returns empty rows when winget's separator line is one continuous run of dashes; column boundaries are now derived from the header line's whitespace gaps, and `Get-WingetPackageStatus` adds a regex fallback that extracts the Available version from raw output, so Node.js (and other packages) are detected instead of reporting `Unknown`.
+
+### V0.1.0.0 — 2026-09-16
 
 First release: personal Windows maintenance script collection.
 
@@ -117,7 +149,7 @@ Güvenilirlik ve sağlamlaştırma sürümü: başlatıcı başına tek PowerShe
 - `Repair-Windows.bat` her aşama için başlangıç/bitiş zaman damgası (UTC+03:00), çıkış kodu ve geçen milisaniyeyi kaydeder; ardından dokuz satırlık özet, toplam süre ve genel durum yazar; eksik kanıt `INDETERMINATE` bildirir, `net start` kod 2 yalnızca `sc query` hizmeti çalışıyor gösterdiğinde kabul edilir ve DISM temizlik önerisi inceleme gerektirir.
 - `Clear-DnsClientCache.bat`, `/nopause` bağımsız değişkenini ayrıştırmadan önce devralınan `NOPAUSE` değişkenini temizler.
 - Link Check, haftalık ve pull request'lerin yanı sıra `main` üzerindeki Markdown push'larında da çalışır.
-- Önerilen PowerShell sürümü 7.6.9'dir; kurulum belgeleri bağımlılık bildirimini adlandırır ve WinGet'i kullanıcı kapsamında tutar.
+- Önerilen PowerShell sürümü 7.6.7'dir; kurulum belgeleri bağımlılık bildirimini adlandırır ve WinGet'i kullanıcı kapsamında tutar.
 - Belgeler ve yönetişim artık proje katmanını, sürüm kullanımdan kaldırmayı, tam kök belge kümesini ve Türkiye saatine sabitlenmiş zaman damgalarını kapsar.
 
 **Kaldırılan:**
