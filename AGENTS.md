@@ -427,6 +427,18 @@ Repository management and dependency conventions.
 - **Release parity.** Releases on every host mirror each other exactly: same tag, title, description, and notes. For a bilingual project, release notes are bilingual (EN paragraph first, local-language paragraph after, at equal scope).
 - **Historical records** (changelog, compatibility tables, per-version release notes) describe the repository as it stood at that version. Rename and cleanup guards exempt them by a scoped marker, per file or per line region, never by a whole-file exemption, and a guard checks that each declared marker is still present.
 - **Release completeness.** Before writing release notes, review every commit between the previous tag and the current one. Confirm each commit is accounted for in the notes (added, changed, fixed, removed, deprecated, security), and that no commit is omitted. The notes must be complete against the tag diff, not just a summary.
+- **Release title and body hygiene.** The canonical changelog is the source of truth
+  for every release's title and notes. A title names the tag exactly once as
+  `<tag> — <descriptive title>`; every tag except the latest starts with
+  `[DEPRECATED]` — the marker goes at the beginning, never the end. Apply the
+  heading-case rule to the descriptive part (acronyms in full capitals,
+  established mixed-case names unchanged). A body is bilingual at equal scope:
+  EN first, local language second, each with its own version heading and
+  Summary / Added / Changed / Removed / Fixed / Files / Documentation sections
+  translated in the second half. Never paste another release's rows, the
+  changelog table of contents, or bare `#N` tokens into notes — GitHub turns the
+  last into issue and pull-request links. Audit every release on every host and
+  confirm title and notes are byte-identical after LF normalization.
 
 ### Naming
 
@@ -759,4 +771,4 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 - Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) are the only exceptions: they delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; they never upload or transmit user data and write no registry keys.
 - No protected-branch bypass is configured for this repository.
 
-<!-- mirror-sync: sync-sha=79696972686e13bcc220728a59ae44b2e363ff45 -->
+<!-- mirror-sync: sync-sha=60f809de5f9be20ef4331b29c7506f9c15e8fbfc -->
