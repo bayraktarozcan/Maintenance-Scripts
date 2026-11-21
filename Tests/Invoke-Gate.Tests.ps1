@@ -22,6 +22,7 @@ BeforeAll {
     $script:ExemptWorkflows = [ordered]@{
         'secret-scan.yml' = 'Runs gitleaks over repository history in CI; no local gate equivalent.'
         'text-audit.yml'  = 'Fetches platform metadata over the network; CI-only weekly audit.'
+        'python-floor.yml' = 'Weekly EOL-driven Python floor bumps; network calendar, no local gate equivalent.'
     }
 }
 

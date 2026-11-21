@@ -21,6 +21,13 @@ jobs:
     steps:
       - uses: actions/checkout@main
 
+      - name: Set up Python floor and latest
+        uses: actions/setup-python@main
+        with:
+          python-version: |
+            3.11
+            3.x
+
       - name: Install Pester
         shell: pwsh
         run: Install-Module Pester -Force -SkipPublisherCheck -Scope CurrentUser

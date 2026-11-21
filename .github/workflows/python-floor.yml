@@ -1,0 +1,69 @@
+# Automation Scripts - Python Floor Currency
+# Windows-native (PowerShell) weekly check of the Python floor declared in
+# quality.yml against the upstream EOL calendar. A bump is applied and pushed
+# to both hosts without human intervention. GitLab needs the repository secret
+# GITLAB_PYTHON_FLOOR_TOKEN (a token with write_repository scope).
+
+name: Python Floor Currency
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: python-floor
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  floor:
+    name: Check and bump floor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+
+      - name: Compare declared floor with upstream EOL calendar
+        id: check
+        shell: pwsh
+        run: ./Tools/Check-PythonFloor.ps1 -Check
+
+      - name: Apply floor bump
+        if: steps.check.outputs.changed == 'true'
+        shell: pwsh
+        env:
+          DESIRED: ${{ steps.check.outputs.desired }}
+        run: ./Tools/Check-PythonFloor.ps1 -Apply -Version $env:DESIRED
+
+      - name: Verify parity after bump
+        if: steps.check.outputs.changed == 'true'
+        shell: pwsh
+        run: ./Tools/Check-PythonFloor.ps1 -Check
+
+      - name: Commit and push to both hosts
+        if: steps.check.outputs.changed == 'true'
+        shell: pwsh
+        env:
+          DESIRED: ${{ steps.check.outputs.desired }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_PYTHON_FLOOR_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/quality.yml Docs/Overview-And-Setup.md
+          if (git diff --cached --quiet) { throw "Floor bump produced no changes" }
+          git commit -m "chore: bump Python floor to $env:DESIRED"
+          git push origin HEAD:main
+          git remote add gitlab https://gitlab.com/bayraktarozcan/Maintenance-Scripts.git 2>$null
+          if ($env:GITLAB_TOKEN) {
+            $askpass = Join-Path $env:RUNNER_TEMP 'gitlab-askpass.sh'
+            Set-Content -LiteralPath $askpass -Value '#!/bin/sh' -Encoding ascii
+            Add-Content -LiteralPath $askpass -Value 'printf "%s\n" "$GITLAB_TOKEN"' -Encoding ascii
+            chmod +x $askpass
+            $env:GIT_ASKPASS = $askpass
+            git push gitlab HEAD:main
+          } else {
+            Write-Host "GITLAB_PYTHON_FLOOR_TOKEN is not configured; GitLab push skipped."
+          }

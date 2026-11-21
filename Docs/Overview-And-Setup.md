@@ -31,6 +31,7 @@ table and [Architecture](Architecture.md) for how they work.
 - `Bug-Report.ps1` reads the System and Application event logs, so the
   scheduling account needs permission to read them.
 - `Update-Components.ps1` requires `py` (Python launcher), `npm`, `pipx` (installed via `py -m pip install pipx`), and optionally `winget` (for Python/Node.js runtime upgrades); it runs entirely in user scope and never self-elevates. The same Python installation runs `Tools/verify_mirror.py`, the mirror verifier (`--selftest` runs its fixture suite; two paths plus optional `--allow-missing` verify a pair).
+- CI installs Python 3.11+ together with the latest 3.x interpreter so the mirror verifier tests actually run in every job. A weekly PowerShell check reads the upstream Python EOL calendar and raises the declared floor automatically when the oldest supported minor advances.
 
 ### Setup
  
@@ -85,6 +86,7 @@ beş `.bat` başlatıcı ile bir PowerShell HTML rapor motoru
 - `Bug-Report.ps1`, System ve Application olay günlüklerini okur; bu yüzden
   zamanlayan hesabın bunları okuma izni olmalıdır.
 - `Update-Components.ps1` için `py` (Python başlatıcı), `npm`, `pipx` (`py -m pip install pipx` ile kurulur) ve isteğe bağlı `winget` (Python/Node.js çalışma zamanı yükseltmeleri için) gerekir; tamamen kullanıcı kapsamında koşur ve asla kendini yükseltmez. Aynı Python kurulumu, ayna doğrulayıcısı `Tools/verify_mirror.py` dosyasını da çalıştırır (`--selftest` yerleşik fixture takımını koşar; iki yol ve isteğe bağlı `--allow-missing` bir çifti doğrular).
+- CI, ayna doğrulayıcısı testlerinin her işte gerçekten çalışması için Python 3.11+ ve en son 3.x yorumlayıcısını kurar. Haftalık PowerShell denetimi Python EOL takvimini okur ve desteklenen en eski küçük sürüm ilerlediğinde bildirilen tabanı otomatik yükseltir.
 
 ### Kurulum
  
