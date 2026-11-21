@@ -89,7 +89,7 @@ Describe 'Format-HtmlSafe' {
 
 Describe 'Clean-OldReports' {
     It 'Keeps newest files' {
-        $root = Join-Path 'TestDrive:' 'logs'
+        $root = Join-Path $TestDrive 'logs'
         New-Item -ItemType Directory -Path $root | Out-Null
         1..5 | ForEach-Object {
             $p = Join-Path $root ("r{0}.html" -f $_)
