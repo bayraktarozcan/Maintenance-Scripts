@@ -30,4 +30,10 @@ while read local_ref local_sha remote_ref remote_sha; do
   fi
 done
 
+printf '%s\n' 'pre-push: running local gate'
+if ! "$PS" -NoProfile -File "$root/Tools/Invoke-Gate.ps1"; then
+  echo "pre-push: local gate failed." >&2
+  failed=1
+fi
+
 exit "$failed"

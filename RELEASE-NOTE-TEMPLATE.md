@@ -11,14 +11,14 @@ Copy the template below when creating or updating a release. Tüm release'lar
 
 ## English
 
-### Title rules
+### Title Rules
 
 - One version number only, in the form `<tag> — Title Case Description` (em dash, spaces on both sides).
 - Every release except the current one starts with `[DEPRECATED] ` — the prefix goes at the **front**, never at the end.
 - Title Case with conjunctions lowercase; abbreviations fully uppercase (`API`, `CI`, `ADMX`); mixed-case names such as `IoC`, `PowerShell`, `GitHub` and `Node.js` are preserved.
 - No bare issue numbers such as `#5` (the host turns them into links), no emoji, no embedded CHANGELOG table of contents.
 
-### Body rules
+### Body Rules
 
 - English block first, Turkish block second, at equal scope.
 - Section order: `## vX — ...`, `### Summary`, `### Added`, `### Changed`, `### Removed`, `### Fixed`, `### Files`, `### Documentation`.
@@ -91,7 +91,7 @@ Copy the template below when creating or updating a release. Tüm release'lar
 - `Docs/...` - {NOT}
 ```
 
-### Publication procedure
+### Publication Procedure
 
 There is no dedicated release script. Derive the canonical title and bilingual
 body from `CHANGELOG.md` first (stdout line 1 is the title; `-Current` omits the
@@ -123,14 +123,14 @@ hosts and keep the full history in `CHANGELOG.md`.
 
 ## Türkçe
 
-### Başlık kuralları
+### Başlık Kuralları
 
 - Yalnızca bir sürüm numarası: `<tag> — Başlık Büyüklüğünde Açıklama` (en tire, iki yanında boşluk).
 - Güncel olan dışındaki tüm release'lar `[DEPRECATED] ` ile **başlar**; önek sona asla konmaz.
 - Başlık büyüklüğü, bağlaçlar küçük kalır; kısaltmalar tamamen büyük yazılır (`API`, `CI`, `ADMX`); `IoC`, `PowerShell`, `GitHub`, `Node.js` gibi karışık yazımlar korunur.
 - `#5` gibi çıplak numaralar (host bağlantıya çevirir), emoji ve gömülü CHANGELOG içindekileri olmaz.
 
-### Gövde kuralları
+### Gövde Kuralları
 
 - Önce İngilizce, sonra Türkçe blok; kapsam eşit olmalı.
 - Bölüm sırası: `## vX — ...`, `### Summary`, `### Added`, `### Changed`, `### Removed`, `### Fixed`, `### Files`, `### Documentation` (TR: `Özet`, `Eklenenler`, `Değiştirilenler`, `Kaldırılanlar`, `Düzeltilenler`, `Dosyalar`, `Belgelendirme`).
