@@ -27,3 +27,9 @@ jobs:
         uses: rhysd/actionlint@main
         with:
           fail-on-error: true
+      - name: Audit published release hygiene
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_PUSH_TOKEN }}
+        run: ./Tools/Check-ReleaseHygiene.ps1 -Check
