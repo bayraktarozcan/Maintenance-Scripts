@@ -8,6 +8,28 @@
 
 ## English
 
+### V0.1.1.2 — 2026-11-21
+
+Post-release hardening: dotted versions compare numerically, the GitLab link check resolves its Rust tool from a verified release, and the bilingual documentation and mirror verifier no longer drift.
+
+**Added:**
+- `Tests/Update-Components.Tests.ps1` — host-tool coverage that extracts and runs `Compare-ToolVersion` from the updater source.
+- `Tests/Invoke-Gate.Tests.ps1` — GitLab CI parity test: every gate job exists, images and Go tools stay on latest, and lychee never returns as a Go module.
+- Two mirror-verifier fixtures for checklist items without a backticked anchor (18/18 cases).
+
+**Changed:**
+- `Tools/Update-Components.ps1` compares dotted versions component-wise with missing components read as zero, so winget's four-part version and PowerShell's three-part version agree (`7.7.0` equals `7.7.0.0`). An update is claimed only when the target is strictly newer.
+- `Docs/Architecture.md` documents host tools, PowerShell 7, Pester, numeric version comparison, and `-ReportPath` in both languages.
+- `Docs/Troubleshooting.md` is back to ten sections per language.
+- `.gitignore` ignores Python bytecode cache (`__pycache__/`, `*.pyc`).
+
+**Fixed:**
+- `.gitlab-ci.yml` link check resolves the latest lychee release for the runner architecture, verifies its published SHA-256, and installs the binary; the previous `go install .../lychee` could never build a Rust tool.
+- `Tools/Install-Dependencies.ps1` keeps `--exact` on the winget ID probe in `Install-Winget`, so a similarly named package cannot be mistaken for the intended one.
+- `CHANGELOG.md` English sections were restored to full symmetry with the Turkish ones; the historical PowerShell 7.6.9 reference was corrected to 7.6.7.
+- `Tools/verify_mirror.py` no longer compares prose for checklist items without a backticked anchor, so a correct translation cannot report false drift.
+- `Docs/Troubleshooting.md` Turkish sections moved out of the English block; the missing English section was restored.
+
 ### V0.1.1.1 — 2026-11-21
 
 Latest-version policy across CI and tooling: third-party actions resolve current code via default-branch refs, images and CLI tools track latest, host dependencies install at latest, and a mirror verifier with a fixture suite guards the bilingual AGENTS.md mirror.
@@ -96,6 +118,28 @@ First release: personal Windows maintenance script collection.
 <a id="tr"></a>
 
 ## Türkçe
+
+### V0.1.1.2 — 2026-11-21
+
+Yayın sonrası sağlamlaştırma: noktalı sürümler sayısal karşılaştırılır, GitLab bağlantı denetimi Rust aracını doğrulanmış sürümden çözümler ve iki dilli belgeler ile ayna doğrulayıcısı sapma üretmez.
+
+**Eklenen:**
+- `Tests/Update-Components.Tests.ps1` — güncelleyici kaynağından `Compare-ToolVersion` işlevini ayırıp çalıştıran ana makine aracı kapsamı.
+- `Tests/Invoke-Gate.Tests.ps1` — GitLab CI eşlik testi: her geçit işi var, görüntüler ve Go araçları latest kalıyor, lychee bir Go modülü olarak geri dönmüyor.
+- Çapası olmayan kontrol maddeleri için iki ayna doğrulayıcı fixture'ı (18/18 durum).
+
+**Değişen:**
+- `Tools/Update-Components.ps1` noktalı sürümleri bileşen bileşen karşılaştırır, eksik bileşenler sıfır sayılır; winget'in dört parçalı ve PowerShell'in üç parçalı sürümü böylece uyuşur (`7.7.0` ile `7.7.0.0` eşittir). Güncelleme yalnızca hedef kesin olarak daha yeniyse iddia edilir.
+- `Docs/Architecture.md` iki dilde ana makine araçlarını, PowerShell 7'yi, Pester'ı, sayısal sürüm karşılaştırmasını ve `-ReportPath` seçeneğini belgeler.
+- `Docs/Troubleshooting.md` her dilde on bölüme döndü.
+- `.gitignore` Python bayt kodu önbelleğini (`__pycache__/`, `*.pyc`) yok sayar.
+
+**Düzeltilen:**
+- `.gitlab-ci.yml` bağlantı denetimi, koşucu mimarisi için en son lychee sürümünü çözer, yayımlanmış SHA-256'yı doğrular ve ikiliyi kurar; önceki `go install .../lychee` bir Rust aracını hiçbir zaman derleyemezdi.
+- `Tools/Install-Dependencies.ps1`, `Install-Winget` içindeki winget kimlik sorgusunda `--exact` seçeneğini korur; benzer adlı bir paket hedef paketle karışmaz.
+- `CHANGELOG.md` İngilizce bölümleri Türkçeleriyle tam simetrik olacak şekilde geri getirildi; tarihsel PowerShell 7.6.9 ifadesi 7.6.7 olarak düzeltildi.
+- `Tools/verify_mirror.py`, çapası olmayan kontrol maddelerinin metnini artık karşılaştırmıyor; doğru bir çeviri yanlış sapma bildiremez.
+- `Docs/Troubleshooting.md` Türkçe bölümleri İngilizce bloktan çıkarıldı; eksik İngilizce bölüm geri getirildi.
 
 ### V0.1.1.1 — 2026-11-21
 
