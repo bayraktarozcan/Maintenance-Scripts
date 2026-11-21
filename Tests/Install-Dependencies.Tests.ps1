@@ -40,9 +40,10 @@ Describe 'Install-Dependencies manifest' {
         $script:Text | Should -Not -Match "'lychee [0-9]"
     }
 
-    It 'Uses exact-version probes nowhere' {
+    It 'Pins no versions while keeping exact ID matching' {
         $script:Text | Should -Not -Match 'Test-ModuleVersion|Test-ToolVersion|Test-PwshVersion'
-        $script:Text | Should -Not -Match '--exact'
+        $script:Text | Should -Not -Match '--version|RequiredVersion'
+        $script:Text | Should -Match "--id', \`$Id, '--exact'"
     }
 
     It 'Supports a side-effect-free -Check switch' {

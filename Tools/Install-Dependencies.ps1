@@ -38,7 +38,9 @@ function Test-Pwsh7OrNewer {
 }
 
 function Install-Winget([string]$Id) {
-    $arguments = @('install', '--id', $Id, '--accept-source-agreements', '--accept-package-agreements')
+    # --exact is an ID match, not a version pin: without it winget does a
+    # case-insensitive substring search and prompts when several packages match.
+    $arguments = @('install', '--id', $Id, '--exact', '--accept-source-agreements', '--accept-package-agreements')
     & $script:Winget @arguments
     if ($LASTEXITCODE -ne 0) { throw ("winget install failed for " + $Id) }
 }
