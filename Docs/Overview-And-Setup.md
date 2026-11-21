@@ -48,7 +48,7 @@ folder on first use; runtime output lives under `Logs/<Name>/` and is never
 committed (see [`.gitignore`](../.gitignore)). For local development hooks,
 see [CONTRIBUTING.md](../CONTRIBUTING.md).
  
-`Update-Components.ps1` runs directly (dry-run with `-Check`) and updates every host tool, runtime, and package — including Pester, gitleaks, actionlint, lychee, and PowerShell 7 — to the latest version. A weekly per-user scheduled task (`Maintenance-Scripts-Update`, Sunday 03:00, `Limited` run level) runs `Scripts/Update-Components.bat` automatically so currency is verified on a cadence, not discovered by an incident. It can also emit a JSON report for CI/CD (`schemaVersion` 1, `mode`, `plan`, `result`, `success`):
+`Update-Components.ps1` runs directly (dry-run with `-Check`) and updates every host tool, runtime, and package — including Pester, gitleaks, actionlint, lychee, and PowerShell 7 — to the latest version. It can also emit a JSON report for CI/CD (`schemaVersion` 1, `mode`, `plan`, `result`, `success`):
 
 ```powershell
 powershell -NoProfile -File Tools/Update-Components.ps1 -Check
@@ -103,7 +103,7 @@ klasörünü ilk kullanımda kendisi açar; çalışma zamanı çıktısı
 [`.gitignore`](../.gitignore)). Yerel geliştirme kancaları için
 [CONTRIBUTING.md](../CONTRIBUTING.md) dosyasına bakın.
  
-`Update-Components.ps1` doğrudan çalıştırılabilir (kuru çalıştırma için `-Check`); Pester, gitleaks, actionlint, lychee ve PowerShell 7 dâhil tüm ana makine araçlarını, çalışma zamanlarını ve paketleri en güncel sürüme günceller. Kullanıcı başına haftalık bir zamanlanmış görev (`Maintenance-Scripts-Update`, Pazar 03:00, `Limited` çalışma düzeyi) `Scripts/Update-Components.bat` dosyasını otomatik çalıştırır; böylece güncellik bir olayla keşfedilmez, düzenli olarak doğrulanır:
+`Update-Components.ps1` doğrudan çalıştırılabilir (kuru çalıştırma için `-Check`); Pester, gitleaks, actionlint, lychee ve PowerShell 7 dâhil tüm ana makine araçlarını, çalışma zamanlarını ve paketleri en güncel sürüme günceller:
  
 ```powershell
 powershell -NoProfile -File Tools/Update-Components.ps1 -Check
