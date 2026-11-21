@@ -24,6 +24,20 @@
 
 ### Unreleased
 
+Latest-version policy across CI and tooling: third-party actions resolve current code via default-branch refs, images and CLI tools track latest, host dependencies install at latest, and a mirror verifier with a fixture suite guards the bilingual AGENTS.md mirror.
+
+**Added:**
+- `Tools/verify_mirror.py` — developer-side mirror verifier: sync-sha plus structure parity (sections, heading depths, top-level rules, fences, tables, ordered checklist anchors), `--selftest` fixture suite, `--allow-missing` for CI; `Tests/Verify-Mirror.Tests.ps1` covers it.
+- `Update-Components.ps1` also updates Pester, gitleaks, actionlint, lychee, and PowerShell 7 to latest alongside Python/pip/pipx/Node/npm.
+
+**Changed:**
+- Third-party GitHub Actions use their default branch (`@main`, `@master` where that is the default) instead of SHA pins; GitLab base images use `latest` tags and CLI tools use `go install @latest`; gitleaks resolves the latest release at run time with checksum verification.
+- Host dependencies (`Install-Dependencies.ps1`, manifest, docs) install and report at latest instead of exact versions.
+- `sha_pinning_required` is disabled for the repository; documented in AGENTS.md with the default-branch rationale.
+
+**Fixed:**
+- AGENTS.md CodeQL/auto-approve rules matched reality (GitHub default setup; no auto-approve workflow); stale "pinned" comments removed from CI files.
+- Dependency tables and command docs no longer name retired exact versions.
 
 Reliability and hardening release: one PowerShell engine per launcher, evidence-based Repair reporting, a modern DNS command, a seven-check local gate, and complete bilingual documentation.
 
@@ -79,6 +93,23 @@ First release: personal Windows maintenance script collection.
 <a id="tr"></a>
 
 ## Türkçe
+
+### Unreleased
+
+CI ve araçlarda en güncel sürüm ilkesi: üçüncü taraf eylemler varsayılan dal referanslarıyla güncel kodu çözümler, görüntüler ve CLI araçları latest sürümleri izler, ana makine bağımlılıkları latest kurulur ve iki dilli AGENTS.md aynasını bir doğrulayıcı + fixture takımı korur.
+
+**Eklenen:**
+- `Tools/verify_mirror.py` — geliştirici tarafı ayna doğrulayıcısı: sync-sha + yapı eşleşmesi (bölümler, başlık derinlikleri, üst-düzey kurallar, fence'ler, tablolar, sıralı kontrol listesi anchor'ları), `--selftest` fixture takımı, CI için `--allow-missing`; `Tests/Verify-Mirror.Tests.ps1` kapsamı.
+- `Update-Components.ps1` artık Python/pip/pipx/Node/npm yanında Pester, gitleaks, actionlint, lychee ve PowerShell 7'yi de latest'e günceller.
+
+**Değişen:**
+- Üçüncü taraf GitHub eylemleri SHA pin yerine varsayılan dalını (`@main`, depo varsayılanı `@master`) kullanır; GitLab taban görüntüleri `latest` etiketi, CLI araçları `go install @latest` kullanır; gitleaks çalışma zamanında en son sürümü çözüp sağlama toplamını doğrular.
+- Ana makine bağımlılıkları (`Install-Dependencies.ps1`, bildirim, belgeler) tam sürüm yerine latest kurar/raporlar.
+- Depo için `sha_pinning_required` kapatıldı; gerekçesi AGENTS.md'de yazılı.
+
+**Düzeltilen:**
+- AGENTS.md CodeQL/otomatik onay kuralları gerçeklikle uyumlu hale getirildi (GitHub varsayılan kurulumu; otomatik onay iş akışı yok); CI dosyalarındaki bayat "pinned" yorumları kaldırıldı.
+- Bağımlılık tabloları ve komut belgeleri artık emekli olmuş tam sürümleri adlandırmıyor.
 
 ### v0.1.1.0 — 2026-11-09
 

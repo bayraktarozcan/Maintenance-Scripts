@@ -238,12 +238,12 @@ State the runtime owns (generated ignore files, installed plugins) is ignored by
 
 ### Local dependencies
 
-- **Identify, then write down.** Determine every host-side dependency a task needs (runtimes, CLIs, toolchains, modules), each with an exact version and an official source, and write it into the project: the language's own manifest and lockfile where one exists, otherwise a plain dependency list in the setup documentation, plus the single setup command. Global installation does not mean unrecorded installation: the manifest is the source of truth for what the host must carry.
+- **Identify, then write down.** Determine every host-side dependency a task needs (runtimes, CLIs, toolchains, modules), each with an official source and its current/latest version policy, and write it into the project: the language's own manifest and lockfile where one exists, otherwise a plain dependency list in the setup documentation, plus the single setup command. Global installation does not mean unrecorded installation: the manifest is the source of truth for what the host must carry.
 - **Global is the default.** Dependencies are installed globally on the host, outside the project tree. Within global, take the narrowest scope that works and needs no elevation: the per-user global scope first (for example `winget install --scope user` where the package supports it, `Install-Module -Scope CurrentUser`, a user-prefix global install, or an isolated global tool installer such as `pipx` or `uv tool`). Machine-wide installation comes last, and because it needs elevation it is the person's decision: say what, why, and which scope, then wait.
 - **Exceptions need the person's approval.** When best practice calls for project scope (library dependencies that belong in a virtual environment or a `node_modules` tree, version conflicts between projects, reproducibility or isolation needs), the agent asks before installing that way, naming the dependency, the reason, and the scope. Nothing is installed project-scope while the question is open. An approval is per project and per category; once given, it is recorded under "Dependencies" in the project layer, with its reason, so it is not asked again.
-- **Every global install is reported, not approved.** The report names the package, exact version, scope, source, and the command that removes it, so the host change stays reversible.
+- **Every global install is reported, not approved.** The report names the package, installed version, scope, source, and the command that removes it, so the host change stays reversible.
 - **Currency.** Host dependencies stay current under "Currency without exception"; an update is reported exactly like an installation.
-- **Installation hygiene.** Official source only, exact version, checksum or signature verified where one exists, and never a remote script piped into a shell (see "Security & privacy").
+- **Installation hygiene.** Official source only, current/latest version, checksum or signature verified where one exists, and never a remote script piped into a shell (see "Security & privacy").
 - **Probe before changing.** Learn what an install would do with a read-only probe first (`pip install --dry-run`, `-WhatIf`, `--simulate`), and record the installed set (a freeze or package list) before upgrading a global environment, so the change stays reversible.
 - **Name the interpreter.** With more than one runtime present, never call a bare tool or the bare interpreter. Call the tool through the runtime that owns it and name the version (`py -3.12 -m pip`, `python3.12 -m pip`); a bare `pip` installs into whichever runtime answers first.
 - **A missing prebuilt binary is a signal, not a task.** If a dependency has no prebuilt package for a runtime and would need a compiler, a build toolchain, or elevation, do not install a toolchain to force it. Separate the causes first (a declared version constraint, a missing prebuilt binary, a missing source dependency), then fix forward without stepping back to an older runtime or version: replace the dependency with a current one that supports the runtime, or stop and ask about the build toolchain, which is a machine-wide installation ("Ask first").
@@ -671,7 +671,7 @@ Project facts for this repository. Points at the universal rules above instead o
 
 ## Commands - setup, build, test, lint, the single local gate command
 
-Verification on Windows PowerShell 5.1 (Pester 5.7.1 installed):
+Verification on Windows PowerShell 5.1 (Pester installed):
 
 The single local gate command runs every check CI declares
 (Syntax, Whitespace, Mojibake, Commits, Pester, Hygiene, LinkCheck):
@@ -758,4 +758,4 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 - Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) are the only exceptions: they delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; they never upload or transmit user data and write no registry keys.
 - No protected-branch bypass is configured for this repository.
 
-<!-- mirror-sync: sync-sha=e4d4d6a7da72277133de00b2d550e51b8ce4ed3d -->
+<!-- mirror-sync: sync-sha=0fb996e9d766c73571f14dde0ce513c7167aa7ec -->
