@@ -1,8 +1,8 @@
 # Automation Scripts - Python Floor Currency
 # Windows-native (PowerShell) weekly check of the Python floor declared in
 # quality.yml against the upstream EOL calendar. A bump is applied and pushed
-# to both hosts without human intervention. GitLab needs the repository secret
-# GITLAB_PYTHON_FLOOR_TOKEN (a token with write_repository scope).
+# to both hosts without human intervention. GitLab uses the repository's
+# existing GITLAB_PUSH_TOKEN secret (write_repository scope).
 
 name: Python Floor Currency
 
@@ -47,7 +47,7 @@ jobs:
         shell: pwsh
         env:
           DESIRED: ${{ steps.check.outputs.desired }}
-          GITLAB_TOKEN: ${{ secrets.GITLAB_PYTHON_FLOOR_TOKEN }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_PUSH_TOKEN }}
         run: |
           $ErrorActionPreference = 'Stop'
           git config user.name "github-actions[bot]"
@@ -60,10 +60,10 @@ jobs:
           if ($env:GITLAB_TOKEN) {
             $askpass = Join-Path $env:RUNNER_TEMP 'gitlab-askpass.sh'
             Set-Content -LiteralPath $askpass -Value '#!/bin/sh' -Encoding ascii
-            Add-Content -LiteralPath $askpass -Value 'printf "%s\n" "$GITLAB_TOKEN"' -Encoding ascii
+            Add-Content -LiteralPath $askpass -Value 'case "$1" in *Username*) echo oauth2 ;; *) printf "%s\n" "$GITLAB_TOKEN" ;; esac' -Encoding ascii
             chmod +x $askpass
             $env:GIT_ASKPASS = $askpass
             git push gitlab HEAD:main
           } else {
-            Write-Host "GITLAB_PYTHON_FLOOR_TOKEN is not configured; GitLab push skipped."
+            Write-Host "GITLAB_PUSH_TOKEN is not configured; GitLab push skipped."
           }
