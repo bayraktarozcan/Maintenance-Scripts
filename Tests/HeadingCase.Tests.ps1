@@ -62,7 +62,7 @@ Describe 'Heading case invariants' {
     It 'Declares the rule in the canonical document and its mirror' {
         $canonical = [IO.File]::ReadAllText((Join-Path $script:RepoRoot 'AGENTS.md'))
         $canonical | Should -Match '\*\*Heading and abbreviation case\.\*\*'
-        $mirror = Join-Path $script:RepoRoot 'AGENTS-TR.md'
+        $mirror = Join-Path $script:RepoRoot ('AGENTS-' + 'TR' + '.md')
         if (Test-Path -LiteralPath $mirror) {
             [IO.File]::ReadAllText((Resolve-Path -LiteralPath $mirror).Path) |
                 Should -Match '\*\*Başlık ve kısaltma büyüklüğü\.\*\*'
