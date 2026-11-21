@@ -1,7 +1,7 @@
-# Release Note Template
+# Release Note Template / Yayın Notu Şablonu
 
-Copy the template below and fill in placeholders when creating new releases.
-Yeni sürümlerde aşağıdaki şablonu kopyalayıp yer tutucuları doldurun.
+Copy the template below when creating or updating a release. Tüm release'lar
+`CHANGELOG.md` kaynaktan üretilir; arayüz metni kaynak değildir.
 
 > **Language / Dil:** [English](#en) · [Türkçe](#tr)
 
@@ -11,10 +11,24 @@ Yeni sürümlerde aşağıdaki şablonu kopyalayıp yer tutucuları doldurun.
 
 ## English
 
-```markdown
-## v{VERSION} - {TITLE}
+### Title rules
 
-**{ONE_LINE_SUMMARY}**
+- One version number only, in the form `<tag> — Title Case Description` (em dash, spaces on both sides).
+- Every release except the current one starts with `[DEPRECATED] ` — the prefix goes at the **front**, never at the end.
+- Title Case with conjunctions lowercase; abbreviations fully uppercase (`API`, `CI`, `ADMX`); mixed-case names such as `IoC`, `PowerShell`, `GitHub` and `Node.js` are preserved.
+- No bare issue numbers such as `#5` (the host turns them into links), no emoji, no embedded CHANGELOG table of contents.
+
+### Body rules
+
+- English block first, Turkish block second, at equal scope.
+- Section order: `## vX — ...`, `### Summary`, `### Added`, `### Changed`, `### Removed`, `### Fixed`, `### Files`, `### Documentation`.
+- An empty category keeps its heading with `- None in this release.`
+- Never include lines belonging to another version.
+
+### Template
+
+```markdown
+## vX.Y.Z.W — Title Case Description
 
 ### Summary
 
@@ -22,7 +36,7 @@ Yeni sürümlerde aşağıdaki şablonu kopyalayıp yer tutucuları doldurun.
 
 ### Added
 
-- {SCRIPT_OR_FEATURE} - {DESCRIPTION}
+- {FEATURE} - {DESCRIPTION}
 
 ### Changed
 
@@ -40,10 +54,63 @@ Yeni sürümlerde aşağıdaki şablonu kopyalayıp yer tutucuları doldurun.
 
 - `Scripts/...` - {NOTE}
 
-### Verification
+### Documentation
 
-- {HOW_IT_WAS_TESTED}
+- `Docs/...` - {NOTE}
+
+---
+
+## vX.Y.Z.W — Türkçe Başlık
+
+### Özet
+
+{KISA_AÇIKLAMA}
+
+### Eklenenler
+
+- {ÖZELLİK} - {AÇIKLAMA}
+
+### Değiştirilenler
+
+- {DEĞİŞİKLİK}
+
+### Kaldırılanlar
+
+- {ÖĞE} - {GEREKÇE}
+
+### Düzeltilenler
+
+- {DÜZELTME}
+
+### Dosyalar
+
+- `Scripts/...` - {NOT}
+
+### Belgelendirme
+
+- `Docs/...` - {NOT}
 ```
+
+### Publication procedure
+
+There is no dedicated release script; the two CLI commands below are the procedure.
+`--name` / `--title`, `--notes-file`, `--ref` and `--tag` are the parameters that
+must match on both hosts.
+
+```powershell
+# GitHub: edit an existing release
+gh release edit vX.Y.Z.W --title "[DEPRECATED] vX.Y.Z.W — Title" --notes-file Logs/releases/vX.Y.Z.W.md
+
+# GitLab: create or update (--ref accepts the tag name; an existing release is updated)
+glab release create vX.Y.Z.W --name "[DEPRECATED] vX.Y.Z.W — Title" --notes-file Logs/releases/vX.Y.Z.W.md --ref vX.Y.Z.W
+
+# Verify parity over the APIs, not the UI
+gh api --paginate "repos/bayraktarozcan/Maintenance-Scripts/releases?per_page=100"
+glab api --paginate "projects/bayraktarozcan%2FMaintenance-Scripts/releases?per_page=100"
+```
+
+After publishing, prefix the previous release title with `[DEPRECATED] ` on both
+hosts and keep the full history in `CHANGELOG.md`.
 
 ---
 
@@ -51,82 +118,36 @@ Yeni sürümlerde aşağıdaki şablonu kopyalayıp yer tutucuları doldurun.
 
 ## Türkçe
 
-```markdown
-## v{VERSION} - {TITLE}
+### Başlık kuralları
 
-**{ONE_LINE_SUMMARY}**
+- Yalnızca bir sürüm numarası: `<tag> — Başlık Büyüklüğünde Açıklama` (en tire, iki yanında boşluk).
+- Güncel olan dışındaki tüm release'lar `[DEPRECATED] ` ile **başlar**; önek sona asla konmaz.
+- Başlık büyüklüğü, bağlaçlar küçük kalır; kısaltmalar tamamen büyük yazılır (`API`, `CI`, `ADMX`); `IoC`, `PowerShell`, `GitHub`, `Node.js` gibi karışık yazımlar korunur.
+- `#5` gibi çıplak numaralar (host bağlantıya çevirir), emoji ve gömülü CHANGELOG içindekileri olmaz.
 
-### Özet
+### Gövde kuralları
 
-{BRIEF_DESCRIPTION}
+- Önce İngilizce, sonra Türkçe blok; kapsam eşit olmalı.
+- Bölüm sırası: `## vX — ...`, `### Summary`, `### Added`, `### Changed`, `### Removed`, `### Fixed`, `### Files`, `### Documentation` (TR: `Özet`, `Eklenenler`, `Değiştirilenler`, `Kaldırılanlar`, `Düzeltilenler`, `Dosyalar`, `Belgelendirme`).
+- Boş kategori başlığı korunur ve `- Bu sürümde yok.` yazılır.
+- Başka bir sürüme ait satır asla eklenmez.
 
-### Eklenenler
+### Yordam
 
-- {SCRIPT_OR_FEATURE} - {DESCRIPTION}
+Ayrı bir release betiği yoktur; aşağıdaki iki komut yordamdır.
+`--name` / `--title`, `--notes-file`, `--ref` ve `--tag` parametreleri iki hostta da aynı olmalıdır.
 
-### Değişenler
+```powershell
+# GitHub: var olan release'i düzenle
+gh release edit vX.Y.Z.W --title "[DEPRECATED] vX.Y.Z.W — Başlık" --notes-file Logs/releases/vX.Y.Z.W.md
 
-- {CHANGE_DESCRIPTION}
+# GitLab: oluştur veya güncelle (--ref etiket adını kabul eder; var olan release güncellenir)
+glab release create vX.Y.Z.W --name "[DEPRECATED] vX.Y.Z.W — Başlık" --notes-file Logs/releases/vX.Y.Z.W.md --ref vX.Y.Z.W
 
-### Kaldırılanlar
-
-- {ITEM} - {REASON}
-
-### Düzeltilenler
-
-- {FIX_DESCRIPTION}
-
-### Dosyalar
-
-- `Scripts/...` - {NOTE}
-
-### Doğrulama
-
-- {HOW_IT_WAS_TESTED}
+# Pariteyi arayüz değil API üzerinden doğrula
+gh api --paginate "repos/bayraktarozcan/Maintenance-Scripts/releases?per_page=100"
+glab api --paginate "projects/bayraktarozcan%2FMaintenance-Scripts/releases?per_page=100"
 ```
 
----
-
-## Example / Örnek: V0.1.0.0
-
-### English
-
-```markdown
-## v0.1.0.0 - Initial Collection
-
-**Five maintenance scripts with per-script logging.**
-
-### Summary
-
-First public release of the personal Windows maintenance collection.
-
-### Added
-
-- `Repair-Windows.bat`, `Reset-Windows-Update.bat`, `Clear-DnsClientCache.bat`,
-  `WinGet-Upgrade.bat`, `Bug-Report.ps1`
-
-### Verification
-
-- Dry runs and live runs on Windows 11 25H2; parser-clean PowerShell.
-```
-
-### Türkçe
-
-```markdown
-## v0.1.0.0 - İlk Koleksiyon
-
-**Betik başına günlük tutan beş bakım betiği.**
-
-### Özet
-
-Kişisel Windows bakım koleksiyonunun ilk herkese açık sürümü.
-
-### Eklenenler
-
-- `Repair-Windows.bat`, `Reset-Windows-Update.bat`, `Clear-DnsClientCache.bat`,
-  `WinGet-Upgrade.bat`, `Bug-Report.ps1`
-
-### Doğrulama
-
-- Windows 11 25H2 üzerinde kuru ve canlı koşular; ayrıştırıcı-temiz PowerShell.
-```
+Yayından sonra önceki release başlığı iki hostta da `[DEPRECATED] ` ile öneklenir;
+tam geçmiş `CHANGELOG.md` içinde tutulur.
