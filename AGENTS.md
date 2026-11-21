@@ -768,7 +768,7 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 
 ## Bypasses - Gates That Do Not Hold by Design, and What Runs Afterward
 
-- Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) are the only exceptions: they delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; they never upload or transmit user data and write no registry keys.
+- Do not add scripts that make network calls or persist elevated privileges. Four named exceptions exist: `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; `Tools/Check-PythonFloor.ps1` and `Tools/Check-ReleaseHygiene.ps1` make read-only HTTPS GETs to the Python release calendar and the public GitHub/GitLab APIs. None uploads user data, writes registry keys, or holds a credential; the two checks use no token and fail closed on transport errors.
 - No protected-branch bypass is configured for this repository.
 
-<!-- mirror-sync: sync-sha=04d745bd43d50e47d8cf21aa62724ce6671b48e9 -->
+<!-- mirror-sync: sync-sha=8a78f3f99ba2e2a492b0930cfbce9f802e045313 -->
