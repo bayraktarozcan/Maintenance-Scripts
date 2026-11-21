@@ -8,7 +8,7 @@
 
 ## English
 
-### Data collection
+### Data Collection
 
 This project does **not** collect personal data or any user data. We are not
 in the business of collecting data, and we have no interest in user data of
@@ -21,7 +21,7 @@ The scripts run entirely on your machine:
 - Logs are written to local disk only and never leave your computer.
 - Configuration is read from local files and never reported anywhere.
 
-### Scope and changes
+### Scope and Changes
 
 This statement reflects the current state of the project and our intent to
 maintain it. Privacy and data-processing rules may change over time. If you
@@ -37,7 +37,7 @@ report it via [SECURITY.md](SECURITY.md).
 
 ## Türkçe
 
-### Veri toplama
+### Veri Toplama
 
 Bu proje, kişisel veri veya herhangi bir kullanıcı verisi **toplamaz**. Veri
 toplamayla ilgilenmiyoruz ve hiçbir türden kullanıcı verisiyle işimiz yok. Bu
@@ -50,7 +50,7 @@ Betikler tamamen kendi makinenizde çalışır:
 - Günlükler yalnızca yerel diske yazılır ve bilgisayarınızdan asla çıkmaz.
 - Yapılandırma yerel dosyalardan okunur ve hiçbir yere bildirilmez.
 
-### Kapsam ve değişiklikler
+### Kapsam ve Değişiklikler
 
 Bu açıklama projenin güncel durumunu ve bu durumu koruma irademizi
 yansıtır. Gizlilik ve veri işleme kuralları zaman içinde değişebilir. Güncel

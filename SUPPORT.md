@@ -8,7 +8,7 @@
 
 ## English
 
-### Getting help
+### Getting Help
 
 This is a personal, hobby-maintained collection of Windows maintenance
 scripts. Support is best-effort, provided by the author of the repository.
@@ -19,19 +19,19 @@ scripts. Support is best-effort, provided by the author of the repository.
    to see whether your question was already asked and answered.
 3. Open a new issue with the `question` label if you still need help.
 
-### Before you ask
+### Before You Ask
 
 - Run each script **as administrator** (right-click -> Run as administrator); required for `Repair-Windows.bat` and `Reset-Windows-Update.bat`.
 - Check the log folder `Logs/<Script-Name>/` for your run; it shows exactly
   what the script did and failed on.
 - Confirm which script you ran and the exact error text you saw.
 
-### What is supported
+### What Is Supported
 
 - Usage questions about the scripts in this repository.
 - Bug reports with reproduction steps.
 
-### What is not supported
+### What Is Not Supported
 
 - General Windows, PowerShell, DISM, SFC, or winget troubleshooting unrelated
   to these scripts. Report issues in those tools to their vendors.
@@ -51,7 +51,7 @@ than a guarantee.
 
 ## Türkçe
 
-### Yardım almak
+### Yardım Almak
 
 Bu, hobi amaçlı, tek kişi tarafından bakılan bir Windows bakım betikleri
 koleksiyonudur. Destek; depo sahibi tarafından sağlanan, elinden gelen ölçüde
@@ -65,7 +65,7 @@ bir destektir.
    bölümünde arama yapın.
 3. Hâlâ yardım gerekiyorsa `question` etiketiyle yeni bir issue açın.
 
-### Sormadan önce
+### Sormadan Önce
 
 - Betikleri **yönetici olarak** çalıştırın (sağ tık -> Yönetici olarak çalıştır); bunu yalnızca `Repair-Windows.bat` ve `Reset-Windows-Update.bat` gerektirir.
 - Koşunuzun günlüğüne `Logs/<Betik-Adı>/` klasöründen bakın; betiğin ne yaptığını
@@ -85,7 +85,7 @@ bir destektir.
   zaman ve ilgiye göre değerlendirilir.
 - Konu dışı veya reklam amaçlı issue'lar kaldırılır.
 
-### Yanıt süresi
+### Yanıt Süresi
 
 Bu projenin bir SLA'sı yoktur. Depo sahibinin vakti olduğunda yanıt bekleyin.
 Güvenilir ve hızlı desteğe ihtiyacınız varsa, bu koleksiyonu bir garanti değil,

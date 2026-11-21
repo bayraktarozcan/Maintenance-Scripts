@@ -8,7 +8,7 @@
 
 ## English
 
-### v0.1.1.0 — 2026-11-09
+### V0.1.1.0 — 2026-11-09
 
 **Added:**
 - `Update-Components.bat` / `Tools/Update-Components.ps1` — user-scope updater for Python/pip, pipx itself and pipx-managed packages, and Node.js/npm global packages, with `-Check` dry-run, plan/result tables, `-ReportPath <file>` JSON report (schema v1, `check`/`execute`, `plan`/`result`), and `Scripts/Update-Components.bat -Check` argument forwarding.
@@ -70,7 +70,7 @@ Reliability and hardening release: one PowerShell engine per launcher, evidence-
 - Documentation security posture, launcher claims, Turkish grammar, and Windows Update / WinGet guidance are corrected.
 - `Update-Components.ps1` `ConvertFrom-WingetTable` no longer returns empty rows when winget's separator line is one continuous run of dashes; column boundaries are now derived from the header line's whitespace gaps, and `Get-WingetPackageStatus` adds a regex fallback that extracts the Available version from raw output, so Node.js (and other packages) are detected instead of reporting `Unknown`.
 
-### v0.1.0.1 — 2026-10-23
+### V0.1.0.1 — 2026-10-23
 
 Reliability and hardening release: one PowerShell engine per launcher, evidence-based Repair reporting, a modern DNS command, a seven-check local gate, and complete bilingual documentation.
 
@@ -111,7 +111,7 @@ CI ve araçlarda en güncel sürüm ilkesi: üçüncü taraf eylemler varsayıla
 - AGENTS.md CodeQL/otomatik onay kuralları gerçeklikle uyumlu hale getirildi (GitHub varsayılan kurulumu; otomatik onay iş akışı yok); CI dosyalarındaki bayat "pinned" yorumları kaldırıldı.
 - Bağımlılık tabloları ve komut belgeleri artık emekli olmuş tam sürümleri adlandırmıyor.
 
-### v0.1.1.0 — 2026-11-09
+### V0.1.1.0 — 2026-11-09
 
 **Eklenen:**
 - `Update-Components.bat` / `Tools/Update-Components.ps1` — Python/pip, pipx kendi kendine ve pipx yönetimli paketleri, ve Node.js/npm global paketleri için kullanıcı kapsamı güncelleyici; `-Check` kuru çalıştırma, plan/sonuç tabloları, `-ReportPath <dosya>` JSON raporu (şema v1, `check`/`execute`, `plan`/`result`) ve `.bat` bağımsız değişken iletimi.
@@ -128,7 +128,7 @@ CI ve araçlarda en güncel sürüm ilkesi: üçüncü taraf eylemler varsayıla
 
 ### Yayınlanmamış
 
-### v0.1.0.1 — 2026-10-23
+### V0.1.0.1 — 2026-10-23
 
 Güvenilirlik ve sağlamlaştırma sürümü: başlatıcı başına tek PowerShell motoru, kanıta dayalı Repair raporlaması, modern DNS komutu, yedi denetimli yerel geçit ve eksiksiz iki dilli belgeler.
 
@@ -161,7 +161,7 @@ Güvenilirlik ve sağlamlaştırma sürümü: başlatıcı başına tek PowerShe
 - Belgelerde güvenlik duruşu, başlatıcı iddiaları, Türkçe dilbilgisi ve Windows Update / WinGet yönlendirmesi düzeltildi.
 - `Update-Components.ps1`'deki `ConvertFrom-WingetTable`, winget'in ayıracı satırı tek bir çizgi olduğunda boş dizi döndürmüyor; sütun sınırları başlık satırındaki boşluklardan çıkarılıyor ve `Get-WingetPackageStatus` ham çıktının Available sürümünü regex ile çıkarmak için bir yedek ekledi, böylece Node.js ve diğer paketler `Unknown` yerine algılanıyor.
 
-### v0.1.0.0 — 2026-09-16
+### V0.1.0.0 — 2026-09-16
 
 İlk sürüm: kişisel Windows bakım betikleri koleksiyonu.
 

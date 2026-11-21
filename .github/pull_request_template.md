@@ -6,7 +6,7 @@
 
 ## English
 
-### What changed and why
+### What Changed and Why
 
 <!-- One logical change per PR. State what, why, and how. -->
 
@@ -28,7 +28,7 @@
 
 ## Türkçe
 
-### Ne değişti ve neden
+### Ne Değişti ve Neden
 
 <!-- PR başına tek mantıksal değişiklik. Neyi, neden ve nasıl yaptığınızı yazın. -->
 

@@ -6,7 +6,7 @@
 
 ## English
 
-### Shared launcher harness
+### Shared Launcher Harness
 
 All four `.bat` files follow the same harness, verified by
 `Tests/Bug-Report.Tests.ps1`; `Tests/Repair-Windows.Tests.ps1` covers the
@@ -24,7 +24,7 @@ Repair-specific logging:
    both the console (`type`) and the log file, so console and log output
    are identical. The scratch file is deleted afterwards.
 
-### Per-script pipelines
+### Per-Script Pipelines
 
 - `Repair-Windows.bat` (9 steps, needs admin): DISM `CheckHealth`,
   `ScanHealth`, ensure `wuauserv`/`bits` are started, DISM
@@ -56,7 +56,7 @@ Repair-specific logging:
   2. **Execution phase**: applies updates and builds a result table. Runs entirely in user scope; never self-elevates. Supports `-Check` dry-run mode that shows the plan and exits.
   Network activity: `winget list --id`, `pip`/`npm`/`pipx` registry queries.
 
-### Component updater engine
+### Component Updater Engine
 
 `Tools/Update-Components.ps1` implements a two-phase update pipeline with structured logging and plan/result tables:
 
@@ -83,7 +83,7 @@ Repair-specific logging:
 - Winget "already up to date" negative exit codes treated as success
 - npm warning exit codes (1 with `npm warn` output) treated as success
 
-### Report engine
+### Report Engine
 
 `Scripts/Bug-Report.ps1` (`-Period Daily|Weekly|Monthly`) reads Level-2
 events from the System and Application logs via `Get-WinEvent`, excluding
@@ -100,7 +100,7 @@ System/Application toggles). See
 
 ## Türkçe
 
-### Ortak başlatıcı iskeleti
+### Ortak Başlatıcı İskeleti
 
 Dört `.bat` dosyası da `Tests/Bug-Report.Tests.ps1` ile doğrulanan aynı
 iskeleti izler; `Tests/Repair-Windows.Tests.ps1` Repair'a özgü günlüklemeyi
@@ -118,7 +118,7 @@ kapsar:
    hem ekrana (`type`) hem günlüğe aynala; böylece ekran ve günlük
    çıktısı birebir aynı olur. Geçici dosya sonra silinir.
 
-### Betik başına hatlar
+### Betik Başına Hatlar
 
 - `Repair-Windows.bat` (9 adım, yönetici ister): DISM `CheckHealth`,
   `ScanHealth`, `wuauserv`/`bits` servislerinin çalıştığını sağlama, DISM
@@ -151,7 +151,7 @@ kapsar:
   2. **Yürütme aşaması**: Güncellemeleri uygular ve sonuç tablosu oluşturur. Tamamen kullanıcı kapsamında koşur; asla kendini yükseltmez. `-Check` kuru çalıştırma (dry-run) modu planı gösterip çıkar.
   Ağ etkinliği: `winget list --id`, `pip`/`npm`/`pipx` kayıt sorguları.
 
-### Bileşen güncelleyici motoru
+### Bileşen Güncelleyici Motoru
 
 `Tools/Update-Components.ps1` yapılandırılmış günlükleme ve plan/sonuç tabloları ile iki aşamalı güncelleme işlem hattı uygular:
 
@@ -178,7 +178,7 @@ kapsar:
 - Winget "zaten güncel" negatif çıkış kodları başarı sayılır
 - npm uyarı çıkış kodları (1 + `npm warn` çıktısı) başarı sayılır
 
-### Rapor motoru
+### Rapor Motoru
 
 `Scripts/Bug-Report.ps1` (`-Period Daily|Weekly|Monthly`), System ve
 Application günlüklerindeki 2. düzey olayları `Get-WinEvent` ile okur;

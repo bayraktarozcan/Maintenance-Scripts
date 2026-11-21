@@ -21,7 +21,7 @@ Kişisel Windows bakım betikleri — sade, izlenebilir, Türkçe ve İngilizce.
 
 ## English
 
-### What is this?
+### What Is This?
 
 Each script does one job: it runs commands in order and writes output both to the console and to its own log folder. No menus, no options, no surprises.
 

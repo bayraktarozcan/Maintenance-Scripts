@@ -6,7 +6,7 @@
 
 ## English
 
-### What this project is
+### What This Project Is
  
 A personal Windows maintenance collection: five `.bat` launchers that run
 system tools inline, plus one PowerShell HTML report engine
@@ -59,7 +59,7 @@ powershell -NoProfile -File Tools/Update-Components.ps1 -Check -ReportPath Logs/
 
 ## Türkçe
 
-### Bu proje nedir
+### Bu Proje Nedir
 
 Kişisel bir Windows bakım koleksiyonu: sistem araçlarını satır içi çalıştıran
 beş `.bat` başlatıcı ile bir PowerShell HTML rapor motoru

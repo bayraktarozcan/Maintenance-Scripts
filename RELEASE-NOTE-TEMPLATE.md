@@ -87,7 +87,7 @@ Yeni sürümlerde aşağıdaki şablonu kopyalayıp yer tutucuları doldurun.
 
 ---
 
-## Example / Örnek: v0.1.0.0
+## Example / Örnek: V0.1.0.0
 
 ### English
 
