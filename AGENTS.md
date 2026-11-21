@@ -724,11 +724,11 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 
 | Dependency | Version | Source |
 |------------|---------|--------|
-| Pester | 5.7.1 | PSGallery (`Install-Module -Scope CurrentUser`) |
+| Pester | latest | PSGallery (`Install-Module -Force -Scope CurrentUser`) |
 | PowerShell | 7+ (latest 7.x) | winget `Microsoft.PowerShell` |
-| gitleaks | 8.30.1 | winget `Gitleaks.Gitleaks` |
-| actionlint | 1.7.12 | winget `rhysd.actionlint` |
-| lychee | 0.24.2 | winget `lycheeverse.lychee` |
+| gitleaks | latest | winget `Gitleaks.Gitleaks` |
+| actionlint | latest | winget `rhysd.actionlint` |
+| lychee | latest | winget `lycheeverse.lychee` |
 | git, gh, winget | present | OS / GitHub CLI / App Installer |
 
 - Single setup command: `powershell -NoProfile -File Tools/Install-Dependencies.ps1` (`-Check` verifies without changing the host).
@@ -758,4 +758,4 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 - Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) are the only exceptions: they delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; they never upload or transmit user data and write no registry keys.
 - No protected-branch bypass is configured for this repository.
 
-<!-- mirror-sync: sync-sha=5bad87aff71a0a2ef04288de87d0743c0f96c688 -->
+<!-- mirror-sync: sync-sha=e4d4d6a7da72277133de00b2d550e51b8ce4ed3d -->
