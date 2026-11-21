@@ -149,7 +149,8 @@ Describe 'Published release hygiene' {
         $file = Join-Path ([IO.Path]::GetTempPath()) ('hygiene-' + [guid]::NewGuid().ToString('N') + '.json')
         try {
             [IO.File]::WriteAllText($file, ($sets | ConvertTo-Json -Depth 8 -Compress))
-            $out = @(& powershell -NoProfile -File $script:Script -Fixtures $file 2>&1)
+            $engine = (Get-Process -Id $PID).Path
+            $out = @(& $engine -NoProfile -File $script:Script -Fixtures $file 2>&1)
             ($out -join "`n") | Should -Match 'FAIL no-garbage'
             $LASTEXITCODE | Should -Be 1
         } finally {

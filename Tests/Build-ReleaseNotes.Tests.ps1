@@ -11,7 +11,8 @@ BeforeAll {
         try {
             $argsList = @('-NoProfile', '-File', $script:Script, $Version, '-Output', $out, '-Root', $RepoRoot)
             if ($Current) { $argsList += '-Current' }
-            $result = @(& powershell @argsList 2>&1)
+            $engine = (Get-Process -Id $PID).Path
+            $result = @(& $engine @argsList 2>&1)
             if ($LASTEXITCODE -ne 0) { throw ($result | Out-String) }
             $title = $result | Select-Object -First 1
             $body = if (Test-Path -LiteralPath $out) { [IO.File]::ReadAllText($out) } else { '' }
