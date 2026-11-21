@@ -1,16 +1,19 @@
 # Maintenance Scripts - published release hygiene guard
 # Reads every release from both hosts through the APIs and reports named checks.
-# CI has no glab, so GitLab uses REST when GITLAB_TOKEN is injected; locally the
-# keyring-backed glab CLI is the fallback. Read-only, no repository changes.
+# GitLab releases are public, so the read-only audit uses the unauthenticated
+# REST endpoint; the keyring-backed glab CLI is only a local fallback. No
+# write-capable token is ever passed to this checker.
 # Usage:
 #   powershell -NoProfile -File Tools/Check-ReleaseHygiene.ps1 -Check
 [CmdletBinding()]
 param(
     [switch]$Check,
-    [string]$Fixtures
+    [string]$Fixtures,
+    [string]$ChangelogPath
 )
 
 $ErrorActionPreference = 'Stop'
+if (-not $ChangelogPath) { $ChangelogPath = Join-Path $PSScriptRoot '..\CHANGELOG.md' }
 $script:Repo = 'bayraktarozcan/Maintenance-Scripts'
 $script:GlProject = 'bayraktarozcan%2FMaintenance-Scripts'
 
@@ -21,15 +24,32 @@ function Get-ReleasesFromApi {
         if ($LASTEXITCODE -ne 0) { throw "GitHub API failed: $($raw -join ' ')" }
         return @(($raw | ConvertFrom-Json))
     }
-    if ($env:GITLAB_TOKEN) {
+    # Public project: no credential belongs in a read-only audit. Keep glab
+    # only as the offline/local fallback, never as the privileged path.
+    try {
         $url = "https://gitlab.com/api/v4/projects/$script:GlProject/releases?per_page=100"
-        $headers = @{ 'PRIVATE-TOKEN' = $env:GITLAB_TOKEN }
-        $raw = Invoke-RestMethod -Uri $url -Headers $headers -TimeoutSec 30
-        return @($raw)
+        $response = Invoke-WebRequest -Uri $url -TimeoutSec 30 -UseBasicParsing
+        # Decode the body as UTF-8 explicitly: PS 5.1 otherwise reads JSON
+        # without a charset as Latin-1 and turns em dashes into mojibake.
+        $stream = $response.RawContentStream
+        $jsonText = $response.Content
+        if ($null -ne $stream -and $stream.Length -gt 0) {
+            $stream.Position = 0
+            $bytes = New-Object byte[] $stream.Length
+            [void]$stream.Read($bytes, 0, $bytes.Length)
+            $jsonText = [Text.Encoding]::UTF8.GetString($bytes)
+        }
+        # PS 5.1 pipes a JSON array as one object; assign first, then wrap so
+        # the array is enumerated identically on every engine.
+        $parsed = $jsonText | ConvertFrom-Json
+        $items = @($parsed)
+        if ($items.Count -eq 0) { throw 'empty release list' }
+        return $items
+    } catch {
+        $raw = & glab api --paginate "projects/$script:GlProject/releases?per_page=100" 2>&1
+        if ($LASTEXITCODE -ne 0) { throw "GitLab API failed: $_; glab: $($raw -join ' ')" }
+        return @(($raw | ConvertFrom-Json))
     }
-    $raw = & glab api --paginate "projects/$script:GlProject/releases?per_page=100" 2>&1
-    if ($LASTEXITCODE -ne 0) { throw "GitLab API failed: $($raw -join ' ')" }
-    return @(($raw | ConvertFrom-Json))
 }
 
 function Get-CurrentTag {
@@ -54,8 +74,64 @@ function Normalize-Text {
     return ($Text -replace "`r`n", "`n") -replace "`r", "`n"
 }
 
+function Get-NormalizedWords {
+    param([string]$Text)
+    $clean = [regex]::Replace($Text, '[^\p{L}\p{N} ]', ' ')
+    return @($clean.ToLowerInvariant().Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries))
+}
+
+function Get-ChangelogBullets {
+    param([string]$Text, [string]$Version, [switch]$Turkish)
+    $marker = [regex]::Match($Text, '(?m)^## Türkçe\s*$')
+    $half = if ($Turkish) {
+        if ($marker.Success) { $Text.Substring($marker.Index) } else { '' }
+    } else {
+        if ($marker.Success) { $Text.Substring(0, $marker.Index) } else { $Text }
+    }
+    $lines = @($half -replace "`r`n", "`n" -split "`n")
+    $start = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -match '^###\s*V' + [regex]::Escape($Version) + '\s*[—–-]') { $start = $i; break }
+    }
+    if ($start -lt 0) { return @() }
+    $bullets = @()
+    for ($i = $start + 1; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -match '^###\s+V\d' -or $lines[$i] -match '^##\s') { break }
+        if ($lines[$i] -match '^\s*-\s+(.+)$') { $bullets += $Matches[1] }
+    }
+    return $bullets
+}
+
+function Test-ChangelogCoverage {
+    param([object[]]$GitHub, [string]$ChangelogPath)
+    if (-not (Test-Path -LiteralPath $ChangelogPath)) { return @('changelog-coverage: CHANGELOG.md not found') }
+    $changelog = [IO.File]::ReadAllText($ChangelogPath)
+    $uncovered = @()
+    foreach ($rel in $GitHub) {
+        $version = $rel.Tag.TrimStart('v', 'V')
+        $body = Normalize-Text $rel.Body
+        $halves = [regex]::Split($body, '(?m)^## v')
+        $enBody = if ($halves.Count -ge 2) { $halves[1] } else { '' }
+        $trBody = if ($halves.Count -ge 3) { $halves[2] } else { '' }
+        foreach ($lang in @(@{ Turkish = $false; Body = $enBody }, @{ Turkish = $true; Body = $trBody })) {
+            $bodyWords = @(Get-NormalizedWords $lang.Body)
+            foreach ($bullet in @(Get-ChangelogBullets -Text $changelog -Version $version -Turkish:$lang.Turkish)) {
+                $lead = @(Get-NormalizedWords $bullet | Select-Object -First 4)
+                if ($lead.Count -eq 0) { continue }
+                $missing = @($lead | Where-Object { $bodyWords -notcontains $_ })
+                if ($missing.Count -gt 0) {
+                    $label = if ($lang.Turkish) { 'TR' } else { 'EN' }
+                    $uncovered += "$($rel.Tag)/$label`: $($lead -join ' ')"
+                }
+            }
+        }
+    }
+    if ($uncovered.Count -gt 0) { return @('changelog-coverage: ' + ($uncovered -join '; ')) }
+    return @()
+}
+
 function Test-ReleaseSet {
-    param([object[]]$GitHub, [object[]]$GitLab, [string]$CurrentTag)
+    param([object[]]$GitHub, [object[]]$GitLab, [string]$CurrentTag, [string]$ChangelogPath)
     $problems = @()
     $ghTags = @($GitHub | ForEach-Object { $_.Tag })
     $glTags = @($GitLab | ForEach-Object { $_.Tag })
@@ -119,6 +195,9 @@ function Test-ReleaseSet {
         if ((Normalize-Text $rel.Body) -cne (Normalize-Text $other.Body)) { $mismatch += "$($rel.Tag): body" }
     }
     if ($mismatch.Count -gt 0) { $problems += 'cross-host: ' + ($mismatch -join '; ') }
+
+    $coverage = @(Test-ChangelogCoverage -GitHub $GitHub -ChangelogPath $ChangelogPath)
+    if ($coverage.Count -gt 0) { $problems += $coverage }
     return $problems
 }
 
@@ -133,8 +212,8 @@ function Invoke-Main {
         $gh = @(Get-ReleasesFromApi 'GitHub' | ForEach-Object { Convert-ToRelease $_ 'GitHub' })
         $gl = @(Get-ReleasesFromApi 'GitLab' | ForEach-Object { Convert-ToRelease $_ 'GitLab' })
     }
-    $problems = @(Test-ReleaseSet -GitHub $gh -GitLab $gl -CurrentTag $current)
-    $names = @('pair-count', 'title-format', 'body-structure', 'no-garbage', 'cross-host')
+    $problems = @(Test-ReleaseSet -GitHub $gh -GitLab $gl -CurrentTag $current -ChangelogPath $ChangelogPath)
+    $names = @('pair-count', 'title-format', 'body-structure', 'no-garbage', 'cross-host', 'changelog-coverage')
     foreach ($name in $names) {
         $hits = @($problems | Where-Object { $_ -like "$name*" })
         if ($hits.Count -eq 0) { Write-Host "PASS $name"; continue }

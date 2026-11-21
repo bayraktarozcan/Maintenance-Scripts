@@ -6,6 +6,21 @@ BeforeAll {
     $script:Script = Join-Path $script:Root 'Tools/Check-ReleaseHygiene.ps1'
     . $script:Script
 
+    $script:Changelog = Join-Path ([IO.Path]::GetTempPath()) ('hygiene-cl-' + [guid]::NewGuid().ToString('N') + '.md')
+    @'
+## English
+
+### V0.1.1.2 — 2026-11-21
+
+### V0.1.1.1 — 2026-11-21
+
+## Türkçe
+
+### V0.1.1.2 — 2026-11-21
+
+### V0.1.1.1 — 2026-11-21
+'@ | Set-Content -LiteralPath $script:Changelog -Encoding UTF8
+
     $enBody = @'
 ## v0.1.1.2 — Post-Release Hardening
 
@@ -91,17 +106,21 @@ BeforeAll {
 }
 
 Describe 'Published release hygiene' {
-    It 'has a tracked guard with the five named checks' {
+    AfterAll {
+        if (Test-Path -LiteralPath $script:Changelog) { Remove-Item -LiteralPath $script:Changelog -Force }
+    }
+
+    It 'has a tracked guard with the six named checks' {
         Test-Path -LiteralPath $script:Script | Should -BeTrue
         $text = [IO.File]::ReadAllText($script:Script)
-        foreach ($name in @('pair-count', 'title-format', 'body-structure', 'no-garbage', 'cross-host')) {
+        foreach ($name in @('pair-count', 'title-format', 'body-structure', 'no-garbage', 'cross-host', 'changelog-coverage')) {
             $text | Should -Match $name
         }
     }
 
     It 'passes a clean two-host set' {
         $sets = New-Sets
-        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current)
+        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current -ChangelogPath $script:Changelog)
         $problems | Should -BeNullOrEmpty
     }
 
@@ -109,7 +128,7 @@ Describe 'Published release hygiene' {
         $sets = New-Sets
         $rel = $sets.gh[1]
         $rel.Title = 'v0.1.1.1 — Latest-Version Policy [DEPRECATED]'
-        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current)
+        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current -ChangelogPath $script:Changelog)
         ($problems -join ' ') | Should -Match 'title-format'
     }
 
@@ -117,7 +136,7 @@ Describe 'Published release hygiene' {
         $sets = New-Sets
         $rel = $sets.gh[0]
         $rel.Body = ($enBody -split '---')[0]
-        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current)
+        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current -ChangelogPath $script:Changelog)
         ($problems -join ' ') | Should -Match 'body-structure'
     }
 
@@ -125,21 +144,21 @@ Describe 'Published release hygiene' {
         $sets = New-Sets
         $rel = $sets.gh[0]
         $rel.Body = $enBody + "`n- fixes #5`n"
-        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current)
+        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current -ChangelogPath $script:Changelog)
         ($problems -join ' ') | Should -Match 'no-garbage'
     }
 
     It 'fails cross-host when one body differs' {
         $sets = New-Sets
         $sets.gl[0].Body = $enBody + "`n"
-        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current)
+        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current -ChangelogPath $script:Changelog)
         ($problems -join ' ') | Should -Match 'cross-host'
     }
 
     It 'fails pair-count when a tag is missing on one host' {
         $sets = New-Sets
         $sets.gl = @($sets.gl[0])
-        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current)
+        $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current -ChangelogPath $script:Changelog)
         ($problems -join ' ') | Should -Match 'pair-count'
     }
 
@@ -150,11 +169,36 @@ Describe 'Published release hygiene' {
         try {
             [IO.File]::WriteAllText($file, ($sets | ConvertTo-Json -Depth 8 -Compress))
             $engine = (Get-Process -Id $PID).Path
-            $out = @(& $engine -NoProfile -File $script:Script -Fixtures $file 2>&1)
+            $out = @(& $engine -NoProfile -File $script:Script -Fixtures $file -ChangelogPath $script:Changelog 2>&1)
             ($out -join "`n") | Should -Match 'FAIL no-garbage'
             $LASTEXITCODE | Should -Be 1
         } finally {
             if (Test-Path -LiteralPath $file) { Remove-Item -LiteralPath $file -Force }
         }
+    }
+
+    It 'fails changelog-coverage when a released bullet is absent from the notes' {
+        $sets = New-Sets
+        $original = [IO.File]::ReadAllText($script:Changelog)
+        try {
+            $planted = $original.Replace(
+                '### V0.1.1.2 — 2026-11-21',
+                "### V0.1.1.2 — 2026-11-21`n`n- Unreleased capability absent from notes."
+            )
+            [IO.File]::WriteAllText($script:Changelog, $planted)
+            $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current -ChangelogPath $script:Changelog)
+            ($problems -join ' ') | Should -Match 'changelog-coverage'
+        } finally {
+            [IO.File]::WriteAllText($script:Changelog, $original)
+        }
+    }
+
+    It 'Reads GitLab without a write-capable credential' {
+        $workflow = [IO.File]::ReadAllText((Join-Path $script:Root '.github/workflows/hygiene.yml'))
+        $workflow | Should -Not -Match 'GITLAB_PUSH_TOKEN'
+        $guard = [IO.File]::ReadAllText($script:Script)
+        $guard | Should -Not -Match 'PRIVATE-TOKEN'
+        $guard | Should -Match 'Invoke-WebRequest'
+        $guard | Should -Match 'glab api'
     }
 }
