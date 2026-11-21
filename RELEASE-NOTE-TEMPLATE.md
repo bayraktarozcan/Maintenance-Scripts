@@ -93,12 +93,17 @@ Copy the template below when creating or updating a release. Tüm release'lar
 
 ### Publication procedure
 
-There is no dedicated release script; the two CLI commands below are the procedure.
-`--name` / `--title`, `--notes-file`, `--ref` and `--tag` are the parameters that
-must match on both hosts.
+There is no dedicated release script. Derive the canonical title and bilingual
+body from `CHANGELOG.md` first (stdout line 1 is the title; `-Current` omits the
+deprecation prefix), then apply them on both hosts. `--title` / `--name`,
+`--notes-file` and `--ref` are the parameters that must match.
 
 ```powershell
-# GitHub: edit an existing release
+# 1. Generate metadata from the canonical changelog
+powershell -NoProfile -File Tools/Build-ReleaseNotes.ps1 0.1.1.2 -Current -Output Logs/releases/v0.1.1.2.md
+powershell -NoProfile -File Tools/Build-ReleaseNotes.ps1 0.1.1.1 -Output Logs/releases/v0.1.1.1.md
+
+# 2. GitHub: edit an existing release
 gh release edit vX.Y.Z.W --title "[DEPRECATED] vX.Y.Z.W — Title" --notes-file Logs/releases/vX.Y.Z.W.md
 
 # GitLab: create or update (--ref accepts the tag name; an existing release is updated)
@@ -134,11 +139,17 @@ hosts and keep the full history in `CHANGELOG.md`.
 
 ### Yordam
 
-Ayrı bir release betiği yoktur; aşağıdaki iki komut yordamdır.
-`--name` / `--title`, `--notes-file`, `--ref` ve `--tag` parametreleri iki hostta da aynı olmalıdır.
+Ayrı bir release betiği yoktur; önce `CHANGELOG.md` dosyasından kanonik başlık ve
+iki dilli gövde üretilir (stdout ilk satır başlıktır; `-Current` eskitme önekini
+atlar), sonra iki hosta uygulanır. `--title` / `--name`, `--notes-file` ve `--ref`
+parametreleri iki hostta da aynı olmalıdır.
 
 ```powershell
-# GitHub: var olan release'i düzenle
+# 1. Kanonik belgelendirmeden üret
+powershell -NoProfile -File Tools/Build-ReleaseNotes.ps1 0.1.1.2 -Current -Output Logs/releases/v0.1.1.2.md
+powershell -NoProfile -File Tools/Build-ReleaseNotes.ps1 0.1.1.1 -Output Logs/releases/v0.1.1.1.md
+
+# 2. GitHub: var olan release'i düzenle
 gh release edit vX.Y.Z.W --title "[DEPRECATED] vX.Y.Z.W — Başlık" --notes-file Logs/releases/vX.Y.Z.W.md
 
 # GitLab: oluştur veya güncelle (--ref etiket adını kabul eder; var olan release güncellenir)
