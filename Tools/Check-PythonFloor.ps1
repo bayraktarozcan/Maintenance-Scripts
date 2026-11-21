@@ -92,6 +92,22 @@ function Compare-FloorVersion {
     return 0
 }
 
+function Get-IstanbulToday {
+    # CI runners default to UTC; the EOL boundary must be evaluated in the
+    # project's declared zone. Verify the offset instead of trusting a setting.
+    $zone = $null
+    foreach ($candidate in @('Europe/Istanbul', 'Turkey Standard Time')) {
+        try { $zone = [TimeZoneInfo]::FindSystemTimeZoneById($candidate); break } catch { }
+    }
+    if ($null -eq $zone) { throw 'Türkiye timezone is unavailable on this host' }
+    $utc = [DateTime]::UtcNow
+    $offset = $zone.GetUtcOffset($utc)
+    if ($offset -ne [TimeSpan]::FromHours(3)) {
+        throw "unexpected Türkiye offset: $offset (expected +03:00)"
+    }
+    return [TimeZoneInfo]::ConvertTimeFromUtc($utc, $zone).Date
+}
+
 function Get-SupportedFloor {
     param([object]$Calendar, [datetime]$Today)
     $supported = @()
@@ -180,7 +196,7 @@ function Invoke-Main {
     }
 
     $calendar = Get-Calendar -Url $CalendarUrl
-    $desired = Get-SupportedFloor -Calendar $calendar -Today (Get-Date)
+    $desired = Get-SupportedFloor -Calendar $calendar -Today (Get-IstanbulToday)
     $quality = [IO.File]::ReadAllText((Get-QualityPath $Root))
     $current = Get-DeclaredFloor $quality
     if ((Compare-FloorVersion -Left $desired -Right $current) -lt 0) {

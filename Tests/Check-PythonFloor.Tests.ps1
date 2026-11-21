@@ -70,6 +70,15 @@ Describe 'Upstream floor resolution' {
     It 'Rejects an empty calendar' {
         { Get-SupportedFloor -Calendar ([pscustomobject]@{}) -Today (Get-Date) } | Should -Throw '*no supported Python version*'
     }
+
+    It 'Evaluates EOL dates in verified Türkiye time' {
+        $today = Get-IstanbulToday
+        $today.Hour | Should -Be 0
+        $text = [IO.File]::ReadAllText((Join-Path $script:Root 'Tools/Check-PythonFloor.ps1'))
+        $text | Should -Match 'Get-SupportedFloor -Calendar \$calendar -Today \(Get-IstanbulToday\)'
+        $text | Should -Match 'Turkey Standard Time'
+        $text | Should -Match 'unexpected Türkiye offset'
+    }
 }
 
 Describe 'Declared floor parity' {
