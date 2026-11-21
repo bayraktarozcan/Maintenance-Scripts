@@ -39,7 +39,7 @@ Logs are UTF-8 with BOM. Open them in an editor that honors the BOM
 consoles, redirect to the log file and read it there.
 
 ### `winget` Not Found
- 
+
 `WinGet-Upgrade.bat` needs the App Installer (`winget`) from the
 Microsoft Store. Install it, then re-run; the log captures the exact
 `winget` error text.
@@ -55,20 +55,16 @@ Microsoft Store. Install it, then re-run; the log captures the exact
 - `pip index versions pip` is used only as a fallback when `pip install --upgrade --dry-run --ignore-installed --report` cannot determine the latest pip version (network/index issues). `Get-LatestFromIndexVersions` parses `Available versions: <latest>, ...` (verified on pip 26.x).
 - `--use-feature=fast-deps` is not supported on pip 26.x (`pip install --help` shows no `fast-deps` feature); the script does not pass speculative `--use-feature` flags.
 
+### `pip list --outdated --format=json` Fails or Returns Nothing
+
+- The script tries `pip list --outdated --format=json` first. If JSON is unavailable or empty, it falls back to text output and parses the `Package / Version / Latest / Type` table.
+- Older pip versions (< 21.2) do not support `--format=json`; the script falls back to text parsing automatically.
+- A proxy, an offline environment, or a stale index can produce an empty result; run `py -m pip index versions <package>` to verify connectivity.
+- If the fallback also returns nothing, all pip packages are up to date.
+
 ### `Update-Components.ps1` JSON Report for CI/CD
 
 - Use `-ReportPath <file>` to write a UTF-8 JSON report (`schemaVersion` 1) with `mode` (`check`/`execute`), `executionCompleted`, `host`, `plan`, `result`, `success`, and `exitCode`. `-Check -ReportPath ...` produces a check-mode report without applying changes.
-
-### `pip index versions` Fallback / `--use-feature=fast-deps` (TR)
-
-- `pip index versions pip`, yalnızca `pip install --upgrade --dry-run --ignore-installed --report` ile en son pip sürümü belirlenemediğinde (ağ/index) fallback olarak kullanılır. `Get-LatestFromIndexVersions`, `Available versions: <en son>, ...` biçimini ayrıştırır (pip 26.x’te doğrulandı).
-- `--use-feature=fast-deps`, pip 26.x’te desteklenmez; betik spekülatif `--use-feature` bayrakları geçmez.
-
-### `Update-Components.ps1` CI/CD JSON Raporu (TR)
-
-- `-ReportPath <dosya>` UTF-8 JSON raporu (şema v1) üretir: `mode` (`check`/`execute`), `executionCompleted`, `host`, `plan`, `result`, `success`, `exitCode`. `-Check -ReportPath ...` değişiklik uygulamadan check modu raporu üretir.
-- Older pip versions (< 21.2) do not support `--format=json`. The script falls back to text parsing automatically.
-- If the fallback also returns nothing, all pip packages are up to date.
 
 ### `npm outdated -g` Shows Packages but They Remain After an Update-Components Run
 
@@ -113,7 +109,7 @@ Günlükler BOM'lu UTF-8'dir. BOM'a saygı duyan bir düzenleyicide açın
 konsollarda çıktıyı günlük dosyasına yönlendirip oradan okuyun.
 
 ### `winget` Bulunamıyor
- 
+
 `WinGet-Upgrade.bat`, Microsoft Store'dan App Installer (`winget`)
 ister. Kurup yeniden çalıştırın; tam `winget` hata metni günlükte
 yakalanır.
@@ -124,10 +120,21 @@ yakalanır.
 - Eksik aracı kurun: Python winget'ten (`Python.Python.3.15`), Node.js winget'ten (`OpenJS.NodeJS.LTS`), veya winget'i Microsoft Store'dan.
 - Betik, tüm istenen bileşenler başarılı olduğunda 0 ile çıkar; eksik araçlar `-Check` kullanılmadıkça genel çalışmayı başarısız sayar.
 
+### `pip index versions` Fallback / `--use-feature=fast-deps`
+
+- `pip index versions pip`, yalnızca `pip install --upgrade --dry-run --ignore-installed --report` ile en son pip sürümü belirlenemediğinde (ağ/index) fallback olarak kullanılır. `Get-LatestFromIndexVersions`, `Available versions: <en son>, ...` biçimini ayrıştırır (pip 26.x’te doğrulandı).
+- `--use-feature=fast-deps`, pip 26.x’te desteklenmez; betik spekülatif `--use-feature` bayrakları geçmez.
+
 ### `pip list --outdated --format=json` Başarısız Oluyor Ya Da Boş Dönüyor
 
 - Betik önce `pip list --outdated --format=json` dener. JSON kullanılamazsa veya boş dönerse metin çıktısına düşer ve `Package / Version / Latest / Type` tablosunu ayrıştırır.
 - Proxy, çevrimdışı ortam veya eski indeks boş sonuç verebilir; bağlantıyı doğrulamak için `py -m pip index versions <paket>` çalıştırın.
+- 21.2'den eski pip sürümleri `--format=json` desteklemez; betik otomatik olarak metin ayrıştırmaya düşer.
+- Fallback de boş dönerse tüm pip paketleri günceldir.
+
+### `Update-Components.ps1` CI/CD JSON Raporu
+
+- `-ReportPath <dosya>` UTF-8 JSON raporu (şema v1) üretir: `mode` (`check`/`execute`), `executionCompleted`, `host`, `plan`, `result`, `success`, `exitCode`. `-Check -ReportPath ...` değişiklik uygulamadan check modu raporu üretir.
 
 ### `npm outdated -g` Paketleri Gösteriyor Ama Update-Components Çalıştıktan Sonra Kalıyor
 
