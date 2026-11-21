@@ -667,7 +667,7 @@ Project facts for this repository. Points at the universal rules above instead o
 
 ## Versions - Scheme, Current Constants, Where Each Is Stated
 
-- Scheme: four-part (`v0.1.0.1`, 2026-10-23) stated in `CHANGELOG.md` headings.
+- Scheme: four-part (`v0.1.1.1`, 2026-11-21) stated in `CHANGELOG.md` headings.
 - No version constants in code; `CHANGELOG.md` is the single source.
 
 ## Commands - Setup, Build, Test, Lint, the Single Local Gate Command
@@ -750,7 +750,7 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 
 ## Releases - Procedure, Hosts, Parity Checks
 
-- Release procedure: update `CHANGELOG.md`, run `Tools/Invoke-Gate.ps1`, commit, create annotated tag `vX.Y.Z.W`, push to both hosts, publish matching releases with the bilingual note, then prefix the previous release title with `[DEPRECATED]`; `CHANGELOG.md` keeps the history (`v0.1.0.1`).
+- Release procedure: update `CHANGELOG.md`, run `Tools/Invoke-Gate.ps1`, commit, create annotated tag `vX.Y.Z.W`, push to both hosts, publish matching releases with the bilingual note, then prefix the previous release title with `[DEPRECATED]`; `CHANGELOG.md` keeps the history (`v0.1.1.1`).
 - `.gitlab-ci.yml` mirrors the GitHub quality gates and runs on GitLab CI. Pipelines trigger on pushes to `main`; the pipeline badge in `README.md` resolves to https://gitlab.com/bayraktarozcan/Maintenance-Scripts/-/pipelines.
 - Commit message style: English, imperative, with a `type:` prefix (`fix:`, `docs:`, `chore:`, `test:`); match the existing Conventional Commits history.
 
@@ -759,4 +759,4 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 - Do not add scripts that make network calls or persist elevated privileges. `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) are the only exceptions: they delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; they never upload or transmit user data and write no registry keys.
 - No protected-branch bypass is configured for this repository.
 
-<!-- mirror-sync: sync-sha=aa6cb1e209ab0a4fbae77e7848573d3c883c0b6f -->
+<!-- mirror-sync: sync-sha=79696972686e13bcc220728a59ae44b2e363ff45 -->

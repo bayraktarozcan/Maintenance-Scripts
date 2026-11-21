@@ -22,7 +22,7 @@
 - `Update-Components.ps1` console output is English-only and includes live checking progress markers (including `Node.js/winget`).
 - Network-activity policy updated to list `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) as the only exceptions; user-facing docs, architecture, and troubleshooting updated.
 
-### Unreleased
+### V0.1.1.1 — 2026-11-21
 
 Latest-version policy across CI and tooling: third-party actions resolve current code via default-branch refs, images and CLI tools track latest, host dependencies install at latest, and a mirror verifier with a fixture suite guards the bilingual AGENTS.md mirror.
 
@@ -38,6 +38,8 @@ Latest-version policy across CI and tooling: third-party actions resolve current
 **Fixed:**
 - AGENTS.md CodeQL/auto-approve rules matched reality (GitHub default setup; no auto-approve workflow); stale "pinned" comments removed from CI files.
 - Dependency tables and command docs no longer name retired exact versions.
+- Markdown headings follow title case with fully uppercase abbreviations; a `Heading and abbreviation case` rule was added (code, anchors and literal strings untouched).
+- Retired `IPConfig-FlushDNS.bat` name in the release-note template replaced with `Clear-DnsClientCache.bat`; dead local shortcut removed.
 
 Reliability and hardening release: one PowerShell engine per launcher, evidence-based Repair reporting, a modern DNS command, a seven-check local gate, and complete bilingual documentation.
 
@@ -94,7 +96,7 @@ First release: personal Windows maintenance script collection.
 
 ## Türkçe
 
-### Unreleased
+### V0.1.1.1 — 2026-11-21
 
 CI ve araçlarda en güncel sürüm ilkesi: üçüncü taraf eylemler varsayılan dal referanslarıyla güncel kodu çözümler, görüntüler ve CLI araçları latest sürümleri izler, ana makine bağımlılıkları latest kurulur ve iki dilli AGENTS.md aynasını bir doğrulayıcı + fixture takımı korur.
 
@@ -110,6 +112,8 @@ CI ve araçlarda en güncel sürüm ilkesi: üçüncü taraf eylemler varsayıla
 **Düzeltilen:**
 - AGENTS.md CodeQL/otomatik onay kuralları gerçeklikle uyumlu hale getirildi (GitHub varsayılan kurulumu; otomatik onay iş akışı yok); CI dosyalarındaki bayat "pinned" yorumları kaldırıldı.
 - Bağımlılık tabloları ve komut belgeleri artık emekli olmuş tam sürümleri adlandırmıyor.
+- Markdown başlıkları, kısaltmalar tamamen büyük harfle olacak şekilde başlık büyüklüğü kuralına uyarlandı; `Başlık ve kısaltma büyüklüğü` kuralı eklendi (kod, çapalar ve değişmez dizelere dokunulmadı).
+- Yayın notu şablonundaki emekli `IPConfig-FlushDNS.bat` adı `Clear-DnsClientCache.bat` ile değiştirildi; ölü yerel kısayol kaldırıldı.
 
 ### V0.1.1.0 — 2026-11-09
 
@@ -125,8 +129,6 @@ CI ve araçlarda en güncel sürüm ilkesi: üçüncü taraf eylemler varsayıla
 - `Update-Components.ps1`, `npm install --global npm@latest` ile `npm`'yi yükseltir, ardından her eski global paketi `npm install --global <pkg>@<latest>` ile (major sürümler dahil) yükseltir ve `npm outdated -g`'yi yeniden kontrol eder; `npm outdated -g --json`'yi paket adına göre anahtarlı nesne olarak ayrıştırarak kararsız/belirsiz sonuçlardan kaçınır.
 - `Update-Components.ps1` konsol çıktısı yalnızca İngilizce'dir ve canlı denetleme ilerleme işaretleri içerir (`Node.js/winget` dahil).
 - Ağ etkinliği politikası yalnızca `WinGet-Upgrade.bat` ve `Update-Components.bat` (`Tools/Update-Components.ps1` aracılığıyla) istisnalarını listeler; ilgili dokümanlar güncellendi.
-
-### Yayınlanmamış
 
 ### V0.1.0.1 — 2026-10-23
 
