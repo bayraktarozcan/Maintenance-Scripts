@@ -47,9 +47,13 @@ jobs:
       - name: Mojibake scan (pushed commits)
         if: github.event_name == 'push'
         shell: pwsh
-        run: './Tools/Check-Mojibake.ps1 -Commits -CommitRange "${{ github.event.before }}..HEAD"'
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: './Tools/Check-Mojibake.ps1 -Commits -CommitRange "${env:BEFORE}..HEAD"'
 
       - name: Mojibake scan (pull request commits)
         if: github.event_name == 'pull_request'
         shell: pwsh
-        run: './Tools/Check-Mojibake.ps1 -Commits -CommitRange "${{ github.event.pull_request.base.sha }}..HEAD"'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: './Tools/Check-Mojibake.ps1 -Commits -CommitRange "${env:BASE_SHA}..HEAD"'

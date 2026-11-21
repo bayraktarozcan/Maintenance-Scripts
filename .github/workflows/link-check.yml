@@ -27,6 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@main
       - name: Check links
+        # lychee-action's default branch is master, not main.
         uses: lycheeverse/lychee-action@master
         with:
           args: >-
