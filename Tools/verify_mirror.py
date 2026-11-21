@@ -105,7 +105,10 @@ class Document:
             item = CHECKLIST_RE.match(line)
             if item:
                 tokens = TOKEN_RE.findall(item.group(1))
-                self.checklist.append(tokens[0] if tokens else item.group(1)[:24])
+                # An item without a backticked token has no anchor to compare.
+                # Comparing its prose would report drift for a valid translation,
+                # so it contributes a constant while presence and order still count.
+                self.checklist.append(tokens[0] if tokens else '<no-anchor>')
         self.rules_per_section.append(rules)
 
     def sync_sha(self):
@@ -236,6 +239,17 @@ def run_selftest():
 
     c, m = pair(mirror=mirror_text.replace('`git status`', '`git diff`'))
     case('checklist anchor dropped', False, (c, m))
+
+    # An item without a backticked token has no anchor; its prose is never
+    # compared, but presence and order still count.
+    no_anchor = base.replace('- [ ] `build` passes', '- [ ] build passes')
+    no_anchor_mirror = mirror_text.replace('- [ ] `build` gecer', '- [ ] derleme gecer')
+    c, m = pair(mirror=no_anchor_mirror, canonical=no_anchor)
+    case('checklist item without anchor tolerated', True, (c, m))
+
+    c, m = pair(mirror=no_anchor_mirror.replace('- [ ] derleme gecer\n', ''),
+                canonical=no_anchor)
+    case('checklist item without anchor still checked for presence', False, (c, m))
 
     tolerant = mirror_text.replace(
         '- **Rule one.** alfa\n',

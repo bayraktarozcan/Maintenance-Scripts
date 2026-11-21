@@ -23,7 +23,7 @@ Describe 'verify_mirror.py' {
         $output = $output | Out-String
         if ($code -ne 0) { Write-Host $output }
         $code | Should -Be 0
-        $output | Should -Match '16/16 cases passed'
+        $output | Should -Match '18/18 cases passed'
     }
 
     It 'detects drift in a real pair when the mirror marker is tampered' {
