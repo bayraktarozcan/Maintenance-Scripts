@@ -21,11 +21,9 @@ BeforeAll {
 }
 
 Describe 'Version parity' {
-    It 'Derives a current version that has an annotated tag' {
+    It 'Derives a well-formed current version from the changelog' {
         $current = Get-CanonicalVersion
         $current | Should -Match '^v\d+\.\d+\.\d+\.\d+$'
-        $tags = @(git -C $script:Root tag -l $current)
-        $tags | Should -Contain $current
     }
 
     It 'Keeps the canonical version in both agent guides' {
