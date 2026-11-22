@@ -50,7 +50,6 @@ type "%OUT%" >> "%LOG%" 2>&1
 echo.
 echo. >> "%LOG%"
 del "%OUT%" >nul 2>&1
-echo.
 echo Step 1 exit code: %S1_RC%
 >>"%LOG%" echo Step 1 exit code: %S1_RC%
 echo Step 2 exit code: %S2_RC%

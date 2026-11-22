@@ -40,7 +40,6 @@ type "%OUT%" >> "%LOG%" 2>&1
 echo.
 echo. >> "%LOG%"
 del "%OUT%" >nul 2>&1
-echo.
 echo Exit code: %EXITCODE%
 >>"%LOG%" echo Exit code: %EXITCODE%
 echo.
