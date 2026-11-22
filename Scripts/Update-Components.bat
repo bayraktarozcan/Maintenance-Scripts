@@ -25,17 +25,26 @@ if not exist "%INDEX%" >>"%INDEX%" echo Script: Update-Components - Dir: %LOGDIR
 >>"%INDEX%" echo %TS% %LOG%
 echo Index: %INDEX%
 >>"%LOG%" echo Index: %INDEX%
+set "EXITCODE=0"
+set "OUT=%TEMP%\uc_out_%RANDOM%.tmp"
 set "SCRIPT=%~dp0..\Tools\Update-Components.ps1"
 echo.
 echo. >> "%LOG%"
 echo ^> Update-Components.ps1 %*
 >>"%LOG%" echo ^> Update-Components.ps1 %*
-"%PSEXE%" -NoProfile -File "%SCRIPT%" %* 2>&1 | "%PSEXE%" -NoProfile -Command "$input | ForEach-Object { $_; [IO.File]::AppendAllText($env:LOG, $_ + [Environment]::NewLine, [Text.UTF8Encoding]::new($false)) }"
+"%PSEXE%" -NoProfile -File "%SCRIPT%" %* > "%OUT%" 2>&1
+set "EXITCODE=%ERRORLEVEL%"
+type "%OUT%"
+type "%OUT%" >> "%LOG%" 2>&1
+del "%OUT%" >nul 2>&1
 echo.
 echo. >> "%LOG%"
 echo.
 echo Log: %LOG%
 >>"%LOG%" echo Log: %LOG%
+echo Exit code: %EXITCODE%
+>>"%LOG%" echo Exit code: %EXITCODE%
 "%PSEXE%" -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 echo.
 pause
+exit /b %EXITCODE%

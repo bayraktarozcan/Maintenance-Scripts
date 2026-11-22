@@ -127,6 +127,13 @@ Describe 'Batch static checks' {
             $lines[-1] | Should -Match '^(if not defined NOPAUSE )?pause$'
         }
     }
+    It 'Publishes the child exit code' -ForEach $script:BatFiles {
+        $text = [IO.File]::ReadAllText($_.FullName)
+        $text | Should -Match 'set "(EXITCODE|S\d+_RC)=%ERRORLEVEL%"'
+        $text | Should -Match '(?m)^exit /b %EXITCODE%\r?$'
+        $text | Should -Match 'echo Exit code: %EXITCODE%'
+        $text | Should -Match '>>"%LOG%" echo Exit code: %EXITCODE%'
+    }
     It 'Prefers the pwsh app alias, then PATH, then Windows PowerShell' -ForEach $script:BatFiles {
         $lines = [System.IO.File]::ReadAllLines($_.FullName)
         if ($lines -match '^"%PSEXE%" -NoProfile') {

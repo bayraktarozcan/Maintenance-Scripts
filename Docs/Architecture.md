@@ -25,6 +25,11 @@ Repair-specific logging:
 4. Run each numbered step to a `%TEMP%` scratch file, then mirror it to
    both the console (`type`) and the log file, so console and log output
    are identical. The scratch file is deleted afterwards.
+5. Capture the workload exit code(s) and finish with `exit /b %EXITCODE%`,
+   so a caller or scheduled task can detect failure. Launchers with several
+   steps exit 1 when any step returned a nonzero code. `Update-Components.bat`
+   buffers the updater output to a scratch file instead of piping it, so the
+   captured code belongs to the updater, not to the logging process.
 
 ### Per-Script Pipelines
 
@@ -130,6 +135,12 @@ kapsar:
 4. Numaralı her adımı `%TEMP%` altındaki geçici dosyaya çalıştır, sonra
    hem ekrana (`type`) hem günlüğe aynala; böylece ekran ve günlük
    çıktısı birebir aynı olur. Geçici dosya sonra silinir.
+5. İş yükünün çıkış kodunu yakala ve `exit /b %EXITCODE%` ile bit; böylece
+   çağıran işlem veya Zamanlayıcı başarısızlığı görebilir. Birden fazla
+   adımı olan başlatıcı, herhangi bir adım sıfırdan farklı döndüğünde 1 ile
+   çıkar. `Update-Components.bat`, güncelleyici çıktısını pipe yerine
+   geçici dosyaya yazar; yakalanan kod logger'ın değil güncelleyicinin
+   kodudur.
 
 ### Betik Başına Hatlar
 

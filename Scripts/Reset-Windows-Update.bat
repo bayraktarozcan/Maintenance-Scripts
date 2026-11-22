@@ -26,12 +26,16 @@ if not exist "%INDEX%" >>"%INDEX%" echo Script: Reset-Windows-Update - Dir: %LOG
 echo Index: %INDEX%
 >>"%LOG%" echo Index: %INDEX%
 set "OUT=%TEMP%\rwu_out.tmp"
+set "EXITCODE=0"
+set /a FAILCOUNT=0
 
 echo.
 echo. >> "%LOG%"
 echo ^> (1/13) net stop wuauserv
 >>"%LOG%" echo ^> (1/13) net stop wuauserv
 net stop wuauserv > "%OUT%" 2>&1
+set "S1_RC=%ERRORLEVEL%"
+if not "%S1_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -42,6 +46,8 @@ echo. >> "%LOG%"
 echo ^> (2/13) net stop bits
 >>"%LOG%" echo ^> (2/13) net stop bits
 net stop bits > "%OUT%" 2>&1
+set "S2_RC=%ERRORLEVEL%"
+if not "%S2_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -52,6 +58,8 @@ echo. >> "%LOG%"
 echo ^> (3/13) net stop msiserver
 >>"%LOG%" echo ^> (3/13) net stop msiserver
 net stop msiserver > "%OUT%" 2>&1
+set "S3_RC=%ERRORLEVEL%"
+if not "%S3_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -62,6 +70,8 @@ echo. >> "%LOG%"
 echo ^> (4/13) net stop cryptSvc
 >>"%LOG%" echo ^> (4/13) net stop cryptSvc
 net stop cryptSvc > "%OUT%" 2>&1
+set "S4_RC=%ERRORLEVEL%"
+if not "%S4_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -72,6 +82,8 @@ echo. >> "%LOG%"
 echo ^> (5/13) del /f /s /q "C:\Windows\SoftwareDistribution\*.*"
 >>"%LOG%" echo ^> (5/13) del /f /s /q "C:\Windows\SoftwareDistribution\*.*"
 del /f /s /q "C:\Windows\SoftwareDistribution\*.*" > "%OUT%" 2>&1
+set "S5_RC=%ERRORLEVEL%"
+if not "%S5_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -82,6 +94,8 @@ echo. >> "%LOG%"
 echo ^> (6/13) for /d %%I in ("C:\Windows\SoftwareDistribution\*") do rd /s /q "%%I"
 >>"%LOG%" echo ^> (6/13) for /d %%I in ("C:\Windows\SoftwareDistribution\*") do rd /s /q "%%I"
 for /d %%I in ("C:\Windows\SoftwareDistribution\*") do rd /s /q "%%I" > "%OUT%" 2>&1
+set "S6_RC=%ERRORLEVEL%"
+if not "%S6_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -92,6 +106,8 @@ echo. >> "%LOG%"
 echo ^> (7/13) del /f /s /q "C:\Windows\System32\catroot2\*.*"
 >>"%LOG%" echo ^> (7/13) del /f /s /q "C:\Windows\System32\catroot2\*.*"
 del /f /s /q "C:\Windows\System32\catroot2\*.*" > "%OUT%" 2>&1
+set "S7_RC=%ERRORLEVEL%"
+if not "%S7_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -102,6 +118,8 @@ echo. >> "%LOG%"
 echo ^> (8/13) for /d %%I in ("C:\Windows\System32\catroot2\*") do rd /s /q "%%I"
 >>"%LOG%" echo ^> (8/13) for /d %%I in ("C:\Windows\System32\catroot2\*") do rd /s /q "%%I"
 for /d %%I in ("C:\Windows\System32\catroot2\*") do rd /s /q "%%I" > "%OUT%" 2>&1
+set "S8_RC=%ERRORLEVEL%"
+if not "%S8_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -112,6 +130,8 @@ echo. >> "%LOG%"
 echo ^> (9/13) net start wuauserv
 >>"%LOG%" echo ^> (9/13) net start wuauserv
 net start wuauserv > "%OUT%" 2>&1
+set "S9_RC=%ERRORLEVEL%"
+if not "%S9_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -122,6 +142,8 @@ echo. >> "%LOG%"
 echo ^> (10/13) net start bits
 >>"%LOG%" echo ^> (10/13) net start bits
 net start bits > "%OUT%" 2>&1
+set "S10_RC=%ERRORLEVEL%"
+if not "%S10_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -132,6 +154,8 @@ echo. >> "%LOG%"
 echo ^> (11/13) net start cryptSvc
 >>"%LOG%" echo ^> (11/13) net start cryptSvc
 net start cryptSvc > "%OUT%" 2>&1
+set "S11_RC=%ERRORLEVEL%"
+if not "%S11_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -142,6 +166,8 @@ echo. >> "%LOG%"
 echo ^> (12/13) net start msiserver
 >>"%LOG%" echo ^> (12/13) net start msiserver
 net start msiserver > "%OUT%" 2>&1
+set "S12_RC=%ERRORLEVEL%"
+if not "%S12_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -152,15 +178,23 @@ echo. >> "%LOG%"
 echo ^> (13/13) UsoClient StartScan
 >>"%LOG%" echo ^> (13/13) UsoClient StartScan
 UsoClient StartScan > "%OUT%" 2>&1
+set "S13_RC=%ERRORLEVEL%"
+if not "%S13_RC%"=="0" set /a FAILCOUNT+=1
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
 echo. >> "%LOG%"
 
 del "%OUT%" >nul 2>&1
+echo Failed steps: %FAILCOUNT%
+>>"%LOG%" echo Failed steps: %FAILCOUNT%
+if %FAILCOUNT% GTR 0 set "EXITCODE=1"
+echo Exit code: %EXITCODE%
+>>"%LOG%" echo Exit code: %EXITCODE%
 echo.
 echo Log: %LOG%
 >>"%LOG%" echo Log: %LOG%
 "%PSEXE%" -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 echo.
 pause
+exit /b %EXITCODE%

@@ -24,10 +24,11 @@ Describe 'WinGet-Upgrade static hygiene' {
 }
 
 Describe 'WinGet-Upgrade log skeleton' {
-    It 'Starts with @echo off and ends with pause' {
+    It 'Starts with @echo off and ends with a pause and exit code' {
         $nonEmpty = @($script:Lines | Where-Object { $_.Trim() -ne '' })
         $nonEmpty[0] | Should -Be '@echo off'
-        $nonEmpty[-1] | Should -Be 'pause'
+        $nonEmpty[-2] | Should -Be 'pause'
+        $nonEmpty[-1] | Should -Be 'exit /b %EXITCODE%'
     }
 
     It 'Keeps the timestamp, log folder, index, and BOM stamp' {

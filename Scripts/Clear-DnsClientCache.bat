@@ -1,6 +1,7 @@
 @echo off
 chcp 65001 >nul 2>&1
 setlocal EnableExtensions
+set "EXITCODE=0"
 set "NOPAUSE="
 if /i "%~1"=="/nopause" set "NOPAUSE=1"
 set "PSEXE=powershell"
@@ -33,6 +34,7 @@ echo. >> "%LOG%"
 echo ^> Clear-DnsClientCache
 >>"%LOG%" echo ^> Clear-DnsClientCache
 "%PSEXE%" -NoProfile -Command "Clear-DnsClientCache" > "%OUT%" 2>&1
+set "EXITCODE=%ERRORLEVEL%"
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -41,6 +43,9 @@ del "%OUT%" >nul 2>&1
 echo.
 echo Log: %LOG%
 >>"%LOG%" echo Log: %LOG%
+echo Exit code: %EXITCODE%
+>>"%LOG%" echo Exit code: %EXITCODE%
 "%PSEXE%" -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 echo.
 if not defined NOPAUSE pause
+exit /b %EXITCODE%

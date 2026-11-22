@@ -1,6 +1,7 @@
 @echo off
 chcp 65001 >nul 2>&1
 setlocal EnableExtensions
+set "EXITCODE=0"
 set "PSEXE=powershell"
 set "PW7=%LOCALAPPDATA%\Microsoft\WindowsApps\pwsh.exe"
 if not exist "%PW7%" set "PW7="
@@ -31,6 +32,8 @@ echo. >> "%LOG%"
 echo ^> (1/2) winget source update
 >>"%LOG%" echo ^> (1/2) winget source update
 winget source update > "%OUT%" 2>&1
+set "S1_RC=%ERRORLEVEL%"
+if not "%S1_RC%"=="0" set "EXITCODE=1"
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -40,6 +43,8 @@ echo. >> "%LOG%"
 echo ^> (2/2) winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements
 >>"%LOG%" echo ^> (2/2) winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements
 winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements > "%OUT%" 2>&1
+set "S2_RC=%ERRORLEVEL%"
+if not "%S2_RC%"=="0" set "EXITCODE=1"
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
 echo.
@@ -48,6 +53,13 @@ del "%OUT%" >nul 2>&1
 echo.
 echo Log: %LOG%
 >>"%LOG%" echo Log: %LOG%
+echo Step 1 exit code: %S1_RC%
+>>"%LOG%" echo Step 1 exit code: %S1_RC%
+echo Step 2 exit code: %S2_RC%
+>>"%LOG%" echo Step 2 exit code: %S2_RC%
+echo Exit code: %EXITCODE%
+>>"%LOG%" echo Exit code: %EXITCODE%
 "%PSEXE%" -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 echo.
 pause
+exit /b %EXITCODE%
