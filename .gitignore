@@ -34,3 +34,8 @@ AGENTS-TR.md
 # [TR] Tools/verify_mirror.py bayt kodu önbelleği; üretilir, asla commit edilmez.
 __pycache__/
 *.pyc
+
+# 7. AR-GE ALANI / RESEARCH SCRATCH
+# [EN] Local-only research layer; reports and probes stay out of version control.
+# [TR] Yalnızca yerel ar-ge alanı; raporlar ve denemeler sürüm kontrolüne girmez.
+/Agent-Scratch/
