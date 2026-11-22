@@ -199,7 +199,12 @@ Describe 'Repair-Windows cleanup mode selection' {
     }
 }
 
-Describe 'Repair-Windows cleanup mode runtime behavior' {
+# cmd.exe exists only on Windows. CI runs Pester on ubuntu-latest and in a
+# Linux PowerShell container, so the real CMD probe is Windows-only; the
+# static invariants above stay active on every host.
+$script:HasCmdHost = [System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT
+
+Describe 'Repair-Windows cleanup mode runtime behavior' -Skip:(-not $script:HasCmdHost) {
     # Executes the real selection subroutine with real cmd.exe, but never
     # reaches the maintenance stages: only :AskCleanupMode .. :End is copied.
     # The probe and its log live under the git-ignored Logs/ tree and are
