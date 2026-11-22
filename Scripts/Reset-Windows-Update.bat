@@ -194,7 +194,8 @@ echo Exit code: %EXITCODE%
 echo.
 echo Log: %LOG%
 >>"%LOG%" echo Log: %LOG%
-"%PSEXE%" -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 echo.
+>>"%LOG%" echo.
+"%PSEXE%" -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 pause
 exit /b %EXITCODE%

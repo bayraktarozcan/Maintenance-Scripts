@@ -134,6 +134,26 @@ Describe 'Batch static checks' {
         $text | Should -Match 'echo Exit code: %EXITCODE%'
         $text | Should -Match '>>"%LOG%" echo Exit code: %EXITCODE%'
     }
+    It 'Writes the summary before the log locator and a blank line after it' -ForEach $script:BatFiles {
+        $lines = [System.IO.File]::ReadAllLines($_.FullName)
+        $logLine = [Array]::IndexOf($lines, 'echo Log: %LOG%')
+        $logLogLine = [Array]::IndexOf($lines, '>>"%LOG%" echo Log: %LOG%')
+        $logLine | Should -BeGreaterThan -1
+        $logLogLine | Should -BeGreaterThan -1
+
+        $summaryIndex = -1
+        foreach ($candidate in @('echo Exit code: %EXITCODE%', 'echo Step 1 exit code: %S1_RC%')) {
+            $idx = [Array]::IndexOf($lines, $candidate)
+            if ($idx -ge 0 -and ($summaryIndex -lt 0 -or $idx -lt $summaryIndex)) { $summaryIndex = $idx }
+        }
+        $summaryIndex | Should -BeLessThan $logLine
+
+        $blankAfter = $false
+        for ($i = $logLogLine + 1; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -eq '>>"%LOG%" echo.') { $blankAfter = $true; break }
+        }
+        $blankAfter | Should -BeTrue
+    }
     It 'Prefers the pwsh app alias, then PATH, then Windows PowerShell' -ForEach $script:BatFiles {
         $lines = [System.IO.File]::ReadAllLines($_.FullName)
         if ($lines -match '^"%PSEXE%" -NoProfile') {

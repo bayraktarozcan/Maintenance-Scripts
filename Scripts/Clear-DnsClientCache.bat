@@ -41,11 +41,13 @@ echo.
 echo. >> "%LOG%"
 del "%OUT%" >nul 2>&1
 echo.
-echo Log: %LOG%
->>"%LOG%" echo Log: %LOG%
 echo Exit code: %EXITCODE%
 >>"%LOG%" echo Exit code: %EXITCODE%
-"%PSEXE%" -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 echo.
+echo Log: %LOG%
+>>"%LOG%" echo Log: %LOG%
+echo.
+>>"%LOG%" echo.
+"%PSEXE%" -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 if not defined NOPAUSE pause
 exit /b %EXITCODE%
