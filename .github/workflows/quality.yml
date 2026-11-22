@@ -39,3 +39,21 @@ jobs:
           $cfg.Run.Path = './Tests'
           $cfg.Output.Verbosity = 'Detailed'
           Invoke-Pester -Configuration $cfg
+
+  pester-windows:
+    name: Pester Tests (Windows CMD probe)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@main
+
+      - name: Install Pester
+        shell: pwsh
+        run: Install-Module Pester -Force -SkipPublisherCheck -Scope CurrentUser
+
+      - name: Run Pester
+        shell: pwsh
+        run: |
+          $cfg = New-PesterConfiguration
+          $cfg.Run.Path = './Tests'
+          $cfg.Output.Verbosity = 'Detailed'
+          Invoke-Pester -Configuration $cfg

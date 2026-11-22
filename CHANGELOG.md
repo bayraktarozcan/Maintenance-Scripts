@@ -23,6 +23,7 @@ Post-release fix and cleanup-mode choice: the execution report no longer collaps
 **Added:**
 - Executable Pester regression that extracts the collector and guard from source, reproduces the case-insensitive collision and asserts the guard rejects it; a static test forbids new generic `$result` assignments.
 - `Tools/Check-LineEndings.ps1` and `Tools/Repair-LineEndings.ps1`: the local gate now has a `LineEndings` check that fails on mixed endings or on a working-tree ending that disagrees with the declared `eol` attribute; the repair tool changes only supplied or changed files and preserves BOM and encoding. `Tests/LineEndings.Tests.ps1` plants both defect classes in a throwaway git fixture, and the CI validate jobs mirror the check.
+- GitHub `quality.yml` also runs the full Pester suite on `windows-latest`, so the five CMD-based cleanup-mode tests execute in CI instead of being skipped on Ubuntu. The Linux job keeps running every platform-neutral check.
 
 ### V0.1.1.2 — 2026-11-21
 
@@ -150,6 +151,7 @@ Yayın sonrası düzeltme ve temizlik kipi seçimi: paket güncellendiğinde yü
 **Eklendi:**
 - Kaynaktan toplayıcıyı ve korumayı çıkarıp büyük/küçük harf çarpışmasını yeniden üreten ve korumanın reddini doğrulayan çalıştırılabilir Pester regresyon testi; yeni genel `$result` atamalarını yasaklayan statik test.
 - `Tools/Check-LineEndings.ps1` ve `Tools/Repair-LineEndings.ps1`: yerel gate artık karışık satır sonlarını veya bildirilen `eol` özniteliğiyle uyuşmayan çalışma ağacı sonunu yakalayan `LineEndings` kontrolünü çalıştırıyor. Onarım aracı yalnızca verilen/değişen dosyalara dokunuyor, BOM ve kodlamayı koruyor. `Tests/LineEndings.Tests.ps1` geçici bir git fixture'ında iki hata sınıfını da ekleyip kontrolün düştüğünü kanıtlıyor; CI validate işleri kontrolü yansıtıyor.
+- GitHub `quality.yml` artık Pester setini `windows-latest` üzerinde de çalıştırıyor; böylece `cmd` kullanan beş temizlik kipi testi Ubuntu'da atlanmak yerine CI'da gerçekten koşuyor. Linux job'u platform bağımsız kontrollerin tamamını çalıştırmaya devam ediyor.
 
 ### V0.1.1.2 — 2026-11-21
 
