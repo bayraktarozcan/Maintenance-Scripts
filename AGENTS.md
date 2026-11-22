@@ -756,7 +756,7 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 
 ## Hidden Layers - Scratch Directory Name (Named Here Once), Cadence for Clearing It
 
-- No scratch directory in use. Intermediates stay in `Logs/` (git-ignored, recreated per run) and are removed when the task ends.
+- `Agent-Scratch/` is the local-only R&D layer: one root ignore pattern in `.gitignore` and a `._dont_migrate_` marker at the layer root; reports and read-only probes stay there and are removed when the task ends. Runtime intermediates still stay in `Logs/` (git-ignored, recreated per run).
 - Local-only layer: a gitignored Turkish mirror (never committed, never named in tracked output beyond the ignore pattern). Whenever this file changes, regenerate that mirror in the same session so the `sync-sha` value matches across both markers.
 
 ## Toolchain - Overrides of the Defaults in the Appendix, Compatibility Floor
@@ -777,4 +777,4 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 - Do not add scripts that make network calls or persist elevated privileges. Four named exceptions exist: `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; `Tools/Check-PythonFloor.ps1` and `Tools/Check-ReleaseHygiene.ps1` make read-only HTTPS GETs to the Python release calendar and the public GitHub/GitLab APIs. None uploads user data, writes registry keys, or holds a credential; the two checks use no token and fail closed on transport errors.
 - The active `main-guard` ruleset lists the repository owner (`User` actor `86029038`, `bypass_mode: always`) in `bypass_actors`, so that actor can push to `main` directly and the ruleset rules are skipped for it. The rules are `deletion`, `non_fast_forward`, `required_linear_history`, `required_status_checks` and `pull_request`; classic branch protection also reports `allow_force_pushes: true` and `enforce_admins: false`. CI and the second host's pipeline therefore run after the push rather than gating it; the local gate is the pre-push control.
 
-<!-- mirror-sync: sync-sha=28ef179710ee2d8ce24e8e31cff811ecf8094825 -->
+<!-- mirror-sync: sync-sha=995f0ca9a8c97ac44efe31808fe2f35934dabc8b -->
