@@ -10,7 +10,10 @@
 
 ### Unreleased — 2026-11-22
 
-Post-release fix: the execution report no longer collapses to an empty row when packages are updated.
+Post-release fix and cleanup-mode choice: the execution report no longer collapses to an empty row when packages are updated, and `Repair-Windows.bat` asks which component-store cleanup mode to use.
+
+**Changed:**
+- `Repair-Windows.bat` now offers two startup modes: `1` Standard (`/StartComponentCleanup`) and `2` ResetBase (`/StartComponentCleanup /ResetBase`). Empty, invalid, or closed input selects Standard; ResetBase shows an explicit warning that existing update packages can no longer be uninstalled. The choice, warning, command line, and summary line are logged, so the selected mode is auditable. The previous flow always ran `/ResetBase` without asking.
 
 **Fixed:**
 - Script-scope `$result` assignments in the execution phase rebound `$script:Result` (PowerShell variable names are case-insensitive). The twelve-row result collector was replaced by an exit code, so every update run rendered `* : []` while still claiming success. Renamed those locals to `$commandExit` and the winget probe local to `$wingetStatus`.
@@ -132,7 +135,10 @@ First release: personal Windows maintenance script collection.
 
 ### Unreleased — 2026-11-22
 
-Yayın sonrası düzeltme: paket güncellendiğinde yürütme raporu artık boş satıra çökmüyor.
+Yayın sonrası düzeltme ve temizlik kipi seçimi: paket güncellendiğinde yürütme raporu artık boş satıra çökmüyor ve `Repair-Windows.bat` bileşen deposu temizlik kipini soruyor.
+
+**Değişen:**
+- `Repair-Windows.bat` artık açılışta iki kiş sunar: `1` Standart (`/StartComponentCleanup`) ve `2` ResetBase (`/StartComponentCleanup /ResetBase`). Boş, geçersiz veya kapalı girdide Standart seçilir; ResetBase, mevcut güncelleştirme paketleri artık kaldırılamayacağına dair açık uyarı gösterir. Seçim, uyarı, komut satırı ve özet satırı günlüğe yazılır; böylece hangi kipin kullanıldığı denetlenebilir. Önceki akış `/ResetBase` komutunu sormadan her zaman çalıştırıyordu.
 
 **Düzeltildi:**
 - Yürütme aşamasındaki betik kapsamındaki `$result` atamaları `$script:Result` dosyasını yeniden bağlıyordu (PowerShell değişken adları büyük/küçük harfe duyarsızdır). On iki satırlık sonuç toplayıcı bir çıkış koduna dönüşüyor, dolayısıyla her güncelleme çalışmasında başarı bildirilmesine karşın `* : []` basılıyordu. Bu yerel değişkenler `$commandExit`, winget sorgusu yereli ise `$wingetStatus` olarak yeniden adlandırıldı.

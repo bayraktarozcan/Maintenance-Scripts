@@ -23,13 +23,13 @@ Kişisel Windows bakım betikleri — sade, izlenebilir, Türkçe ve İngilizce.
 
 ### What Is This?
 
-Each script does one job: it runs commands in order and writes output both to the console and to its own log folder. No menus, no options, no surprises.
+Each script does one job: it runs commands in order and writes output both to the console and to its own log folder. No nested menus. `Repair-Windows.bat` asks once at startup which component-store cleanup mode to use; every other script needs no input.
 
 ### Scripts
 
 | Script | Does |
 |---|---|
-| `Repair-Windows.bat` | DISM + SFC + WinSxS maintenance (includes ResetBase) |
+| `Repair-Windows.bat` | DISM + SFC + WinSxS maintenance; choose Standard or ResetBase at startup |
 | `Reset-Windows-Update.bat` | Reset Windows Update components |
 | `Clear-DnsClientCache.bat` | Flush DNS cache |
 | `WinGet-Upgrade.bat` | Upgrade all packages (winget) |
@@ -39,6 +39,7 @@ Each script does one job: it runs commands in order and writes output both to th
 ### Usage
  
 1. Run `Scripts/<name>.bat` as administrator (right-click → Run as administrator); only `Repair-Windows.bat` and `Reset-Windows-Update.bat` require it.
+   `Repair-Windows.bat` asks once at startup: `1` Standard (`/StartComponentCleanup`, keeps the ability to uninstall existing updates) or `2` ResetBase (adds `/ResetBase`; existing update packages can no longer be uninstalled). Empty or invalid input selects Standard; the choice and warning are written to the log.
 2. Each script logs under `Logs/<Script-Name>/`; every folder keeps an `index.txt` run ledger.
 3. `Bug-Report.ps1` runs on a schedule:
    `pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`
@@ -65,13 +66,13 @@ Each script does one job: it runs commands in order and writes output both to th
 
 ### Nedir?
 
-Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ekrana hem de kendi günlük klasörüne yazar. Menü yok, seçenek yok, sürpriz yok.
+Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ekrana hem de kendi günlük klasörüne yazar. İç içe menü yok; yalnızca `Repair-Windows.bat` açılışta bileşen deposu temizlik kipini sorar, diğer betikler girdi istemez.
 
 ### Betikler
 
 | Betik | İş |
 |---|---|
-| `Repair-Windows.bat` | DISM + SFC + WinSxS bakımı (ResetBase dahil) |
+| `Repair-Windows.bat` | DISM + SFC + WinSxS bakımı; açılışta Standart veya ResetBase seçimi |
 | `Reset-Windows-Update.bat` | Windows Update bileşenlerini sıfırlama |
 | `Clear-DnsClientCache.bat` | DNS önbelleğini temizleme |
 | `WinGet-Upgrade.bat` | Tüm paketleri yükseltme (winget) |
@@ -81,6 +82,7 @@ Her betik tek iş yapar: komutları sırayla çalıştırır, çıktıyı hem ek
 ### Kullanım
  
 1. `Scripts/` klasöründeki betiği yönetici olarak çalıştırın (sağ tık → Yönetici olarak çalıştır); bunu yalnızca `Repair-Windows.bat` ve `Reset-Windows-Update.bat` gerektirir.
+   `Repair-Windows.bat` açılışta bir kez sorar: `1` Standart (`/StartComponentCleanup`, mevcut güncelleştirmelerin kaldırılabilirliğini korur) veya `2` ResetBase (`/ResetBase` ekler; mevcut güncelleştirme paketleri artık kaldırılamaz). Boş veya geçersiz girdi Standart'ı seçer; seçim ve uyarı günlüğe yazılır.
 2. Her betik günlüğünü `Logs/<Betik-Adı>/` altına yazar; her klasörde `index.txt` koşu dökümünü tutar.
 3. `Bug-Report.ps1` Zamanlayıcı ile koşar:
    `pwsh.exe -NoProfile -ExecutionPolicy Bypass -File "Scripts\Bug-Report.ps1" -Period Daily`

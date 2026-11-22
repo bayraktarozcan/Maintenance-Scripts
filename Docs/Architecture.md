@@ -28,10 +28,15 @@ Repair-specific logging:
 
 ### Per-Script Pipelines
 
-- `Repair-Windows.bat` (9 steps, needs admin): DISM `CheckHealth`,
-  `ScanHealth`, ensure `wuauserv`/`bits` are started, DISM
-  `RestoreHealth`, `AnalyzeComponentStore`,
-  `StartComponentCleanup /ResetBase`, `sfc /scannow`, final
+- `Repair-Windows.bat` (9 steps, needs admin): at startup it offers two modes:
+  `1` Standard (`DISM /StartComponentCleanup`) and `2` ResetBase
+  (`/StartComponentCleanup /ResetBase`). Empty, invalid, or closed input
+  selects Standard; ResetBase shows an explicit warning because existing
+  update packages can no longer be uninstalled. The choice, warning, and
+  resulting command are written to both console and log. The nine steps are
+  DISM `CheckHealth`, `ScanHealth`, ensure `wuauserv`/`bits` are started, DISM
+  `RestoreHealth`, `AnalyzeComponentStore`, mode-dependent
+  `StartComponentCleanup`, `sfc /scannow`, final
   `AnalyzeComponentStore`. It also records an Istanbul start/end timestamp
   (`yyyy-MM-dd HH:mm:ss.fff`, UTC+03:00), exit code, and elapsed
   milliseconds for every step, then a nine-line summary and `TOTAL`. The
@@ -128,10 +133,15 @@ kapsar:
 
 ### Betik Başına Hatlar
 
-- `Repair-Windows.bat` (9 adım, yönetici ister): DISM `CheckHealth`,
+- `Repair-Windows.bat` (9 adım, yönetici ister): açılışta iki kiş sunar:
+  `1` Standart (`DISM /StartComponentCleanup`) ve `2` ResetBase
+  (`/StartComponentCleanup /ResetBase`). Boş, geçersiz veya kapalı girdi
+  Standart'ı seçer; ResetBase, mevcut güncelleştirme paketleri artık
+  kaldırılamayacağı için açık uyarı gösterir. Seçim, uyarı ve oluşan komut
+  hem ekrana hem günlüğe yazılır. Dokuz adım şunlardır: DISM `CheckHealth`,
   `ScanHealth`, `wuauserv`/`bits` servislerinin çalıştığını sağlama, DISM
-  `RestoreHealth`, `AnalyzeComponentStore`,
-  `StartComponentCleanup /ResetBase`, `sfc /scannow`, son
+  `RestoreHealth`, `AnalyzeComponentStore`, kipe bağlı
+  `StartComponentCleanup`, `sfc /scannow`, son
   `AnalyzeComponentStore`. Ayrıca her adım için İstanbul saatine göre
   başlangıç/bitiş damgası (`yyyy-MM-dd HH:mm:ss.fff`, UTC+03:00), çıkış
   kodu ve geçen milisaniyeyi, ardından dokuz satırlık özet ve `TOTAL`

@@ -31,6 +31,24 @@ set /a REVIEWCOUNT=0
 set /a MISSINGCOUNT=0
 set /a REBOOTCOUNT=0
 set "EXITCODE=0"
+
+echo.
+echo Component store cleanup mode:
+>>"%LOG%" echo.
+>>"%LOG%" echo Component store cleanup mode:
+echo   [1] Standard - DISM /StartComponentCleanup - keeps update uninstall capability
+>>"%LOG%" echo   [1] Standard - DISM /StartComponentCleanup - keeps update uninstall capability
+echo   [2] ResetBase - adds /ResetBase - existing update packages can no longer be uninstalled
+>>"%LOG%" echo   [2] ResetBase - adds /ResetBase - existing update packages can no longer be uninstalled
+echo.
+>>"%LOG%" echo.
+call :AskCleanupMode
+echo Selected mode: %CLEANUP_DESC%
+>>"%LOG%" echo Selected mode: %CLEANUP_DESC%
+if "%CLEANUP_MODE%"=="resetbase" (
+    echo WARNING: existing update packages can no longer be uninstalled.
+    >>"%LOG%" echo WARNING: existing update packages can no longer be uninstalled.
+)
 call :StartTimer TOTAL_START
 
 echo.
@@ -144,9 +162,9 @@ echo. >> "%LOG%"
 echo.
 echo. >> "%LOG%"
 call :StartTimer S7_START
-echo ^> [%START_HUMAN%] (7/9) DISM /Online /Cleanup-Image /StartComponentCleanup /ResetBase
->>"%LOG%" echo ^> [%START_HUMAN%] (7/9) DISM /Online /Cleanup-Image /StartComponentCleanup /ResetBase
-DISM /Online /Cleanup-Image /StartComponentCleanup /ResetBase > "%OUT%" 2>&1
+echo ^> [%START_HUMAN%] (7/9) DISM /Online /Cleanup-Image /StartComponentCleanup%CLEANUP_SUFFIX%
+>>"%LOG%" echo ^> [%START_HUMAN%] (7/9) DISM /Online /Cleanup-Image /StartComponentCleanup%CLEANUP_SUFFIX%
+DISM /Online /Cleanup-Image /StartComponentCleanup%CLEANUP_SUFFIX% > "%OUT%" 2>&1
 set "S7_RC=%ERRORLEVEL%"
 call :StopTimer "%S7_START%" S7_MS "%TIME%"
 del "%S7_START%" >nul 2>&1
@@ -205,7 +223,7 @@ call :SummaryLine 3 "net start wuauserv" "%S3_MS%" "%S3_RC%" NET "%S3_STATE%"
 call :SummaryLine 4 "net start bits" "%S4_MS%" "%S4_RC%" NET "%S4_STATE%"
 call :SummaryLine 5 "DISM /RestoreHealth" "%S5_MS%" "%S5_RC%" DISM
 call :SummaryLine 6 "DISM /AnalyzeComponentStore" "%S6_MS%" "%S6_RC%" DISM "%S6_CLEANUP%"
-call :SummaryLine 7 "DISM /StartComponentCleanup /ResetBase" "%S7_MS%" "%S7_RC%" DISM
+call :SummaryLine 7 "DISM /StartComponentCleanup%CLEANUP_SUFFIX%" "%S7_MS%" "%S7_RC%" DISM
 call :SummaryLine 8 "sfc /scannow" "%S8_MS%" "%S8_RC%" SFC
 call :SummaryLine 9 "DISM /AnalyzeComponentStore" "%S9_MS%" "%S9_RC%" DISM "%S9_CLEANUP%"
 if not defined TOTAL_MS set "TOTAL_MS=NA"
@@ -375,6 +393,29 @@ if "%RESULT%"=="MISSING" set /a MISSINGCOUNT+=1
 call :FormatMs "%MS%"
 echo %N%^) %NAME% - %DUR% - rc=%RC% - %RESULT% %NOTE%
 >>"%LOG%" echo %N%^) %NAME% - %DUR% - rc=%RC% - %RESULT% %NOTE%
+exit /b 0
+
+:AskCleanupMode
+set "CLEANUP_CHOICE="
+set /p "CLEANUP_CHOICE=Select 1 or 2 [1]: "
+if defined CLEANUP_CHOICE set "CLEANUP_CHOICE=%CLEANUP_CHOICE:"=%"
+if not defined CLEANUP_CHOICE goto :ModeStandard
+if "%CLEANUP_CHOICE%"=="1" goto :ModeStandard
+if "%CLEANUP_CHOICE%"=="2" goto :ModeResetBase
+echo Invalid selection; using Standard.
+>>"%LOG%" echo Invalid selection; using Standard.
+goto :ModeStandard
+
+:ModeStandard
+set "CLEANUP_MODE=standard"
+set "CLEANUP_SUFFIX="
+set "CLEANUP_DESC=DISM /Online /Cleanup-Image /StartComponentCleanup"
+exit /b 0
+
+:ModeResetBase
+set "CLEANUP_MODE=resetbase"
+set "CLEANUP_SUFFIX= /ResetBase"
+set "CLEANUP_DESC=DISM /Online /Cleanup-Image /StartComponentCleanup /ResetBase"
 exit /b 0
 
 :End

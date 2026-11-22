@@ -16,7 +16,7 @@ Describe 'Repair-Windows logging' {
             'net start bits > "%OUT%" 2>&1',
             'DISM /Online /Cleanup-Image /RestoreHealth > "%OUT%" 2>&1',
             'DISM /Online /Cleanup-Image /AnalyzeComponentStore > "%OUT%" 2>&1',
-            'DISM /Online /Cleanup-Image /StartComponentCleanup /ResetBase > "%OUT%" 2>&1',
+            'DISM /Online /Cleanup-Image /StartComponentCleanup%CLEANUP_SUFFIX% > "%OUT%" 2>&1',
             'sfc /scannow > "%OUT%" 2>&1',
             'DISM /Online /Cleanup-Image /AnalyzeComponentStore > "%OUT%" 2>&1'
         )
@@ -32,7 +32,7 @@ Describe 'Repair-Windows logging' {
             'net start bits > "%OUT%" 2>&1',
             'DISM /Online /Cleanup-Image /RestoreHealth > "%OUT%" 2>&1',
             'DISM /Online /Cleanup-Image /AnalyzeComponentStore > "%OUT%" 2>&1',
-            'DISM /Online /Cleanup-Image /StartComponentCleanup /ResetBase > "%OUT%" 2>&1',
+            'DISM /Online /Cleanup-Image /StartComponentCleanup%CLEANUP_SUFFIX% > "%OUT%" 2>&1',
             'sfc /scannow > "%OUT%" 2>&1',
             'DISM /Online /Cleanup-Image /AnalyzeComponentStore > "%OUT%" 2>&1'
         )
@@ -144,5 +144,129 @@ Describe 'Repair-Windows exit-code classification' {
         $script:Text | Should -Match ([regex]::Escape('set "EXITCODE=0"'))
         $script:Text | Should -Match ([regex]::Escape('if not "%OVERALL%"=="SUCCESS" if not "%OVERALL%"=="SUCCESS (restart required)" set "EXITCODE=1"'))
         $script:Text | Should -Match ([regex]::Escape('exit /b %EXITCODE%'))
+    }
+}
+
+Describe 'Repair-Windows cleanup mode selection' {
+    It 'offers exactly two options and reads a choice before the total timer starts' {
+        $script:Text | Should -Match ([regex]::Escape('echo   [1] Standard - DISM /StartComponentCleanup - keeps update uninstall capability'))
+        $script:Text | Should -Match ([regex]::Escape('echo   [2] ResetBase - adds /ResetBase - existing update packages can no longer be uninstalled'))
+        $script:Text | Should -Match ([regex]::Escape('set /p "CLEANUP_CHOICE=Select 1 or 2 [1]: "'))
+        $call = [Array]::IndexOf($script:Lines, 'call :AskCleanupMode')
+        $label = [Array]::IndexOf($script:Lines, ':AskCleanupMode')
+        $prompt = [Array]::IndexOf($script:Lines, 'set /p "CLEANUP_CHOICE=Select 1 or 2 [1]: "')
+        $start = [Array]::IndexOf($script:Lines, 'call :StartTimer TOTAL_START')
+        $call | Should -BeGreaterThan -1
+        $label | Should -BeLessThan $prompt
+        $start | Should -BeGreaterThan $call
+    }
+
+    It 'defaults to Standard on empty, invalid, or closed input' {
+        foreach ($line in @(
+            'if defined CLEANUP_CHOICE set "CLEANUP_CHOICE=%CLEANUP_CHOICE:"=%"',
+            'if not defined CLEANUP_CHOICE goto :ModeStandard',
+            'if "%CLEANUP_CHOICE%"=="1" goto :ModeStandard',
+            'if "%CLEANUP_CHOICE%"=="2" goto :ModeResetBase',
+            'echo Invalid selection; using Standard.',
+            'set "CLEANUP_SUFFIX="'
+        )) {
+            $script:Lines | Should -Contain $line
+        }
+    }
+
+    It 'keeps ResetBase opt-in only through the selected suffix' {
+        $command = @($script:Lines | Where-Object { $_ -like 'DISM /Online /Cleanup-Image /StartComponentCleanup*' })
+        $command.Count | Should -Be 1
+        $command[0] | Should -Not -Match '/ResetBase'
+        $script:Lines | Should -Contain 'set "CLEANUP_SUFFIX= /ResetBase"'
+    }
+
+    It 'logs the choice and warns only in ResetBase mode' {
+        $script:Text | Should -Match ([regex]::Escape('echo Selected mode: %CLEANUP_DESC%'))
+        $script:Text | Should -Match ([regex]::Escape('>>"%LOG%" echo Selected mode: %CLEANUP_DESC%'))
+        $script:Text | Should -Match ([regex]::Escape('if "%CLEANUP_MODE%"=="resetbase" ('))
+        $script:Text | Should -Match ([regex]::Escape('echo WARNING: existing update packages can no longer be uninstalled.'))
+        $script:Text | Should -Match ([regex]::Escape('>>"%LOG%" echo WARNING: existing update packages can no longer be uninstalled.'))
+    }
+
+    It 'mirrors every startup menu line to the log' {
+        foreach ($line in @('Component store cleanup mode:',
+                            '  [1] Standard - DISM /StartComponentCleanup - keeps update uninstall capability',
+                            '  [2] ResetBase - adds /ResetBase - existing update packages can no longer be uninstalled')) {
+            $script:Lines | Should -Contain ('echo ' + $line)
+            $script:Lines | Should -Contain ('>>"%LOG%" echo ' + $line)
+        }
+    }
+}
+
+Describe 'Repair-Windows cleanup mode runtime behavior' {
+    # Executes the real selection subroutine with real cmd.exe, but never
+    # reaches the maintenance stages: only :AskCleanupMode .. :End is copied.
+    # The probe and its log live under the git-ignored Logs/ tree and are
+    # removed in AfterAll even when an assertion fails.
+    BeforeAll {
+        $script:SourceText = [IO.File]::ReadAllLines((Join-Path $PSScriptRoot '..\Scripts\Repair-Windows.bat'))
+        $begin = [Array]::IndexOf($script:SourceText, ':AskCleanupMode')
+        $finish = [Array]::IndexOf($script:SourceText, ':End')
+        $begin | Should -BeGreaterThan -1
+        $finish | Should -BeGreaterThan $begin
+        $subroutine = $script:SourceText[$begin..($finish - 1)]
+
+        $logDir = Join-Path (Join-Path $PSScriptRoot '..\Logs') 'Repair-Windows'
+        if (-not (Test-Path -LiteralPath $logDir)) {
+            $null = New-Item -ItemType Directory -Path $logDir -Force
+        }
+        $script:Probe = Join-Path $logDir ("menu-probe-$PID.bat")
+        $script:ProbeLog = Join-Path $logDir ("menu-probe-$PID.log")
+        $header = @(
+            '@echo off',
+            'setlocal EnableExtensions',
+            ('set "LOG=' + $script:ProbeLog + '"'),
+            'call :AskCleanupMode',
+            'echo RESULT_MODE=%CLEANUP_MODE%',
+            'echo RESULT_SUFFIX=[%CLEANUP_SUFFIX%]',
+            'exit /b 0',
+            ''
+        )
+        [IO.File]::WriteAllText($script:Probe, (($header + $subroutine) -join "`r`n") + "`r`n")
+    }
+
+    AfterAll {
+        Remove-Item -LiteralPath $script:Probe -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $script:ProbeLog -Force -ErrorAction SilentlyContinue
+    }
+
+    It 'selects Standard silently on empty or closed input' {
+        $out = (('' | cmd /c $script:Probe 2>&1) -join "`n")
+        $out | Should -Match 'RESULT_MODE=standard'
+        $out | Should -Match 'RESULT_SUFFIX=\[\]'
+        $out | Should -Not -Match 'Invalid selection'
+        $out | Should -Not -Match 'unexpected at this time'
+    }
+
+    It 'selects Standard on an explicit 1' {
+        $out = (('1' | cmd /c $script:Probe 2>&1) -join "`n")
+        $out | Should -Match 'RESULT_MODE=standard'
+        $out | Should -Match 'RESULT_SUFFIX=\[\]'
+    }
+
+    It 'selects ResetBase with its suffix on an explicit 2' {
+        $out = (('2' | cmd /c $script:Probe 2>&1) -join "`n")
+        $out | Should -Match 'RESULT_MODE=resetbase'
+        $out | Should -Match 'RESULT_SUFFIX=\[ /ResetBase\]'
+        $out | Should -Not -Match 'unexpected at this time'
+    }
+
+    It 'falls back to Standard and logs the reason on invalid input' {
+        $out = (('garbage' | cmd /c $script:Probe 2>&1) -join "`n")
+        $out | Should -Match 'Invalid selection; using Standard.'
+        $out | Should -Match 'RESULT_MODE=standard'
+        (Get-Content -LiteralPath $script:ProbeLog -Raw) | Should -Match 'Invalid selection'
+    }
+
+    It 'strips a stray quote before matching the choice' {
+        $out = (('2"' | cmd /c $script:Probe 2>&1) -join "`n")
+        $out | Should -Match 'RESULT_MODE=resetbase'
+        $out | Should -Match 'RESULT_SUFFIX=\[ /ResetBase\]'
     }
 }
