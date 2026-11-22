@@ -118,6 +118,16 @@ Describe 'Published release hygiene' {
         }
     }
 
+    It 'resolves the current tag from the supplied changelog path' {
+        $custom = Join-Path ([IO.Path]::GetTempPath()) ('hygiene-tag-' + [guid]::NewGuid().ToString('N') + '.md')
+        try {
+            "## English`n`n### V9.8.7.6 — 2026-11-22`n" | Set-Content -LiteralPath $custom -Encoding UTF8
+            Get-CurrentTag -ChangelogPath $custom | Should -Be 'v9.8.7.6'
+        } finally {
+            Remove-Item -LiteralPath $custom -Force -ErrorAction SilentlyContinue
+        }
+    }
+
     It 'passes a clean two-host set' {
         $sets = New-Sets
         $problems = @(Test-ReleaseSet -GitHub $sets.gh -GitLab $sets.gl -CurrentTag $sets.current -ChangelogPath $script:Changelog)

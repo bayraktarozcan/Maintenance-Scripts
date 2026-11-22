@@ -53,7 +53,8 @@ function Get-ReleasesFromApi {
 }
 
 function Get-CurrentTag {
-    $changelog = [IO.File]::ReadAllText((Join-Path $PSScriptRoot '..\CHANGELOG.md'))
+    param([string]$ChangelogPath = (Join-Path $PSScriptRoot '..\CHANGELOG.md'))
+    $changelog = [IO.File]::ReadAllText($ChangelogPath)
     $match = [regex]::Match($changelog, '(?m)^###\s*V(\d+\.\d+\.\d+\.\d+)\s*[—–-]')
     if (-not $match.Success) { throw 'current version not found in CHANGELOG.md' }
     return 'v' + $match.Groups[1].Value
@@ -229,7 +230,7 @@ function Invoke-Main {
         $gl = @($data.gl | ForEach-Object { Convert-ToRelease $_ 'GitLab' })
         $current = $data.current
     } else {
-        $current = Get-CurrentTag
+        $current = Get-CurrentTag -ChangelogPath $ChangelogPath
         $gh = @(Get-ReleasesFromApi 'GitHub' | ForEach-Object { Convert-ToRelease $_ 'GitHub' })
         $gl = @(Get-ReleasesFromApi 'GitLab' | ForEach-Object { Convert-ToRelease $_ 'GitLab' })
     }
