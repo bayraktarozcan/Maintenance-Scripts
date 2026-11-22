@@ -16,7 +16,7 @@ param(
     [switch]$List
 )
 
-$script:Checks = @('Syntax', 'Whitespace', 'Mojibake', 'Commits', 'Pester', 'Hygiene', 'LinkCheck')
+$script:Checks = @('Syntax', 'Whitespace', 'LineEndings', 'Mojibake', 'Commits', 'Pester', 'Hygiene', 'LinkCheck')
 
 if ($List) {
     $script:Checks
@@ -56,6 +56,11 @@ Invoke-GateStep 'Whitespace' {
         $hits | ForEach-Object { Write-Output $_.Line }
         throw "trailing whitespace in added lines"
     }
+}
+
+Invoke-GateStep 'LineEndings' {
+    & $script:PsExe -NoProfile -File (Join-Path $script:Root 'Tools\Check-LineEndings.ps1') -Root $script:Root
+    if ($LASTEXITCODE -ne 0) { throw "line-ending findings present" }
 }
 
 Invoke-GateStep 'Mojibake' {

@@ -39,6 +39,8 @@ validate:
         exit 1
       fi
     - |
+      pwsh -NoProfile -File ./Tools/Check-LineEndings.ps1 -Root .
+    - |
       pwsh -NoProfile -File ./Tools/Check-Mojibake.ps1 -Files
     - |
       pwsh -NoProfile -File ./Tools/Check-Mojibake.ps1 -Commits -CommitRange "$CI_COMMIT_BEFORE_SHA..$CI_COMMIT_SHA"

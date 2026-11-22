@@ -12,8 +12,9 @@ BeforeAll {
     $script:PsExe = if ($PSVersionTable.PSEdition -eq 'Core') { 'pwsh' } else { 'powershell' }
     $script:CheckSources = [ordered]@{
         Syntax     = @{ File = 'validate.yml';   Step = 'PowerShell syntax check' }
-        Whitespace = @{ File = 'validate.yml';   Step = 'Trailing whitespace in added lines' }
-        Mojibake   = @{ File = 'validate.yml';   Step = 'Mojibake scan (tracked files)' }
+        Whitespace  = @{ File = 'validate.yml';   Step = 'Trailing whitespace in added lines' }
+        LineEndings = @{ File = 'validate.yml';   Step = 'Line ending check' }
+        Mojibake    = @{ File = 'validate.yml';   Step = 'Mojibake scan (tracked files)' }
         Commits    = @{ File = 'validate.yml';   Step = 'Mojibake scan (pushed commits)' }
         Pester     = @{ File = 'quality.yml';    Step = 'Run Pester' }
         Hygiene    = @{ File = 'hygiene.yml';    Step = 'Run actionlint' }

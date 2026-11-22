@@ -40,6 +40,10 @@ jobs:
             exit 1
           fi
 
+      - name: Line ending check
+        shell: pwsh
+        run: pwsh -NoProfile -File ./Tools/Check-LineEndings.ps1 -Root .
+
       - name: Mojibake scan (tracked files)
         shell: pwsh
         run: ./Tools/Check-Mojibake.ps1 -Files
