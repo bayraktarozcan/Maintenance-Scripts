@@ -72,7 +72,7 @@ Repair-specific logging:
 - npm packages: `npm outdated -g --json` → array of `{name, current, wanted, latest}`
 - Host tools: `gitleaks`, `actionlint`, and `lychee` via `winget list --id <ID> --exact`; PowerShell 7 via `winget list --id Microsoft.PowerShell --exact` (latest 7.x); Pester via `Find-Module Pester` (PSGallery latest)
 - Dotted versions are compared component-wise with missing components read as zero; an update is planned only when the target is strictly newer (`7.7.0` equals `7.7.0.0`)
-- Builds plan table with columns: Component, Action, Current, Target, Details
+- Builds plan table with columns: Component, Action, Current, Target, Details. Detected packages (pip, outdated pip/npm packages, pipx-managed apps) are also listed by name and version on indented lines under their plan row, so a count is never the only evidence.
 
 **Phase 2 — Execution (Result)**:
 - Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements` for runtimes, host tools, and PowerShell 7; `Update-Module Pester -Force` for Pester; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; and `npm install --global <pkg>@<latest>` for outdated globals
@@ -84,6 +84,7 @@ Repair-specific logging:
 - UTF-8 BOM logs under `Logs/Update-Components/` with `index.txt` ledger
 - No elevation; all commands run in user scope
 - `-Check` mode: runs Phase 1 only, shows plan, exits 0
+- The result collector is a fixed twelve-row shape (`$script:ResultComponentNames` is its single source of truth). `Assert-ResultCollector` checks that shape and non-empty `Component`/`Status` fields before every `Set-Result` and before rendering; a violation throws and the run exits nonzero instead of printing an empty `Results` table. A violation terminates before `Show-ResultTable` and before the JSON report is written, so `-ReportPath` produces no file in that failure mode: the `[ResultCollector]` error line and the nonzero exit code are the CI signal. Command exit codes are held in `$commandExit`, never `$result`, because PowerShell variable names are case-insensitive and a script-scope `$result` would rebind `$script:Result`.
 - Winget "already up to date" negative exit codes treated as success
 - npm warning exit codes (1 with `npm warn` output) treated as success
 - `-ReportPath <file>` writes a UTF-8 JSON report (`schemaVersion` 1) with `mode`, `executionCompleted`, `host`, `plan`, `result`, `success`, and `exitCode`; `-Check -ReportPath ...` writes a check-mode report without applying changes
@@ -172,7 +173,7 @@ kapsar:
 - npm paketleri: `npm outdated -g --json` → `{name, current, wanted, latest}` dizisi
 - Ana makine araçları: `gitleaks`, `actionlint` ve `lychee` `winget list --id <ID> --exact` ile; PowerShell 7 `winget list --id Microsoft.PowerShell --exact` ile (en son 7.x); Pester `Find-Module Pester` ile (PSGallery en son)
 - Noktalı sürümler bileşen bileşen karşılaştırılır; eksik bileşenler sıfır sayılır ve yalnızca hedef kesin olarak daha yeniyse güncelleme planlanır (`7.7.0` ile `7.7.0.0` eşittir)
-- Plan tablosu oluşturur: Bileşen, Eylem, Mevcut, Hedef, Detay sütunları
+- Plan tablosu oluşturur: Bileşen, Eylem, Mevcut, Hedef, Detay sütunları. Tespit edilen paketler (pip, eski pip/npm paketleri, pipx yönetimli uygulamalar) kendi plan satırının altında girintili satırlarda adı ve sürümüyle de listelenir; sayı tek kanıt olarak kalmaz.
 
 **Aşama 2 — Yürütme (Sonuç)**:
 - Plan başına güncellemeleri uygular: çalışma zamanları, ana makine araçları ve PowerShell 7 için `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`; Pester için `Update-Module Pester -Force`; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; eski kalan global paketler için `npm install --global <pkg>@<latest>`
@@ -184,6 +185,7 @@ kapsar:
 - `Logs/Update-Components/` altına UTF-8 BOM'lu günlükler ve `index.txt` defteri
 - Yükseltme yok; tüm komutlar kullanıcı kapsamında koşur
 - `-Check` modu: sadece Aşama 1 çalışır, plan gösterilir, 0 ile çıkar
+- Sonuç toplayıcı sabit on iki satırlık bir yapıdır (`$script:ResultComponentNames` tek doğruluk kaynağıdır). `Assert-ResultCollector` bu yapıyı ve boş olmayan `Component`/`Status` alanlarını her `Set-Result` çağrısından önce ve çizimden önce denetler; ihlal durumunda hata verilir ve çalışma, boş `Results` tablosu basmak yerine sıfırdan farklı kodla çıkar. İhlal, `Show-ResultTable` ve JSON raporundan önce sonlandırır; bu hata modunda `-ReportPath` dosya üretmez, CI sinyali `[ResultCollector]` hata satırı ve sıfırdan farklı çıkış kodudur. Komut çıkış kodları `$commandExit` içinde tutulur, asla `$result` içinde değil; çünkü PowerShell değişken adları büyük/küçük harfe duyarsızdır ve betik kapsamındaki bir `$result`, `$script:Result` dosyasını yeniden bağlar.
 - Winget "zaten güncel" negatif çıkış kodları başarı sayılır
 - npm uyarı çıkış kodları (1 + `npm warn` çıktısı) başarı sayılır
 - `-ReportPath <dosya>` UTF-8 JSON raporu (`schemaVersion` 1) yazar: `mode`, `executionCompleted`, `host`, `plan`, `result`, `success`, `exitCode`; `-Check -ReportPath ...` değişiklik uygulamadan check modu raporu yazar

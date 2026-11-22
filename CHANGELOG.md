@@ -8,6 +8,17 @@
 
 ## English
 
+### Unreleased — 2026-11-22
+
+Post-release fix: the execution report no longer collapses to an empty row when packages are updated.
+
+**Fixed:**
+- Script-scope `$result` assignments in the execution phase rebound `$script:Result` (PowerShell variable names are case-insensitive). The twelve-row result collector was replaced by an exit code, so every update run rendered `* : []` while still claiming success. Renamed those locals to `$commandExit` and the winget probe local to `$wingetStatus`.
+- `Set-Result` now validates the collector before each update, and `Assert-ResultCollector` checks the complete twelve-row shape plus non-empty `Component`/`Status` fields before rendering. A broken collector fails closed instead of reporting success; the run terminates before rendering and before the JSON report, so `-ReportPath` writes no file in that failure mode and the `[ResultCollector]` error plus a nonzero exit are the CI signal.
+
+**Added:**
+- Executable Pester regression that extracts the collector and guard from source, reproduces the case-insensitive collision and asserts the guard rejects it; a static test forbids new generic `$result` assignments.
+
 ### V0.1.1.2 — 2026-11-21
 
 Post-release hardening: dotted versions compare numerically, the GitLab link check resolves its Rust tool from a verified release, and the bilingual documentation and mirror verifier no longer drift.
@@ -118,6 +129,17 @@ First release: personal Windows maintenance script collection.
 <a id="tr"></a>
 
 ## Türkçe
+
+### Unreleased — 2026-11-22
+
+Yayın sonrası düzeltme: paket güncellendiğinde yürütme raporu artık boş satıra çökmüyor.
+
+**Düzeltildi:**
+- Yürütme aşamasındaki betik kapsamındaki `$result` atamaları `$script:Result` dosyasını yeniden bağlıyordu (PowerShell değişken adları büyük/küçük harfe duyarsızdır). On iki satırlık sonuç toplayıcı bir çıkış koduna dönüşüyor, dolayısıyla her güncelleme çalışmasında başarı bildirilmesine karşın `* : []` basılıyordu. Bu yerel değişkenler `$commandExit`, winget sorgusu yereli ise `$wingetStatus` olarak yeniden adlandırıldı.
+- `Set-Result` her güncellemeden önce toplayıcıyı doğruluyor; `Assert-ResultCollector` çizimden önce on iki satırlık tam yapıyı ve boş olmayan `Component`/`Status` alanlarını denetliyor. Bozulan toplayıcı artık başarı bildirmek yerine işlemi durduruyor; çalışma çizimden ve JSON raporundan önce sonlandığı için bu hata modunda `-ReportPath` dosya yazmıyor, CI sinyali `[ResultCollector]` hatası ve sıfırdan farklı çıkış kodudur.
+
+**Eklendi:**
+- Kaynaktan toplayıcıyı ve korumayı çıkarıp büyük/küçük harf çarpışmasını yeniden üreten ve korumanın reddini doğrulayan çalıştırılabilir Pester regresyon testi; yeni genel `$result` atamalarını yasaklayan statik test.
 
 ### V0.1.1.2 — 2026-11-21
 

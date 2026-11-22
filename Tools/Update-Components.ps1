@@ -92,7 +92,7 @@ $script:Plan = @(
 $script:Result = @(
     @{ Component = 'Python runtime';     Status = 'Skipped'; Before = ''; After = ''; Details = '' }
     @{ Component = 'pip';                Status = 'Skipped'; Before = ''; After = ''; Details = '' }
-@{ Component = 'pip packages';       Status = 'Skipped'; Before = ''; After = ''; Details = '' }
+    @{ Component = 'pip packages';       Status = 'Skipped'; Before = ''; After = ''; Details = '' }
     @{ Component = 'pipx';             Status = 'Skipped'; Before = ''; After = ''; Details = '' }
     @{ Component = 'Node.js runtime';    Status = 'Skipped'; Before = ''; After = ''; Details = '' }
     @{ Component = 'npm';                Status = 'Skipped'; Before = ''; After = ''; Details = '' }
@@ -103,6 +103,10 @@ $script:Result = @(
     @{ Component = 'PowerShell 7';       Status = 'Skipped'; Before = ''; After = ''; Details = '' }
     @{ Component = 'Pester';             Status = 'Skipped'; Before = ''; After = ''; Details = '' }
 )
+
+# Single source of truth for the collector shape. Derived once, before any
+# execution-phase code can rebind $script:Result.
+$script:ResultComponentNames = @($script:Result | ForEach-Object { $_.Component })
 
 function Write-Log {
 
@@ -451,24 +455,24 @@ function Get-WingetPackageStatus {
     # Returns: @{ Found; Id; Installed; Available; Parseable; NoUpgradeMatch; Source; Note }
     $pkg = Resolve-WingetPackage -CandidateIds $CandidateIds -NameQuery $NameQuery -ExpectedVersion $ExpectedVersion
     $primaryId = if ($pkg.Found -and $pkg.Id) { $pkg.Id } elseif ($CandidateIds -and $CandidateIds.Count -gt 0) { $CandidateIds[0] } else { $null }
-    $result = [pscustomobject]@{ Found = [bool]$pkg.Found; Id = $primaryId; Installed = $pkg.InstalledVersion; Available = $pkg.AvailableVersion; Parseable = $false; NoUpgradeMatch = $false; Source = $pkg.Source; Note = $null }
-    if ($pkg.Found -and $pkg.AvailableVersion) { $result.Parseable = $true; return $result }
-    if (-not $primaryId) { $result.Note = 'winget ID çözümlenemedi'; return $result }
+    $wingetStatus = [pscustomobject]@{ Found = [bool]$pkg.Found; Id = $primaryId; Installed = $pkg.InstalledVersion; Available = $pkg.AvailableVersion; Parseable = $false; NoUpgradeMatch = $false; Source = $pkg.Source; Note = $null }
+    if ($pkg.Found -and $pkg.AvailableVersion) { $wingetStatus.Parseable = $true; return $wingetStatus }
+    if (-not $primaryId) { $wingetStatus.Note = 'winget ID çözümlenemedi'; return $wingetStatus }
     # Precise upgrade probe (winget v1.29+: lists only upgradable matches).
     $ua = Invoke-WingetList -Arguments @('list', '--id', $primaryId, '--exact', '--upgrade-available')
     if ($ua.NoMatch) {
-        $result.NoUpgradeMatch = $true
-        $result.Parseable = $true
-        if ($result.Installed) { $result.Note = 'yükseltme yok (--upgrade-available)' }
-        return $result
+        $wingetStatus.NoUpgradeMatch = $true
+        $wingetStatus.Parseable = $true
+        if ($wingetStatus.Installed) { $wingetStatus.Note = 'yükseltme yok (--upgrade-available)' }
+        return $wingetStatus
     }
     if ($ua.Rows.Count -gt 0) {
         $row = $ua.Rows | Select-Object -First 1
         $avail = Get-WingetTableField $row @('Available', 'Mevcut')
         $inst = Get-WingetTableField $row @('Version', 'Sürüm')
-        if ($inst) { $result.Installed = $inst }
-        if ($avail) { $result.Available = $avail; $result.Parseable = $true; $result.Source = 'winget --upgrade-available' }
-        return $result
+        if ($inst) { $wingetStatus.Installed = $inst }
+        if ($avail) { $wingetStatus.Available = $avail; $wingetStatus.Parseable = $true; $wingetStatus.Source = 'winget --upgrade-available' }
+        return $wingetStatus
     }
     # Regex fallback: extract Available version from raw output when structured parsing fails.
     $rawLine = $ua.Output -split "`r?`n" | Where-Object { $_ -match [regex]::Escape($primaryId) } | Select-Object -First 1
@@ -476,18 +480,18 @@ function Get-WingetPackageStatus {
         $verRe = '\d+(?:\.\d+)+(?:[-\+][A-Za-z0-9.\-]+)?'
         $m = [regex]::Match($rawLine, ([regex]::Escape($primaryId) + '\s+(' + $verRe + ')\s+(' + $verRe + ')'))
         if ($m.Success) {
-            if (-not $result.Installed) { $result.Installed = $m.Groups[1].Value }
-            $result.Available = $m.Groups[2].Value
-            $result.Parseable = $true
-            $result.Source = 'winget --upgrade-available (regex)'
-            return $result
+            if (-not $wingetStatus.Installed) { $wingetStatus.Installed = $m.Groups[1].Value }
+            $wingetStatus.Available = $m.Groups[2].Value
+            $wingetStatus.Parseable = $true
+            $wingetStatus.Source = 'winget --upgrade-available (regex)'
+            return $wingetStatus
         }
     }
     # Fallback: parse raw head for diagnostics; never claim up-to-date from unparseable output.
     $head = (($ua.Output -split "`r?`n" | Where-Object { $_ -and $_ -notmatch '^-+$' } | Select-Object -First 3) -join ' | ')
     Write-Log "winget ($primaryId): target version field not parsed; raw header: $head" 'DEBUG'
-    $result.Note = "target version not determined (unparseable output)"
-    return $result
+    $wingetStatus.Note = "target version not determined (unparseable output)"
+    return $wingetStatus
 }
 
 function Compare-ToolVersion {
@@ -531,8 +535,38 @@ function Set-Plan {
     }
 }
 
+# Fail-closed invariant: the execution report must always be the full,
+# twelve-row collector. A rebound variable must never degrade into a single
+# scalar that renders as an empty "Results" row while the run still says success.
+function Assert-ResultCollector {
+    param([string]$Where = 'check')
+
+    $rows = @($script:Result)
+    $problems = @()
+    if ($rows.Count -ne $script:ResultComponentNames.Count) {
+        $problems += "row count $($rows.Count) != $($script:ResultComponentNames.Count)"
+    }
+    foreach ($name in $script:ResultComponentNames) {
+        $matched = @($rows | Where-Object { $_ -is [System.Collections.IDictionary] -and $_.Component -eq $name })
+        if ($matched.Count -ne 1) { $problems += "component '$name' matched $($matched.Count) times" }
+    }
+    foreach ($row in $rows) {
+        if ($row -isnot [System.Collections.IDictionary]) { continue }
+        foreach ($field in @('Component', 'Status')) {
+            $value = $row[$field]
+            if ($null -eq $value -or [string]::IsNullOrWhiteSpace([string]$value)) {
+                $problems += "row with empty $field"
+            }
+        }
+    }
+    if ($problems.Count -gt 0) {
+        throw "[ResultCollector] Invalid result collector at $Where : $($problems -join '; ')"
+    }
+}
+
 function Set-Result {
     param([string]$Component, [string]$Status, [string]$Before = '', [string]$After = '', [string]$Details = '')
+    Assert-ResultCollector -Where "Set-Result:$Component"
     $idx = $script:Result | Where-Object { $_.Component -eq $Component }
     if ($idx) {
         $idx.Status = $Status
@@ -553,6 +587,10 @@ function Show-PlanTable {
         $detail = if ($row.Details) { " ($($row.Details))" } else { '' }
 
         Write-Log "  * $($row.Component): $($row.Action)  [$($row.Current) -> $($row.Target)]$detail"
+
+        if ($row.Items) {
+            foreach ($item in $row.Items) { Write-Log "      - $item" }
+        }
 
     }
 
@@ -661,6 +699,8 @@ if (Test-Command 'py') {
     if ($outdated -and $outdated.Count -gt 0) {
         $details = ($outdated | ForEach-Object { "$($_.name) $($_.version)→$($_.latest_version)" }) -join ', '
         Set-Plan 'pip packages' 'Update available' "$($outdated.Count) package(s)" "$($outdated.Count) package(s)" $details
+        $planRow = $script:Plan | Where-Object { $_.Component -eq 'pip packages' }
+        $planRow.Items = @($outdated | ForEach-Object { "$($_.name) $($_.version) -> $($_.latest_version)" })
     } else {
         Set-Plan 'pip packages' 'Up to date' '0 packages' '0 packages'
     }
@@ -702,11 +742,14 @@ if (Test-Command 'py') {
         $pipxDetails += "$($pipxOutdatedPkgs.Count) package(s) outdated"
     }
     $installedCount = @($pipxPkgs).Count
+    $pipxInstalledNames = @($pipxPkgs | ForEach-Object { "$($_.Name) $($_.Version)" })
     if ($pipxHasUpdates) {
         Set-Plan 'pipx' 'Update available' "$installedCount package(s) + pipx $pipxCurrent" "$installedCount package(s) + pipx $pipxLatest" ($pipxDetails -join ', ')
     } else {
         Set-Plan 'pipx' 'Up to date' "$installedCount package(s) + pipx $pipxCurrent" "$installedCount package(s) + pipx $pipxCurrent"
     }
+    $planRow = $script:Plan | Where-Object { $_.Component -eq 'pipx' }
+    $planRow.Items = $pipxInstalledNames
 } else {
     Set-Plan 'pipx' 'Skipped' '' '' 'py not found'
 }
@@ -759,6 +802,8 @@ if (Test-Command 'npm') {
     if ($npmOutdated -and $npmOutdated.Count -gt 0) {
         $details = ($npmOutdated | ForEach-Object { "$($_.name) $($_.current)→$($_.latest)" }) -join ', '
         Set-Plan 'npm packages' 'Update available' "$($npmOutdated.Count) package(s)" "$($npmOutdated.Count) package(s)" $details
+        $planRow = $script:Plan | Where-Object { $_.Component -eq 'npm packages' }
+        $planRow.Items = @($npmOutdated | ForEach-Object { "$($_.name) $($_.current) -> $($_.latest)" })
     } else {
         Set-Plan 'npm packages' 'Up to date' '0 packages' '0 packages'
     }
@@ -889,8 +934,8 @@ if ($pipPkgRow.Action -eq 'Update available') {
             $fromVer = $pkg.version
             $toVer = $pkg.latest_version
             Write-Log "Upgrading $name ($fromVer -> $toVer)..." 'INFO'
-            $result = Run-Command 'py' @('-m', 'pip', 'install', '--upgrade', $name) "pip upgrade $name"
-            if ($result -eq 0) {
+            $commandExit = Run-Command 'py' @('-m', 'pip', 'install', '--upgrade', $name) "pip upgrade $name"
+            if ($commandExit -eq 0) {
                 $pipPkgDetails += "$name $fromVer→$toVer"
             } else {
                 $pipPkgDetails += "$name FAILED"
@@ -923,8 +968,8 @@ if ($pipxRow.Action -eq 'Update available') {
     $pipxLatest = Get-PipxLatestVersion -Package 'pipx'
     if ($pipxLatest -and $pipxLatest -ne $pipxCurrent) {
         Write-Log "Upgrading pipx ($pipxCurrent -> $pipxLatest)..." 'INFO'
-        $result = Run-Command 'py' @('-m', 'pipx', 'upgrade', 'pipx') "pipx upgrade pipx"
-        if ($result -eq 0) {
+        $commandExit = Run-Command 'py' @('-m', 'pipx', 'upgrade', 'pipx') "pipx upgrade pipx"
+        if ($commandExit -eq 0) {
             $pipxPkgsDetails += "pipx $pipxCurrent→$pipxLatest"
         } else {
             $pipxPkgsDetails += "pipx FAILED"
@@ -942,8 +987,8 @@ if ($pipxRow.Action -eq 'Update available') {
     }
     if ($pipxOutdatedPkgs -and $pipxOutdatedPkgs.Count -gt 0) {
         Write-Log "Upgrading $($pipxOutdatedPkgs.Count) pipx package(s) via pipx upgrade-all..." 'INFO'
-        $result = Run-Command 'py' @('-m', 'pipx', 'upgrade-all') "pipx upgrade-all"
-        if ($result -eq 0) {
+        $commandExit = Run-Command 'py' @('-m', 'pipx', 'upgrade-all') "pipx upgrade-all"
+        if ($commandExit -eq 0) {
             $pipxPkgsDetails += ($pipxOutdatedPkgs | ForEach-Object { "$($_.name) $($_.version)→$(Get-PipxLatestVersion -Package $_.name)" }) -join ', '
         } else {
             $pipxPkgsDetails += "pipx upgrade-all FAILED"
@@ -1007,8 +1052,8 @@ if ($npmPkgRow.Action -eq 'Update available') {
             $toVer = [string]$pkg.latest
             if (-not $name -or -not $toVer) { continue }
             Write-Log "Upgrading $name ($fromVer -> $toVer)..." 'INFO'
-            $result = Run-Command 'npm' @('install', '--global', "$name@$toVer") "npm upgrade $name"
-            if ($result -eq 0) { $npmPkgDetails += "$name $fromVer→$toVer" }
+            $commandExit = Run-Command 'npm' @('install', '--global', "$name@$toVer") "npm upgrade $name"
+            if ($commandExit -eq 0) { $npmPkgDetails += "$name $fromVer→$toVer" }
             else { $npmPkgDetails += "$name FAILED"; $npmPkgFailed = $true; $script:OverallFailed = $true }
         }
     }
@@ -1062,6 +1107,7 @@ if ($pesterRow.Action -eq 'Update available') {
 # ============================================================
 # FINAL: Show results
 # ============================================================
+Assert-ResultCollector -Where 'final'
 Show-ResultTable
 
 $script:ExecutionCompleted = $true

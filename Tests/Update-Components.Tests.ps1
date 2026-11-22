@@ -197,6 +197,14 @@ Describe 'Update-Components two-phase tables' {
         $script:Text | Should -Not -Match '╔|╚|║'
     }
 
+    It 'Prints detected package names under the plan rows, not only counts' {
+        $script:Text | Should -Match 'if \(\$row\.Items\)'
+        $script:Text | Should -Match 'Write-Log "      - \$item"'
+        $script:Text | Should -Match '\$planRow\.Items = @\(\$outdated'
+        $script:Text | Should -Match '\$planRow\.Items = \$pipxInstalledNames'
+        $script:Text | Should -Match '\$planRow\.Items = @\(\$npmOutdated'
+    }
+
     It 'Shows live detection and execution phases' {
         $script:Text | Should -Match '1/2 Checking'
         $script:Text | Should -Match '2/2 Applying'
@@ -249,5 +257,92 @@ Describe 'Update-Components winget table parsing fixtures' {
         $script:Text | Should -Match 'Column boundaries are derived from the'
         $script:Text | Should -Match "if \(\`$Lines\[\`$i\] -match"
         $script:Text | Should -Match '\^\-\{8,\}'
+    }
+}
+
+Describe 'Update-Components result collector invariant' {
+    It 'Declares exactly one result collector and no generic $result assignments' {
+        $collectorAssignments = {
+            param([string]$Source)
+            $tokens = $null; $errors = $null
+            $localAst = [System.Management.Automation.Language.Parser]::ParseInput($Source, [ref]$tokens, [ref]$errors)
+            @($localAst.FindAll({ param($n)
+                $n -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+                $n.Left -is [System.Management.Automation.Language.VariableExpressionAst] -and
+                (($n.Left.VariablePath.UserPath -replace '^script:', '') -ieq 'result')
+            }, $true))
+        }
+
+        $found = @(& $collectorAssignments $script:Text)
+        $found.Count | Should -Be 1
+        $found[0].Left.VariablePath.UserPath | Should -BeExactly 'script:Result'
+        $found[0].Right.Extent.Text | Should -Match '^@\('
+
+        # A check must be seen to fail: the exact collision shape is rejected.
+        $planted = @(& $collectorAssignments '$script:result = 0')
+        $planted.Count | Should -Be 1
+        $planted[0].Left.VariablePath.UserPath | Should -Not -BeExactly 'script:Result'
+        $planted[0].Right.Extent.Text | Should -Not -Match '^@\('
+    }
+
+    It 'Rejects a collector clobbered by a case-insensitive variable collision' {
+        $tokens = $null; $errors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput($script:Text, [ref]$tokens, [ref]$errors)
+        $errors | Should -BeNullOrEmpty
+
+        $wanted = @('Write-Log', 'Set-Result', 'Assert-ResultCollector')
+        $funcs = @($ast.FindAll({ param($n)
+            $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $wanted -contains $n.Name
+        }, $true))
+        $funcs.Count | Should -Be 3
+
+        $assign = { param($n)
+            $n -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+            $n.Left -is [System.Management.Automation.Language.VariableExpressionAst]
+        }
+        $collector = @($ast.FindAll($assign, $true) | Where-Object { $_.Left.VariablePath.UserPath -eq 'script:Result' })[0]
+        $names = @($ast.FindAll($assign, $true) | Where-Object { $_.Left.VariablePath.UserPath -eq 'script:ResultComponentNames' })[0]
+        $collector | Should -Not -BeNullOrEmpty
+        $names | Should -Not -BeNullOrEmpty
+
+        $snippet = (@($collector.Extent.Text, $names.Extent.Text) + @($funcs | ForEach-Object { $_.Extent.Text })) -join "`n"
+
+        # The extracted snippet writes to script scope; save and restore that
+        # scope so this test cannot pollute any test that runs after it.
+        $saved = @{}
+        foreach ($name in @('Result', 'ResultComponentNames')) {
+            $v = Get-Variable -Name $name -Scope Script -ErrorAction SilentlyContinue
+            $saved[$name] = if ($null -ne $v) { @{ Present = $true; Value = $v.Value } } else { @{ Present = $false } }
+        }
+        foreach ($name in @('Write-Log', 'Set-Result', 'Assert-ResultCollector')) {
+            $f = Get-Item -Path "Function:\$name" -ErrorAction SilentlyContinue
+            $saved[$name] = if ($null -ne $f) { @{ Present = $true; Value = $f.ScriptBlock } } else { @{ Present = $false } }
+        }
+
+        try {
+            Invoke-Expression $snippet
+
+            foreach ($component in $script:ResultComponentNames) { Set-Result $component 'Up to date' 'x' 'x' }
+            { Assert-ResultCollector -Where 'healthy' } | Should -Not -Throw
+
+            # Field-level corruption must fail too, not only a rebound collector.
+            $script:Result[0]['Status'] = ''
+            { Assert-ResultCollector -Where 'empty-field' } | Should -Throw -ExpectedMessage '*ResultCollector*'
+            $script:Result[0]['Status'] = 'Up to date'
+
+            # PowerShell variable names are case-insensitive: this is the exact
+            # script-scope collision that used to turn the collector into an integer.
+            $script:result = 0
+            { Assert-ResultCollector -Where 'collision' } | Should -Throw -ExpectedMessage '*ResultCollector*'
+        } finally {
+            foreach ($name in @('Result', 'ResultComponentNames')) {
+                if ($saved[$name].Present) { Set-Variable -Name $name -Scope Script -Value $saved[$name].Value -Force }
+                else { Remove-Variable -Name $name -Scope Script -ErrorAction SilentlyContinue }
+            }
+            foreach ($name in @('Write-Log', 'Set-Result', 'Assert-ResultCollector')) {
+                if ($saved[$name].Present) { Set-Item -Path "Function:\$name" -Value $saved[$name].Value -Force }
+                else { Remove-Item -Path "Function:\$name" -ErrorAction SilentlyContinue }
+            }
+        }
     }
 }
