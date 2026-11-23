@@ -230,6 +230,11 @@ Describe 'Update-Components logging and structure' {
         $script:Text | Should -Match "'ERROR'\s+\{ 'Red' \}"
     }
 
+    It 'Logs an unhandled terminating error before exiting' {
+        $script:Text | Should -Match '(?m)^trap \{'
+        $script:Text | Should -Match 'Unhandled error:'
+    }
+
     It 'Defines Test-Command helper' {
         $script:Text | Should -Match 'function Test-Command'
     }

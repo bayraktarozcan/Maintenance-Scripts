@@ -171,6 +171,14 @@ function Write-Log {
 
 }
 
+# Direct invocation means stderr is no longer captured by the launcher. Route
+# an unhandled terminating error through Write-Log so the log keeps the cause
+# before the process exits with the same nonzero code.
+trap {
+    Write-Log "Unhandled error: $($_.Exception.Message)" 'ERROR'
+    exit 1
+}
+
 function Test-Command {
     param([string]$Command)
     $null -ne (Get-Command $Command -ErrorAction SilentlyContinue)
