@@ -667,6 +667,8 @@ The shipped product is the `Scripts/` directory only: maintenance launchers and 
 | `Scripts/Bug-Report.ps1` | Only runtime PowerShell logic; HTML report engine, UTF-8 with BOM |
 | `Scripts/*.bat` | Thin wrappers around system tools (`DISM`, `SFC`, `ipconfig`, `winget`); run tools inline |
 | `Tools/Check-Mojibake.ps1` | Developer-side encoding gate; rejects double-encoded text and invalid UTF-8, never makes network calls |
+| `Tools/Check-LineEndings.ps1` | Read-only line-ending gate over `git ls-files --eol`; fails on mixed endings, a working-tree ending that disagrees with its declared attribute, or a `.gitattributes`/`.editorconfig` disagreement; never modifies files |
+| `Tools/Repair-LineEndings.ps1` | Scoped, encoding-safe line-ending repair for the files handed to it; skips and reports files with no declared attribute and binary/invalid-UTF-8 files; preserves BOM |
 | `Tools/verify_mirror.py` | Developer-side mirror verifier: sync-sha + structure parity; `--selftest` runs its fixture suite, `--allow-missing` is the CI case; never makes network calls |
 | `Tools/Invoke-Gate.ps1` | Single local gate command running every CI-declared check |
 | `Tools/Install-Dependencies.ps1` | Single host dependency setup command (per-user scope, `-Check` verifies) |
@@ -674,7 +676,7 @@ The shipped product is the `Scripts/` directory only: maintenance launchers and 
 | `Tools/Build-ReleaseNotes.ps1` | Derives the canonical release title and bilingual body from `CHANGELOG.md` |
 | `Tools/Check-PythonFloor.ps1` | Read-only PEP EOL calendar check and CI floor parity; never holds a credential |
 | `Tools/Check-ReleaseHygiene.ps1` | Read-only two-host release audit with seven named checks and a generator check |
-| `Tests/` | Pester suites for report, encoding, updater, gate, mirror, version parity, naming, heading case, hidden layers, final newline, release hygiene, generator, action refs, expression boundaries and hooks (19 files) |
+| `Tests/` | Pester suites for report, encoding, updater, gate, mirror, version parity, naming, heading case, hidden layers, line endings, final newline, release hygiene, generator, action refs, expression boundaries and hooks (20 files) |
 | `.githooks/` | Bundled local hooks; enable with `git config core.hooksPath .githooks` |
 | `.github/` | GitHub quality gates |
 | `Docs/` | Tracked chapters: overview/setup, architecture, troubleshooting |
@@ -693,7 +695,7 @@ The shipped product is the `Scripts/` directory only: maintenance launchers and 
 Verification on Windows PowerShell 5.1 (Pester installed):
 
 The single local gate command runs every check CI declares
-(Syntax, Whitespace, Mojibake, Commits, Pester, Hygiene, LinkCheck):
+(Syntax, Whitespace, LineEndings, Mojibake, Commits, Pester, Hygiene, LinkCheck):
 
 ```powershell
 powershell -NoProfile -File Tools/Invoke-Gate.ps1
@@ -777,4 +779,4 @@ Exemptions: `.github/`, `.githooks/`, `.idea/` (platform/tool fixed paths); `Log
 - Do not add scripts that make network calls or persist elevated privileges. Four named exceptions exist: `WinGet-Upgrade.bat` and `Update-Components.bat` (via `Tools/Update-Components.ps1`) delegate to `winget`, `pip`, or `npm`, which query configured sources and download packages; `Tools/Check-PythonFloor.ps1` and `Tools/Check-ReleaseHygiene.ps1` make read-only HTTPS GETs to the Python release calendar and the public GitHub/GitLab APIs. None uploads user data, writes registry keys, or holds a credential; the two checks use no token and fail closed on transport errors.
 - The active `main-guard` ruleset lists the repository owner (`User` actor `86029038`, `bypass_mode: always`) in `bypass_actors`, so that actor can push to `main` directly and the ruleset rules are skipped for it. The rules are `deletion`, `non_fast_forward`, `required_linear_history`, `required_status_checks` and `pull_request`; classic branch protection also reports `allow_force_pushes: true` and `enforce_admins: false`. CI and the second host's pipeline therefore run after the push rather than gating it; the local gate is the pre-push control.
 
-<!-- mirror-sync: sync-sha=995f0ca9a8c97ac44efe31808fe2f35934dabc8b -->
+<!-- mirror-sync: sync-sha=95b34957268bbcdc730dcc7516b5ab95da2bd4fa -->
