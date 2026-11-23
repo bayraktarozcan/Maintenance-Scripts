@@ -67,7 +67,7 @@ Repair-specific logging:
 - `Update-Components.bat` (launcher for `Tools/Update-Components.ps1`): resolves the PowerShell engine, sets up logging, forwards any arguments (including `-Check`), then calls the PS script which runs a two-phase update:
   1. **Detection phase**: checks `winget` for Python/Node.js runtime updates, `pip`/`npm` for package manager self-updates, `pip list --outdated --format=json` and `npm outdated -g --json` for global packages, and `pipx list --json` + `pip index versions` for pipx itself and pipx-managed packages. Builds a plan table.
   2. **Execution phase**: applies updates and builds a result table. Runs entirely in user scope; never self-elevates. Supports `-Check` dry-run mode that shows the plan and exits.
-  Output streams live: the launcher passes `-LogPath`, the updater appends every line to the log as it prints it, and console colors mark steps (cyan), successes (green), warnings (yellow), and errors (red).
+  Output streams live: the launcher passes `-LogPath`, the updater appends every line to the log as it prints it, and console colors mark steps (cyan), update-available rows (magenta), successes (green), warnings (yellow), and errors (red). Phase 1 closes with the number of updates found and their component names; phase 2 closes with how many planned component updates were applied.
   Network activity: `winget list --id`, `pip`/`npm`/`pipx` registry queries.
 
 ### Component Updater Engine
@@ -85,11 +85,13 @@ Repair-specific logging:
 - Host tools: `gitleaks`, `actionlint`, and `lychee` via `winget list --id <ID> --exact`; PowerShell 7 via `winget list --id Microsoft.PowerShell --exact` (latest 7.x); Pester via `Find-Module Pester` (PSGallery latest)
 - Dotted versions are compared component-wise with missing components read as zero; an update is planned only when the target is strictly newer (`7.7.0` equals `7.7.0.0`)
 - Builds plan table with columns: Component, Action, Current, Target, Details. Detected packages (pip, outdated pip/npm packages, pipx-managed apps) are also listed by name and version on indented lines under their plan row, so a count is never the only evidence.
+- Closes the phase with `1/2 Found N update(s): ...`, naming every component whose action is `Update available`; those rows and the closing line are magenta.
 
 **Phase 2 — Execution (Result)**:
 - Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements` for runtimes, host tools, and PowerShell 7; `Update-Module Pester -Force` for Pester; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; and `npm install --global <pkg>@<latest>` for outdated globals
 - Tracks before/after versions per component
 - Builds result table with columns: Component, Status, Before, After
+- Closes the phase with `2/2 X of Y component update(s) applied successfully`, counting only planned rows that ended `Updated` or `Up to date`; a partial or error row lowers the count and the line is yellow.
 - Overall failure tracking; exits 0 on full success, 1 otherwise
 
 **Conventions**:
@@ -182,7 +184,7 @@ kapsar:
 - `Update-Components.bat` (`Tools/Update-Components.ps1` başlatıcısı): PowerShell motorunu çözümler, günlüklemeyi kurar, bağımsız değişkenleri (`-Check` dâhil) iletir, PS betiğini çağırır. PS betiği iki aşamalı güncelleme çalıştırır:
   1. **Tespit aşaması**: Python/Node.js çalışma zamanı güncellemeleri için `winget list --id`, pip/npm için paket yöneticisi kendini-güncelleme, `pip list --outdated --format=json` ve `npm outdated -g --json` ile global paketler, `pipx list --json` + `pip index versions` ile pipx kendi kendine ve pipx yönetimli paketler. Plan tablosu oluşturur.
   2. **Yürütme aşaması**: Güncellemeleri uygular ve sonuç tablosu oluşturur. Tamamen kullanıcı kapsamında koşur; asla kendini yükseltmez. `-Check` kuru çalıştırma (dry-run) modu planı gösterip çıkar.
-  Çıktı canlı akar: başlatıcı `-LogPath` iletir, güncelleyici her satırı bastığı anda günlüğe ekler; konsol renkleri adımları (camgöbeği), başarıları (yeşil), uyarıları (sarı) ve hataları (kırmızı) işaretler.
+  Çıktı canlı akar: başlatıcı `-LogPath` iletir, güncelleyici her satırı bastığı anda günlüğe ekler; konsol renkleri adımları (camgöbeği), güncelleme bulunan satırları (macenta), başarıları (yeşil), uyarıları (sarı) ve hataları (kırmızı) işaretler. 1/2 aşaması bulunan güncelleme sayısı ve bileşen adlarıyla, 2/2 aşaması planlanan bileşen güncellemelerinden kaçının uygulandığıyla kapanır.
   Ağ etkinliği: `winget list --id`, `pip`/`npm`/`pipx` kayıt sorguları.
 
 ### Bileşen Güncelleyici Motoru
@@ -200,11 +202,13 @@ kapsar:
 - Ana makine araçları: `gitleaks`, `actionlint` ve `lychee` `winget list --id <ID> --exact` ile; PowerShell 7 `winget list --id Microsoft.PowerShell --exact` ile (en son 7.x); Pester `Find-Module Pester` ile (PSGallery en son)
 - Noktalı sürümler bileşen bileşen karşılaştırılır; eksik bileşenler sıfır sayılır ve yalnızca hedef kesin olarak daha yeniyse güncelleme planlanır (`7.7.0` ile `7.7.0.0` eşittir)
 - Plan tablosu oluşturur: Bileşen, Eylem, Mevcut, Hedef, Detay sütunları. Tespit edilen paketler (pip, eski pip/npm paketleri, pipx yönetimli uygulamalar) kendi plan satırının altında girintili satırlarda adı ve sürümüyle de listelenir; sayı tek kanıt olarak kalmaz.
+- Aşamayı `1/2 Found N update(s): ...` satırıyla kapatır ve eylemi `Update available` olan her bileşeni adıyla sayar; bu satırlar ve kapanış satırı macentadır.
 
 **Aşama 2 — Yürütme (Sonuç)**:
 - Plan başına güncellemeleri uygular: çalışma zamanları, ana makine araçları ve PowerShell 7 için `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`; Pester için `Update-Module Pester -Force`; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; eski kalan global paketler için `npm install --global <pkg>@<latest>`
 - Bileşen başına önceki/sonraki sürümleri takip eder
 - Sonuç tablosu oluşturur: Bileşen, Durum, Önceki, Sonraki sütunları
+- Aşamayı `2/2 X of Y component update(s) applied successfully` satırıyla kapatır; yalnızca `Updated` veya `Up to date` ile biten plan satırlarını sayar; kısmi veya hatalı satır sayıyı düşürür ve satır sarı olur.
 - Genel hata takibi; tam başarıda 0, aksi halde 1 ile çıkar
 
 **Kurallar**:

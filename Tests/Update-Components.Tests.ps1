@@ -186,9 +186,10 @@ Describe 'Update-Components two-phase tables' {
         $script:Text | Should -Match '\$script:Result = @'
     }
 
-    It 'Has Show-PlanTable and Show-ResultTable functions' {
+    It 'Has Show-PlanTable, Show-ResultTable, and Show-PhaseTotals functions' {
         $script:Text | Should -Match 'function Show-PlanTable'
         $script:Text | Should -Match 'function Show-ResultTable'
+        $script:Text | Should -Match 'function Show-PhaseTotals'
     }
 
     It 'Plan and result output are readable text (no box drawing)' {
@@ -203,6 +204,18 @@ Describe 'Update-Components two-phase tables' {
         $script:Text | Should -Match '\$planRow\.Items = @\(\$outdated'
         $script:Text | Should -Match '\$planRow\.Items = \$pipxInstalledNames'
         $script:Text | Should -Match '\$planRow\.Items = @\(\$npmOutdated'
+    }
+
+    It 'Closes phase 1 with a count and the component names' {
+        $script:Text | Should -Match '\$updates = @\(\$script:Plan \| Where-Object \{ \$_.Action -eq ''Update available'' \}\)'
+        $script:Text | Should -Match '\$names = \(\$updates \| ForEach-Object \{ \$_.Component \}\) -join '', '''
+        $script:Text | Should -Match '1/2 Found \$\(\$updates\.Count\) update\(s\): \$names'
+    }
+
+    It 'Highlights update-available rows and counts phase 2 successes' {
+        $script:Text | Should -Match '\$level = if \(\$row\.Action -eq ''Update available''\) \{ ''UPDATE'' \}'
+        $script:Text | Should -Match '\$applied = @\(\$ResultRows \| Where-Object \{ \$plannedNames -contains \$_.Component -and \$_.Status -in @\(''Updated'', ''Up to date''\) \}\)'
+        $script:Text | Should -Match '2/2 \$\(\$applied\.Count\) of \$\(\$planned\.Count\) component update\(s\)'
     }
 
     It 'Shows live detection and execution phases' {
@@ -223,8 +236,9 @@ Describe 'Update-Components logging and structure' {
         $script:Text | Should -Match '\[System\.IO\.File\]::AppendAllText'
     }
 
-    It 'Colors step, success, warning, and error levels' {
+    It 'Colors step, update, success, warning, and error levels' {
         $script:Text | Should -Match "'STEP'\s+\{ 'Cyan' \}"
+        $script:Text | Should -Match "'UPDATE'\s+\{ 'Magenta' \}"
         $script:Text | Should -Match "'OK'\s+\{ 'Green' \}"
         $script:Text | Should -Match "'WARN'\s+\{ 'Yellow' \}"
         $script:Text | Should -Match "'ERROR'\s+\{ 'Red' \}"

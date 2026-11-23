@@ -144,12 +144,13 @@ function Write-Log {
     $line = if ($tagLevel) { "[$timestamp] [$Level] $Message" } else { "[$timestamp] $Message" }
 
     $color = switch ($Level) {
-        'DEBUG' { 'DarkGray' }
-        'STEP'  { 'Cyan' }
-        'OK'    { 'Green' }
-        'WARN'  { 'Yellow' }
-        'ERROR' { 'Red' }
-        default { $null }
+        'DEBUG'  { 'DarkGray' }
+        'STEP'   { 'Cyan' }
+        'UPDATE' { 'Magenta' }
+        'OK'     { 'Green' }
+        'WARN'   { 'Yellow' }
+        'ERROR'  { 'Red' }
+        default  { $null }
     }
 
     if ($color) {
@@ -635,12 +636,28 @@ function Show-PlanTable {
 
         $detail = if ($row.Details) { " ($($row.Details))" } else { '' }
 
-        Write-Log "  * $($row.Component): $($row.Action)  [$($row.Current) -> $($row.Target)]$detail"
+        # "Update available" is the one line the person must act on; magenta
+        # separates it from neutral "Up to date" and gray "Skipped" rows.
+        $level = if ($row.Action -eq 'Update available') { 'UPDATE' } else { 'INFO' }
+
+        Write-Log "  * $($row.Component): $($row.Action)  [$($row.Current) -> $($row.Target)]$detail" $level
 
         if ($row.Items) {
             foreach ($item in $row.Items) { Write-Log "      - $item" }
         }
 
+    }
+
+    # Closing count for phase 1: the number and the names, nothing else.
+    $updates = @($script:Plan | Where-Object { $_.Action -eq 'Update available' })
+    $names = ($updates | ForEach-Object { $_.Component }) -join ', '
+
+    Write-Log ""
+
+    if ($updates.Count -gt 0) {
+        Write-Log "1/2 Found $($updates.Count) update(s): $names" 'UPDATE'
+    } else {
+        Write-Log "1/2 Found 0 update(s)" 'OK'
     }
 
     Write-Log ""
@@ -671,6 +688,26 @@ function Show-ResultTable {
     }
 
     Write-Log ""
+
+}
+
+function Show-PhaseTotals {
+    param([array]$PlanRows, [array]$ResultRows)
+
+    # Planned rows whose operation finished without an Error or partial state.
+    # "Up to date" here means the update was attempted and nothing was left to
+    # change; the results table above still shows the distinction.
+    $planned = @($PlanRows | Where-Object { $_.Action -eq 'Update available' })
+    $plannedNames = @($planned | ForEach-Object { $_.Component })
+    $applied = @($ResultRows | Where-Object { $plannedNames -contains $_.Component -and $_.Status -in @('Updated', 'Up to date') })
+
+    if ($planned.Count -eq 0) {
+        Write-Log "2/2 No component updates to apply" 'OK'
+        return
+    }
+
+    $level = if ($applied.Count -eq $planned.Count) { 'OK' } else { 'WARN' }
+    Write-Log "2/2 $($applied.Count) of $($planned.Count) component update(s) applied successfully" $level
 
 }
 
@@ -1165,6 +1202,11 @@ if ($pesterRow.Action -eq 'Update available') {
 # ============================================================
 Assert-ResultCollector -Where 'final'
 Show-ResultTable
+
+# Closing count for phase 2. The results table above carries the detail.
+Write-Log ""
+Show-PhaseTotals -PlanRows $script:Plan -ResultRows $script:Result
+Write-Log ""
 
 $script:ExecutionCompleted = $true
 Write-UpdateComponentsReport -ExecutionCompleted:$true | Out-Null
