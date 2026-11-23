@@ -44,4 +44,12 @@ Describe 'Update-Components.bat log skeleton' {
         $script:Text | Should -Not -Match 'type\s+"%OUT%"'
         $script:Text | Should -Match '-LogPath\s+"%LOG%"'
     }
+
+    It 'Shows the exit prompt immediately with a single key press' {
+        # A key-drain before pause swallowed the first press, so the message
+        # appeared only after one press and a second press was needed to exit.
+        $script:Text | Should -Not -Match 'KeyAvailable'
+        $script:Text | Should -Not -Match 'ReadKey'
+        $script:Text | Should -Match '(?m)^pause$'
+    }
 }

@@ -123,6 +123,20 @@ Describe 'Update-Components command patterns' {
     }
 }
 
+Describe 'Update-Components download progress' {
+    It 'Announces each download before the child command runs' {
+        $script:Text | Should -Match 'Write-Log "Downloading: \$Description\.\.\." ''STEP'''
+        $checkBlock = [regex]::Match($script:Text, 'if \(\$Check\) \{[\s\S]*?return 0\s*\}')
+        $checkBlock.Success | Should -BeTrue
+        $checkBlock.Value | Should -Not -Match 'Downloading:'
+        $script:Text.IndexOf('Downloading: $Description') | Should -BeGreaterThan $checkBlock.Index
+    }
+
+    It 'Keeps the raw command in the debug line for diagnostics' {
+        $script:Text | Should -Match 'Write-Log "Running: \$Command \$\(\$Arguments -join '' ''\)" ''DEBUG'''
+    }
+}
+
 Describe 'Update-Components host tools' {
     BeforeAll {
         $tokens = $null

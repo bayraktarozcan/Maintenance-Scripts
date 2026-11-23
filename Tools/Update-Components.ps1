@@ -192,6 +192,9 @@ function Run-Command {
         Write-Log "[CHECK MODE] Would run: $Command $($Arguments -join ' ')" 'INFO'
         return 0
     }
+    # The child's output is buffered to $output, so without this line the
+    # screen is silent for the whole download. Announce it before starting.
+    Write-Log "Downloading: $Description..." 'STEP'
     $exitCode = 0
     $output = $null
     try {

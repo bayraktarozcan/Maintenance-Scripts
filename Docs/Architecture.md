@@ -90,6 +90,7 @@ Repair-specific logging:
 **Phase 2 — Execution (Result)**:
 - Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements` for runtimes, host tools, and PowerShell 7; `Update-Module Pester -Force` for Pester; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; and `npm install --global <pkg>@<latest>` for outdated globals
 - Tracks before/after versions per component
+- Prints `Downloading: <component>...` (cyan) before each package-manager call (`Run-Command`), because child output is buffered to a string and would otherwise leave the screen silent during a long download; the raw command stays on the dim DEBUG line. `-Check` mode runs no installers and prints no download line.
 - Prints a live result line only for components that had a planned update (`Set-Result`), using the same status colors as phase 1. Components that were already up to date were shown in phase 1 and are not printed again. No closing result table repeats those lines.
 - Closes the phase with `2/2 X of Y component update(s) applied successfully`, counting only planned rows that ended `Updated` or `Up to date`; a partial or error row lowers the count and the line is yellow.
 - Overall failure tracking; exits 0 on full success, 1 otherwise
@@ -207,6 +208,7 @@ kapsar:
 **Aşama 2 — Yürütme (Sonuç)**:
 - Plan başına güncellemeleri uygular: çalışma zamanları, ana makine araçları ve PowerShell 7 için `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`; Pester için `Update-Module Pester -Force`; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; eski kalan global paketler için `npm install --global <pkg>@<latest>`
 - Bileşen başına önceki/sonraki sürümleri takip eder
+- Her paket yöneticisi çağrısından önce `Downloading: <bileşen>...` (camgöbeği) satırı yazı (`Run-Command`); alt komut çıktısı bir diziye tamponlandığı için bu satır olmasa uzun indirme boyunca ekran sessiz kalır. Ham komut sönük DEBUG satırında kalır. `-Check` kipinde kurulum çalışmadığı için indirme satırı basılmaz.
 - Yalnızca planlanmış güncellemesi olan bileşenler için canlı sonuç satırı yazı (`Set-Result`); 1/2'de zaten görülen güncel bileşenler tekrar basılmaz. Sonunda aynı satırları tekrarlayan sonuç tablosu yok.
 - Aşamayı `2/2 X of Y component update(s) applied successfully` satırıyla kapatır; yalnızca `Updated` veya `Up to date` ile biten plan satırlarını sayar; kısmi veya hatalı satır sayıyı düşürür ve satır sarı olur.
 - Genel hata takibi; tam başarıda 0, aksi halde 1 ile çıkar

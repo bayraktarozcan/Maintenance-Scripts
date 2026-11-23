@@ -42,6 +42,5 @@ echo Log: %LOG%
 >>"%LOG%" echo Log: %LOG%
 echo.
 >>"%LOG%" echo.
-"%PSEXE%" -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 pause
 exit /b %EXITCODE%
