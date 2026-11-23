@@ -583,6 +583,12 @@ function Set-Plan {
         if ($Target)  { $idx.Target  = $Target }
         if ($Details) { $idx.Details = $Details }
     }
+    # Announce each component the moment its check finishes. The plan table at
+    # the end of phase 1 stays the complete record; this is the live progress line.
+    $detail = if ($Details) { " ($Details)" } else { '' }
+    $range = if ($Current -or $Target) { " [$Current -> $Target]" } else { '' }
+    $liveLevel = if ($Action -eq 'Update available') { 'UPDATE' } else { 'INFO' }
+    Write-Log "    $($Component): $($Action)$range$detail" $liveLevel
 }
 
 # Fail-closed invariant: the execution report must always be the full,
@@ -624,29 +630,31 @@ function Set-Result {
         if ($After)  { $idx.After  = $After }
         if ($Details) { $idx.Details = $Details }
     }
+    # Only components with a planned update get a second line in phase 2.
+    # Everything else was already shown in phase 1; repeating it is noise.
+    $planned = @($script:Plan | Where-Object { $_.Component -eq $Component -and $_.Action -eq 'Update available' })
+    if ($planned.Count -eq 0) { return }
+
+    $after = if ($After) { $After } elseif ($Before) { $Before } else { '' }
+    $detail = if ($Details) { " ($Details)" } else { '' }
+    $rowLevel = switch -Regex ($Status) {
+        '^(Updated|Up to date)$' { 'OK'; break }
+        '^Partially updated$' { 'WARN'; break }
+        '^Error$' { 'ERROR'; break }
+        default { 'INFO' }
+    }
+    Write-Log "    $($Component): $($Status) [$after]$detail" $rowLevel
 }
 
-function Show-PlanTable {
+function Show-PlanItems {
+    param([string]$Component)
+    # Package names are written where they are detected, not again in a
+    # closing table. The JSON report still carries the full Items array.
+    $row = @($script:Plan | Where-Object { $_.Component -eq $Component }) | Select-Object -First 1
+    foreach ($item in @($row.Items)) { Write-Log "      - $item" }
+}
 
-    Write-Log ""
-
-    Write-Log "Plan:" 'STEP'
-
-    foreach ($row in $script:Plan) {
-
-        $detail = if ($row.Details) { " ($($row.Details))" } else { '' }
-
-        # "Update available" is the one line the person must act on; magenta
-        # separates it from neutral "Up to date" and gray "Skipped" rows.
-        $level = if ($row.Action -eq 'Update available') { 'UPDATE' } else { 'INFO' }
-
-        Write-Log "  * $($row.Component): $($row.Action)  [$($row.Current) -> $($row.Target)]$detail" $level
-
-        if ($row.Items) {
-            foreach ($item in $row.Items) { Write-Log "      - $item" }
-        }
-
-    }
+function Show-PhaseOneTotals {
 
     # Closing count for phase 1: the number and the names, nothing else.
     $updates = @($script:Plan | Where-Object { $_.Action -eq 'Update available' })
@@ -664,39 +672,12 @@ function Show-PlanTable {
 
 }
 
-function Show-ResultTable {
-
-    Write-Log ""
-
-    Write-Log "Results:" 'STEP'
-
-    foreach ($row in $script:Result) {
-
-        $detail = if ($row.Details) { " ($($row.Details))" } else { '' }
-
-        $after = if ($row.After) { $row.After } elseif ($row.Before) { $row.Before } else { '' }
-
-        $rowLevel = switch -Regex ($row.Status) {
-            '^(Updated|Up to date)$' { 'OK'; break }
-            '^Partially updated$' { 'WARN'; break }
-            '^Error$' { 'ERROR'; break }
-            default { 'INFO' }
-        }
-
-        Write-Log "  * $($row.Component): $($row.Status)  [$after]$detail" $rowLevel
-
-    }
-
-    Write-Log ""
-
-}
-
 function Show-PhaseTotals {
     param([array]$PlanRows, [array]$ResultRows)
 
     # Planned rows whose operation finished without an Error or partial state.
     # "Up to date" here means the update was attempted and nothing was left to
-    # change; the results table above still shows the distinction.
+    # change; the live component lines above still show the distinction.
     $planned = @($PlanRows | Where-Object { $_.Action -eq 'Update available' })
     $plannedNames = @($planned | ForEach-Object { $_.Component })
     $applied = @($ResultRows | Where-Object { $plannedNames -contains $_.Component -and $_.Status -in @('Updated', 'Up to date') })
@@ -794,6 +775,7 @@ if (Test-Command 'py') {
         Set-Plan 'pip packages' 'Update available' "$($outdated.Count) package(s)" "$($outdated.Count) package(s)" $details
         $planRow = $script:Plan | Where-Object { $_.Component -eq 'pip packages' }
         $planRow.Items = @($outdated | ForEach-Object { "$($_.name) $($_.version) -> $($_.latest_version)" })
+        Show-PlanItems -Component 'pip packages'
     } else {
         Set-Plan 'pip packages' 'Up to date' '0 packages' '0 packages'
     }
@@ -843,6 +825,7 @@ if (Test-Command 'py') {
     }
     $planRow = $script:Plan | Where-Object { $_.Component -eq 'pipx' }
     $planRow.Items = $pipxInstalledNames
+    Show-PlanItems -Component 'pipx'
 } else {
     Set-Plan 'pipx' 'Skipped' '' '' 'py not found'
 }
@@ -897,6 +880,7 @@ if (Test-Command 'npm') {
         Set-Plan 'npm packages' 'Update available' "$($npmOutdated.Count) package(s)" "$($npmOutdated.Count) package(s)" $details
         $planRow = $script:Plan | Where-Object { $_.Component -eq 'npm packages' }
         $planRow.Items = @($npmOutdated | ForEach-Object { "$($_.name) $($_.current) -> $($_.latest)" })
+        Show-PlanItems -Component 'npm packages'
     } else {
         Set-Plan 'npm packages' 'Up to date' '0 packages' '0 packages'
     }
@@ -964,8 +948,8 @@ if (Test-Command 'pwsh') {
     Set-Plan 'Pester' 'Skipped' '' '' 'pwsh not found'
 }
 
-# Show the plan
-Show-PlanTable
+# Close phase 1 with the total; per-component lines were already streamed.
+Show-PhaseOneTotals
 
 if ($Check) {
     Write-UpdateComponentsReport -ExecutionCompleted:$false | Out-Null
@@ -1198,12 +1182,9 @@ if ($pesterRow.Action -eq 'Update available') {
 }
 
 # ============================================================
-# FINAL: Show results
+# FINAL: closing count; per-component lines were already streamed.
 # ============================================================
 Assert-ResultCollector -Where 'final'
-Show-ResultTable
-
-# Closing count for phase 2. The results table above carries the detail.
 Write-Log ""
 Show-PhaseTotals -PlanRows $script:Plan -ResultRows $script:Result
 Write-Log ""

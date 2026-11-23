@@ -173,8 +173,8 @@ Describe 'Update-Components Check mode' {
         $script:Text | Should -Match 'return 0'
     }
 
-    It 'Shows plan table in CHECK MODE and exits' {
-        $script:Text | Should -Match 'Show-PlanTable'
+    It 'Closes phase 1 in CHECK MODE and exits' {
+        $script:Text | Should -Match 'Show-PhaseOneTotals'
         $script:Text | Should -Match 'CHECK MODE:'
         $script:Text | Should -Match 'exit 0'
     }
@@ -186,21 +186,25 @@ Describe 'Update-Components two-phase tables' {
         $script:Text | Should -Match '\$script:Result = @'
     }
 
-    It 'Has Show-PlanTable, Show-ResultTable, and Show-PhaseTotals functions' {
-        $script:Text | Should -Match 'function Show-PlanTable'
-        $script:Text | Should -Match 'function Show-ResultTable'
+    It 'Has Show-PlanItems and phase total functions, no duplicate tables' {
+        $script:Text | Should -Match 'function Show-PlanItems'
+        $script:Text | Should -Match 'function Show-PhaseOneTotals'
         $script:Text | Should -Match 'function Show-PhaseTotals'
+        $script:Text | Should -Not -Match 'function Show-PlanTable'
+        $script:Text | Should -Not -Match 'function Show-ResultTable'
     }
 
-    It 'Plan and result output are readable text (no box drawing)' {
-        $script:Text | Should -Match 'Write-Log "Plan:"'
-        $script:Text | Should -Match 'Write-Log "Results:"'
+    It 'Output is readable text (no box drawing, no repeated tables)' {
+        $script:Text | Should -Not -Match 'Write-Log "Plan:"'
+        $script:Text | Should -Not -Match 'Write-Log "Results:"'
         $script:Text | Should -Not -Match '╔|╚|║'
     }
 
-    It 'Prints detected package names under the plan rows, not only counts' {
-        $script:Text | Should -Match 'if \(\$row\.Items\)'
+    It 'Prints detected package names once, where they are found' {
         $script:Text | Should -Match 'Write-Log "      - \$item"'
+        $script:Text | Should -Match 'Show-PlanItems -Component ''pip packages'''
+        $script:Text | Should -Match 'Show-PlanItems -Component ''pipx'''
+        $script:Text | Should -Match 'Show-PlanItems -Component ''npm packages'''
         $script:Text | Should -Match '\$planRow\.Items = @\(\$outdated'
         $script:Text | Should -Match '\$planRow\.Items = \$pipxInstalledNames'
         $script:Text | Should -Match '\$planRow\.Items = @\(\$npmOutdated'
@@ -213,7 +217,7 @@ Describe 'Update-Components two-phase tables' {
     }
 
     It 'Highlights update-available rows and counts phase 2 successes' {
-        $script:Text | Should -Match '\$level = if \(\$row\.Action -eq ''Update available''\) \{ ''UPDATE'' \}'
+        $script:Text | Should -Match '\$liveLevel = if \(\$Action -eq ''Update available''\) \{ ''UPDATE'' \}'
         $script:Text | Should -Match '\$applied = @\(\$ResultRows \| Where-Object \{ \$plannedNames -contains \$_.Component -and \$_.Status -in @\(''Updated'', ''Up to date''\) \}\)'
         $script:Text | Should -Match '2/2 \$\(\$applied\.Count\) of \$\(\$planned\.Count\) component update\(s\)'
     }
@@ -222,6 +226,15 @@ Describe 'Update-Components two-phase tables' {
         $script:Text | Should -Match '1/2 Checking'
         $script:Text | Should -Match '2/2 Applying'
         $script:Text | Should -Match 'Python/winget|pip|npm|Node\.js'
+    }
+
+    It 'Streams one live line per component without repeating it at the end' {
+        $script:Text | Should -Match 'Write-Log "    \$\(\$Component\): \$\(\$Action\)\$range\$detail" \$liveLevel'
+        $script:Text | Should -Match 'Write-Log "    \$\(\$Component\): \$\(\$Status\) \[\$after\]\$detail" \$rowLevel'
+        $script:Text | Should -Match '\$planned = @\(\$script:Plan \| Where-Object \{ \$_.Component -eq \$Component -and \$_.Action -eq ''Update available'' \}\)'
+        $script:Text | Should -Match 'if \(\$planned\.Count -eq 0\) \{ return \}'
+        $script:Text | Should -Match 'live progress line'
+        $script:Text | Should -Match 'Everything else was already shown in phase 1; repeating it is noise'
     }
 }
 

@@ -84,13 +84,13 @@ Repair-specific logging:
 - npm packages: `npm outdated -g --json` → array of `{name, current, wanted, latest}`
 - Host tools: `gitleaks`, `actionlint`, and `lychee` via `winget list --id <ID> --exact`; PowerShell 7 via `winget list --id Microsoft.PowerShell --exact` (latest 7.x); Pester via `Find-Module Pester` (PSGallery latest)
 - Dotted versions are compared component-wise with missing components read as zero; an update is planned only when the target is strictly newer (`7.7.0` equals `7.7.0.0`)
-- Builds plan table with columns: Component, Action, Current, Target, Details. Detected packages (pip, outdated pip/npm packages, pipx-managed apps) are also listed by name and version on indented lines under their plan row, so a count is never the only evidence.
-- Closes the phase with `1/2 Found N update(s): ...`, naming every component whose action is `Update available`; those rows and the closing line are magenta.
+- Prints one live line per component as soon as its check ends (`Set-Plan`), with action, current/target versions, and details. No closing plan table repeats those lines. Detected package names are printed once, at detection time, on indented lines (`Show-PlanItems`); the JSON report still carries the full `Items` arrays.
+- Closes the phase with `1/2 Found N update(s): ...`, naming every component whose action is `Update available`; the actionable component lines and the closing line are magenta.
 
 **Phase 2 — Execution (Result)**:
 - Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements` for runtimes, host tools, and PowerShell 7; `Update-Module Pester -Force` for Pester; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; and `npm install --global <pkg>@<latest>` for outdated globals
 - Tracks before/after versions per component
-- Builds result table with columns: Component, Status, Before, After
+- Prints a live result line only for components that had a planned update (`Set-Result`), using the same status colors as phase 1. Components that were already up to date were shown in phase 1 and are not printed again. No closing result table repeats those lines.
 - Closes the phase with `2/2 X of Y component update(s) applied successfully`, counting only planned rows that ended `Updated` or `Up to date`; a partial or error row lowers the count and the line is yellow.
 - Overall failure tracking; exits 0 on full success, 1 otherwise
 
@@ -201,13 +201,13 @@ kapsar:
 - npm paketleri: `npm outdated -g --json` → `{name, current, wanted, latest}` dizisi
 - Ana makine araçları: `gitleaks`, `actionlint` ve `lychee` `winget list --id <ID> --exact` ile; PowerShell 7 `winget list --id Microsoft.PowerShell --exact` ile (en son 7.x); Pester `Find-Module Pester` ile (PSGallery en son)
 - Noktalı sürümler bileşen bileşen karşılaştırılır; eksik bileşenler sıfır sayılır ve yalnızca hedef kesin olarak daha yeniyse güncelleme planlanır (`7.7.0` ile `7.7.0.0` eşittir)
-- Plan tablosu oluşturur: Bileşen, Eylem, Mevcut, Hedef, Detay sütunları. Tespit edilen paketler (pip, eski pip/npm paketleri, pipx yönetimli uygulamalar) kendi plan satırının altında girintili satırlarda adı ve sürümüyle de listelenir; sayı tek kanıt olarak kalmaz.
-- Aşamayı `1/2 Found N update(s): ...` satırıyla kapatır ve eylemi `Update available` olan her bileşeni adıyla sayar; bu satırlar ve kapanış satırı macentadır.
+- Her bileşenin kontrolü biter bitmez o bileşen için tek canlı satır yazı (`Set-Plan`): eylem, mevcut/hedef sürümler ve detaylar. Sonunda aynı satırları tekrarlayan plan tablosu yok. Tespit edilen paket adları yalnızca tespit anında girintili satırlarda yazılır (`Show-PlanItems`); JSON raporu tam `Items` dizilerini taşır.
+- Aşamayı `1/2 Found N update(s): ...` satırıyla kapatır ve eylemi `Update available` olan her bileşeni adıyla sayar; eylem gerektiren bileşen satırları ve kapanış satırı macentadır.
 
 **Aşama 2 — Yürütme (Sonuç)**:
 - Plan başına güncellemeleri uygular: çalışma zamanları, ana makine araçları ve PowerShell 7 için `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`; Pester için `Update-Module Pester -Force`; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; eski kalan global paketler için `npm install --global <pkg>@<latest>`
 - Bileşen başına önceki/sonraki sürümleri takip eder
-- Sonuç tablosu oluşturur: Bileşen, Durum, Önceki, Sonraki sütunları
+- Yalnızca planlanmış güncellemesi olan bileşenler için canlı sonuç satırı yazı (`Set-Result`); 1/2'de zaten görülen güncel bileşenler tekrar basılmaz. Sonunda aynı satırları tekrarlayan sonuç tablosu yok.
 - Aşamayı `2/2 X of Y component update(s) applied successfully` satırıyla kapatır; yalnızca `Updated` veya `Up to date` ile biten plan satırlarını sayar; kısmi veya hatalı satır sayıyı düşürür ve satır sarı olur.
 - Genel hata takibi; tam başarıda 0, aksi halde 1 ile çıkar
 
