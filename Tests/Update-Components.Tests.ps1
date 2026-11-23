@@ -218,6 +218,18 @@ Describe 'Update-Components logging and structure' {
         $script:Text | Should -Match 'Get-Date -Format'
     }
 
+    It 'Mirrors each rendered line to the launcher log file' {
+        $script:Text | Should -Match '\[string\]\$LogPath'
+        $script:Text | Should -Match '\[System\.IO\.File\]::AppendAllText'
+    }
+
+    It 'Colors step, success, warning, and error levels' {
+        $script:Text | Should -Match "'STEP'\s+\{ 'Cyan' \}"
+        $script:Text | Should -Match "'OK'\s+\{ 'Green' \}"
+        $script:Text | Should -Match "'WARN'\s+\{ 'Yellow' \}"
+        $script:Text | Should -Match "'ERROR'\s+\{ 'Red' \}"
+    }
+
     It 'Defines Test-Command helper' {
         $script:Text | Should -Match 'function Test-Command'
     }

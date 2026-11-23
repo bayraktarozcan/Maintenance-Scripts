@@ -10,7 +10,7 @@ The product of this repository is the `Scripts/` directory — the maintenance l
 
 ### Shared Launcher Harness
 
-All four `.bat` files follow the same harness, verified by
+All five `.bat` files follow the same harness, verified by
 `Tests/Bug-Report.Tests.ps1`; `Tests/Repair-Windows.Tests.ps1` covers the
 Repair-specific logging:
 
@@ -22,14 +22,15 @@ Repair-specific logging:
    `%TEMP%\<Name>` when the folder cannot be created.
 3. Stamp the log file with a UTF-8 BOM and append the run to
    `index.txt` (the per-folder run ledger).
-4. Run each numbered step to a `%TEMP%` scratch file, then mirror it to
-   both the console (`type`) and the log file, so console and log output
-   are identical. The scratch file is deleted afterwards.
+4. Run each numbered step and mirror it to both console and log. The
+   DISM/SFC/net/winget launchers capture each step in a `%TEMP%` scratch file
+   and `type` it afterwards. `Update-Components.bat` instead calls the
+   updater directly with `-LogPath`; the updater appends every rendered line
+   to the log as it prints it, so output is live and console colors survive.
 5. Capture the workload exit code(s) and finish with `exit /b %EXITCODE%`,
    so a caller or scheduled task can detect failure. Launchers with several
    steps exit 1 when any step returned a nonzero code. `Update-Components.bat`
-   buffers the updater output to a scratch file instead of piping it, so the
-   captured code belongs to the updater, not to the logging process.
+   invokes the updater directly, so the captured code is the updater's own.
 
 ### Per-Script Pipelines
 
@@ -66,6 +67,7 @@ Repair-specific logging:
 - `Update-Components.bat` (launcher for `Tools/Update-Components.ps1`): resolves the PowerShell engine, sets up logging, forwards any arguments (including `-Check`), then calls the PS script which runs a two-phase update:
   1. **Detection phase**: checks `winget` for Python/Node.js runtime updates, `pip`/`npm` for package manager self-updates, `pip list --outdated --format=json` and `npm outdated -g --json` for global packages, and `pipx list --json` + `pip index versions` for pipx itself and pipx-managed packages. Builds a plan table.
   2. **Execution phase**: applies updates and builds a result table. Runs entirely in user scope; never self-elevates. Supports `-Check` dry-run mode that shows the plan and exits.
+  Output streams live: the launcher passes `-LogPath`, the updater appends every line to the log as it prints it, and console colors mark steps (cyan), successes (green), warnings (yellow), and errors (red).
   Network activity: `winget list --id`, `pip`/`npm`/`pipx` registry queries.
 
 ### Component Updater Engine
@@ -91,7 +93,7 @@ Repair-specific logging:
 - Overall failure tracking; exits 0 on full success, 1 otherwise
 
 **Conventions**:
-- UTF-8 BOM logs under `Logs/Update-Components/` with `index.txt` ledger
+- UTF-8 BOM logs under `Logs/Update-Components/` with `index.txt` ledger. The launcher stamps the BOM; the updater appends plain UTF-8 without a second one, so colors stay console-only and the log stays diffable.
 - No elevation; all commands run in user scope
 - `-Check` mode: runs Phase 1 only, shows plan, exits 0
 - The result collector is a fixed twelve-row shape (`$script:ResultComponentNames` is its single source of truth). `Assert-ResultCollector` checks that shape and non-empty `Component`/`Status` fields before every `Set-Result` and before rendering; a violation throws and the run exits nonzero instead of printing an empty `Results` table. A violation terminates before `Show-ResultTable` and before the JSON report is written, so `-ReportPath` produces no file in that failure mode: the `[ResultCollector]` error line and the nonzero exit code are the CI signal. Command exit codes are held in `$commandExit`, never `$result`, because PowerShell variable names are case-insensitive and a script-scope `$result` would rebind `$script:Result`.
@@ -120,7 +122,7 @@ Bu deponun ürünü `Scripts/` dizinidir — kullanıcıların çalıştırdığ
 
 ### Ortak Başlatıcı İskeleti
 
-Dört `.bat` dosyası da `Tests/Bug-Report.Tests.ps1` ile doğrulanan aynı
+Beş `.bat` dosyası da `Tests/Bug-Report.Tests.ps1` ile doğrulanan aynı
 iskeleti izler; `Tests/Repair-Windows.Tests.ps1` Repair'a özgü günlüklemeyi
 kapsar:
 
@@ -132,15 +134,17 @@ kapsar:
    `%TEMP%\<Ad>` yedeğine düş.
 3. Günlük dosyasına UTF-8 BOM damgala ve koşuyu `index.txt`
    dosyasına işle (klasör başına koşu dökümü).
-4. Numaralı her adımı `%TEMP%` altındaki geçici dosyaya çalıştır, sonra
-   hem ekrana (`type`) hem günlüğe aynala; böylece ekran ve günlük
-   çıktısı birebir aynı olur. Geçici dosya sonra silinir.
+4. Numaralı her adımı çalıştır ve hem ekrana hem günlüğe aynala.
+   DISM/SFC/net/winget başlatıcıları her adımı `%TEMP%` altındaki geçici
+   dosyaya yazıp sonra `type` eder. `Update-Components.bat` bunun yerine
+   güncelleyiciyi `-LogPath` ile doğrudan çağırır; güncelleyici her satırı
+   bastığı anda günlüğe de ekler, böylece çıktı canlı akar ve konsol
+   renkleri korunur.
 5. İş yükünün çıkış kodunu yakala ve `exit /b %EXITCODE%` ile bit; böylece
    çağıran işlem veya Zamanlayıcı başarısızlığı görebilir. Birden fazla
    adımı olan başlatıcı, herhangi bir adım sıfırdan farklı döndüğünde 1 ile
-   çıkar. `Update-Components.bat`, güncelleyici çıktısını pipe yerine
-   geçici dosyaya yazar; yakalanan kod logger'ın değil güncelleyicinin
-   kodudur.
+   çıkar. `Update-Components.bat` güncelleyiciyi doğrudan çağırdığı için
+   yakalanan kod güncelleyicinin kendi kodudur.
 
 ### Betik Başına Hatlar
 
@@ -178,6 +182,7 @@ kapsar:
 - `Update-Components.bat` (`Tools/Update-Components.ps1` başlatıcısı): PowerShell motorunu çözümler, günlüklemeyi kurar, bağımsız değişkenleri (`-Check` dâhil) iletir, PS betiğini çağırır. PS betiği iki aşamalı güncelleme çalıştırır:
   1. **Tespit aşaması**: Python/Node.js çalışma zamanı güncellemeleri için `winget list --id`, pip/npm için paket yöneticisi kendini-güncelleme, `pip list --outdated --format=json` ve `npm outdated -g --json` ile global paketler, `pipx list --json` + `pip index versions` ile pipx kendi kendine ve pipx yönetimli paketler. Plan tablosu oluşturur.
   2. **Yürütme aşaması**: Güncellemeleri uygular ve sonuç tablosu oluşturur. Tamamen kullanıcı kapsamında koşur; asla kendini yükseltmez. `-Check` kuru çalıştırma (dry-run) modu planı gösterip çıkar.
+  Çıktı canlı akar: başlatıcı `-LogPath` iletir, güncelleyici her satırı bastığı anda günlüğe ekler; konsol renkleri adımları (camgöbeği), başarıları (yeşil), uyarıları (sarı) ve hataları (kırmızı) işaretler.
   Ağ etkinliği: `winget list --id`, `pip`/`npm`/`pipx` kayıt sorguları.
 
 ### Bileşen Güncelleyici Motoru
@@ -203,7 +208,7 @@ kapsar:
 - Genel hata takibi; tam başarıda 0, aksi halde 1 ile çıkar
 
 **Kurallar**:
-- `Logs/Update-Components/` altına UTF-8 BOM'lu günlükler ve `index.txt` defteri
+- `Logs/Update-Components/` altına UTF-8 BOM'lu günlükler ve `index.txt` defteri. BOM'u başlatıcı damgalar; güncelleyici ikinci bir BOM eklemeden düz UTF-8 yazar, böylece renkler yalnızca konsolda kalır ve günlük karşılaştırılabilir olur.
 - Yükseltme yok; tüm komutlar kullanıcı kapsamında koşur
 - `-Check` modu: sadece Aşama 1 çalışır, plan gösterilir, 0 ile çıkar
 - Sonuç toplayıcı sabit on iki satırlık bir yapıdır (`$script:ResultComponentNames` tek doğruluk kaynağıdır). `Assert-ResultCollector` bu yapıyı ve boş olmayan `Component`/`Status` alanlarını her `Set-Result` çağrısından önce ve çizimden önce denetler; ihlal durumunda hata verilir ve çalışma, boş `Results` tablosu basmak yerine sıfırdan farklı kodla çıkar. İhlal, `Show-ResultTable` ve JSON raporundan önce sonlandırır; bu hata modunda `-ReportPath` dosya üretmez, CI sinyali `[ResultCollector]` hata satırı ve sıfırdan farklı çıkış kodudur. Komut çıkış kodları `$commandExit` içinde tutulur, asla `$result` içinde değil; çünkü PowerShell değişken adları büyük/küçük harfe duyarsızdır ve betik kapsamındaki bir `$result`, `$script:Result` dosyasını yeniden bağlar.

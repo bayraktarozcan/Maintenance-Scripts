@@ -10,6 +10,10 @@
 
     Follows the project conventions: no elevation, per-user scope only, UTF-8 output.
 
+.PARAMETER LogPath
+    Appends every rendered line to this file as plain UTF-8 while the console keeps its colors.
+    The launcher passes its log file so output streams live instead of being buffered.
+
 .EXAMPLE
     powershell -NoProfile -File Tools/Update-Components.ps1
 
@@ -23,10 +27,30 @@
 [CmdletBinding()]
 param(
     [switch]$Check,
-    [string]$ReportPath
+    [string]$ReportPath,
+    [string]$LogPath
 )
 
 $ErrorActionPreference = 'Stop'
+
+# The launcher owns the log file (it stamps the BOM and writes the header).
+# Every rendered line is appended here as plain UTF-8, one write per line, so
+# an external reader can tail the file while the run is still in progress.
+$script:LogFile = $null
+$script:LogWriteWarned = $false
+$script:LogEncoding = New-Object System.Text.UTF8Encoding($false)
+if ($LogPath) {
+    try {
+        $script:LogFile = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($LogPath)
+        $logDirectory = [System.IO.Path]::GetDirectoryName($script:LogFile)
+        if ($logDirectory -and -not (Test-Path -LiteralPath $logDirectory)) {
+            $null = New-Item -ItemType Directory -Path $logDirectory -Force
+        }
+    } catch {
+        $script:LogFile = $null
+        Write-Host "WARN: cannot open log file $LogPath - $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+}
 
 function Get-LatestFromIndexVersions {
     param([string]$Text)
@@ -114,18 +138,35 @@ function Write-Log {
 
     $timestamp = Get-Date -Format 'HH:mm:ss'
 
-    if ($Level -eq 'DEBUG') {
+    # The log keeps the established plain-text shape: [time] message for
+    # normal lines, [time] [LEVEL] message for warnings and errors.
+    $tagLevel = ($Level -eq 'WARN' -or $Level -eq 'ERROR')
+    $line = if ($tagLevel) { "[$timestamp] [$Level] $Message" } else { "[$timestamp] $Message" }
 
-        Write-Host "[$timestamp] $Message" -ForegroundColor DarkGray
+    $color = switch ($Level) {
+        'DEBUG' { 'DarkGray' }
+        'STEP'  { 'Cyan' }
+        'OK'    { 'Green' }
+        'WARN'  { 'Yellow' }
+        'ERROR' { 'Red' }
+        default { $null }
+    }
 
-    } elseif ($Level -eq 'WARN' -or $Level -eq 'ERROR') {
-
-        Write-Host "[$timestamp] [$Level] $Message" -ForegroundColor Yellow
-
+    if ($color) {
+        Write-Host $line -ForegroundColor $color
     } else {
+        Write-Host $line
+    }
 
-        Write-Host "[$timestamp] $Message"
-
+    if ($script:LogFile) {
+        try {
+            [System.IO.File]::AppendAllText($script:LogFile, $line + [Environment]::NewLine, $script:LogEncoding)
+        } catch {
+            if (-not $script:LogWriteWarned) {
+                $script:LogWriteWarned = $true
+                Write-Host "[$timestamp] [WARN] Log write failed: $($_.Exception.Message)" -ForegroundColor Yellow
+            }
+        }
     }
 
 }
@@ -580,7 +621,7 @@ function Show-PlanTable {
 
     Write-Log ""
 
-    Write-Log "Plan:"
+    Write-Log "Plan:" 'STEP'
 
     foreach ($row in $script:Plan) {
 
@@ -602,7 +643,7 @@ function Show-ResultTable {
 
     Write-Log ""
 
-    Write-Log "Results:"
+    Write-Log "Results:" 'STEP'
 
     foreach ($row in $script:Result) {
 
@@ -610,7 +651,14 @@ function Show-ResultTable {
 
         $after = if ($row.After) { $row.After } elseif ($row.Before) { $row.Before } else { '' }
 
-        Write-Log "  * $($row.Component): $($row.Status)  [$after]$detail"
+        $rowLevel = switch -Regex ($row.Status) {
+            '^(Updated|Up to date)$' { 'OK'; break }
+            '^Partially updated$' { 'WARN'; break }
+            '^Error$' { 'ERROR'; break }
+            default { 'INFO' }
+        }
+
+        Write-Log "  * $($row.Component): $($row.Status)  [$after]$detail" $rowLevel
 
     }
 
@@ -618,13 +666,13 @@ function Show-ResultTable {
 
 }
 
-Write-Log "Component updater" 'INFO'
+Write-Log "Component updater" 'STEP'
 if ($Check) { Write-Log "CHECK MODE: no changes will be made" 'INFO' }
 
 # ============================================================
 # PHASE 1: DETECTION — Build the PLAN (what WILL be updated)
 # ============================================================
-Write-Log "1/2 Checking..." 'INFO'
+Write-Log "1/2 Checking..." 'STEP'
 
 # --- Python runtime ---
 Write-Log "  - Python/winget" 'INFO'
@@ -883,7 +931,7 @@ if ($Check) {
 # ============================================================
 # PHASE 2: EXECUTION — Apply updates and build RESULTS
 # ============================================================
-Write-Log "2/2 Applying..." 'INFO'
+Write-Log "2/2 Applying..." 'STEP'
 
 $script:OverallFailed = $false
 
@@ -891,7 +939,7 @@ $script:OverallFailed = $false
 $pyRow = $script:Plan | Where-Object { $_.Component -eq 'Python runtime' }
 if ($pyRow.Action -eq 'Update available') {
     $pyExecId = if ($pyWingetId) { $pyWingetId } else { 'Python.Python' }
-    Write-Log "Updating Python runtime via winget ($pyExecId)..." 'INFO'
+    Write-Log "Updating Python runtime via winget ($pyExecId)..." 'STEP'
     $pyUpgrade = Run-Command 'winget' @('upgrade', '--id', $pyExecId, '--exact', '--accept-source-agreements', '--accept-package-agreements') "Python runtime ($pyExecId)"
     $pyAfter = Get-PythonVersion
     if ($pyUpgrade -eq 0) {
@@ -908,7 +956,7 @@ if ($pyRow.Action -eq 'Update available') {
 # --- pip ---
 $pipRow = $script:Plan | Where-Object { $_.Component -eq 'pip' }
 if ($pipRow.Action -eq 'Update available') {
-    Write-Log "Upgrading pip..." 'INFO'
+    Write-Log "Upgrading pip..." 'STEP'
     $pipUpgrade = Run-Command 'py' @('-m', 'pip', 'install', '--upgrade', 'pip') 'pip upgrade'
     $pipAfter = Get-PipVersion
     if ($pipUpgrade -eq 0) {
@@ -925,7 +973,7 @@ if ($pipRow.Action -eq 'Update available') {
 # --- pip packages ---
 $pipPkgRow = $script:Plan | Where-Object { $_.Component -eq 'pip packages' }
 if ($pipPkgRow.Action -eq 'Update available') {
-    Write-Log "Checking for outdated pip packages..." 'INFO'
+    Write-Log "Checking for outdated pip packages..." 'STEP'
     $outdated = Get-PipOutdated
     if ($outdated -and $outdated.Count -gt 0) {
         $pipPkgDetails = @()
@@ -933,7 +981,7 @@ if ($pipPkgRow.Action -eq 'Update available') {
             $name = $pkg.name
             $fromVer = $pkg.version
             $toVer = $pkg.latest_version
-            Write-Log "Upgrading $name ($fromVer -> $toVer)..." 'INFO'
+            Write-Log "Upgrading $name ($fromVer -> $toVer)..." 'STEP'
             $commandExit = Run-Command 'py' @('-m', 'pip', 'install', '--upgrade', $name) "pip upgrade $name"
             if ($commandExit -eq 0) {
                 $pipPkgDetails += "$name $fromVer→$toVer"
@@ -954,7 +1002,7 @@ if ($pipPkgRow.Action -eq 'Update available') {
 # --- pipx ---
 $pipxRow = $script:Plan | Where-Object { $_.Component -eq 'pipx' }
 if ($pipxRow.Action -eq 'Update available') {
-    Write-Log "Checking for pipx and pipx-managed package updates..." 'INFO'
+    Write-Log "Checking for pipx and pipx-managed package updates..." 'STEP'
     $pipxPkgs = Get-PipxList
     $pipxPkgsDetails = @()
     $pipxFailed = $false
@@ -967,7 +1015,7 @@ if ($pipxRow.Action -eq 'Update available') {
     } catch { }
     $pipxLatest = Get-PipxLatestVersion -Package 'pipx'
     if ($pipxLatest -and $pipxLatest -ne $pipxCurrent) {
-        Write-Log "Upgrading pipx ($pipxCurrent -> $pipxLatest)..." 'INFO'
+        Write-Log "Upgrading pipx ($pipxCurrent -> $pipxLatest)..." 'STEP'
         $commandExit = Run-Command 'py' @('-m', 'pipx', 'upgrade', 'pipx') "pipx upgrade pipx"
         if ($commandExit -eq 0) {
             $pipxPkgsDetails += "pipx $pipxCurrent→$pipxLatest"
@@ -986,7 +1034,7 @@ if ($pipxRow.Action -eq 'Update available') {
         $pipxOutdatedPkgs += $pkg
     }
     if ($pipxOutdatedPkgs -and $pipxOutdatedPkgs.Count -gt 0) {
-        Write-Log "Upgrading $($pipxOutdatedPkgs.Count) pipx package(s) via pipx upgrade-all..." 'INFO'
+        Write-Log "Upgrading $($pipxOutdatedPkgs.Count) pipx package(s) via pipx upgrade-all..." 'STEP'
         $commandExit = Run-Command 'py' @('-m', 'pipx', 'upgrade-all') "pipx upgrade-all"
         if ($commandExit -eq 0) {
             $pipxPkgsDetails += ($pipxOutdatedPkgs | ForEach-Object { "$($_.name) $($_.version)→$(Get-PipxLatestVersion -Package $_.name)" }) -join ', '
@@ -1007,7 +1055,7 @@ if ($pipxRow.Action -eq 'Update available') {
 $nodeRow = $script:Plan | Where-Object { $_.Component -eq 'Node.js runtime' }
 if ($nodeRow.Action -eq 'Update available') {
     $nodeExecId = if ($nodeWingetId) { $nodeWingetId } else { 'OpenJS.NodeJS.LTS' }
-    Write-Log "Checking for Node.js LTS update via winget ($nodeExecId)..." 'INFO'
+    Write-Log "Checking for Node.js LTS update via winget ($nodeExecId)..." 'STEP'
     $wingetUpgrade = Run-Command 'winget' @('upgrade', '--id', $nodeExecId, '--exact', '--accept-source-agreements', '--accept-package-agreements') 'Node.js LTS winget upgrade'
     $nodeAfter = Get-NodeVersion
     if ($wingetUpgrade -eq 0) {
@@ -1024,7 +1072,7 @@ if ($nodeRow.Action -eq 'Update available') {
 # --- npm ---
 $npmRow = $script:Plan | Where-Object { $_.Component -eq 'npm' }
 if ($npmRow.Action -eq 'Update available') {
-    Write-Log "Upgrading npm..." 'INFO'
+    Write-Log "Upgrading npm..." 'STEP'
     $npmUpgrade = Run-Command 'npm' @('install', '--global', 'npm@latest') 'npm self-upgrade'
     $npmAfter = Get-NpmVersion
     if ($npmUpgrade -eq 0) {
@@ -1041,7 +1089,7 @@ if ($npmRow.Action -eq 'Update available') {
 # --- npm packages ---
 $npmPkgRow = $script:Plan | Where-Object { $_.Component -eq 'npm packages' }
 if ($npmPkgRow.Action -eq 'Update available') {
-    Write-Log "Updating global npm packages to latest..." 'INFO'
+    Write-Log "Updating global npm packages to latest..." 'STEP'
     $npmOutdatedNow = Get-NpmOutdatedGlobal
     $npmPkgDetails = @()
     $npmPkgFailed = $false
@@ -1051,7 +1099,7 @@ if ($npmPkgRow.Action -eq 'Update available') {
             $fromVer = [string]$pkg.current
             $toVer = [string]$pkg.latest
             if (-not $name -or -not $toVer) { continue }
-            Write-Log "Upgrading $name ($fromVer -> $toVer)..." 'INFO'
+            Write-Log "Upgrading $name ($fromVer -> $toVer)..." 'STEP'
             $commandExit = Run-Command 'npm' @('install', '--global', "$name@$toVer") "npm upgrade $name"
             if ($commandExit -eq 0) { $npmPkgDetails += "$name $fromVer→$toVer" }
             else { $npmPkgDetails += "$name FAILED"; $npmPkgFailed = $true; $script:OverallFailed = $true }
@@ -1079,7 +1127,7 @@ foreach ($tool in @('gitleaks', 'actionlint', 'lychee', 'PowerShell 7')) {
         continue
     }
     $hid = if ($tool -eq 'PowerShell 7') { 'Microsoft.PowerShell' } else { $script:HostToolWingetIds[$tool] }
-    Write-Log "Upgrading $tool via winget ($hid)..." 'INFO'
+    Write-Log "Upgrading $tool via winget ($hid)..." 'STEP'
     $hUpgrade = Run-Command 'winget' @('upgrade', '--id', $hid, '--exact', '--accept-source-agreements', '--accept-package-agreements') "$tool winget upgrade"
     if ($hUpgrade -eq 0) {
         Set-Result $tool 'Updated' $hRow.Current $hRow.Target
@@ -1092,7 +1140,7 @@ foreach ($tool in @('gitleaks', 'actionlint', 'lychee', 'PowerShell 7')) {
 # --- Pester (Update-Module to latest) ---
 $pesterRow = $script:Plan | Where-Object { $_.Component -eq 'Pester' }
 if ($pesterRow.Action -eq 'Update available') {
-    Write-Log "Updating Pester to latest from PSGallery..." 'INFO'
+    Write-Log "Updating Pester to latest from PSGallery..." 'STEP'
     $pesterUpgrade = Run-Command 'pwsh' @('-NoProfile', '-Command', 'Update-Module Pester -Force -ErrorAction Stop') 'Pester Update-Module'
     if ($pesterUpgrade -eq 0) {
         Set-Result 'Pester' 'Updated' $pesterRow.Current $pesterRow.Target
@@ -1113,11 +1161,11 @@ Show-ResultTable
 $script:ExecutionCompleted = $true
 Write-UpdateComponentsReport -ExecutionCompleted:$true | Out-Null
 
-Write-Log "Summary" 'INFO'
+Write-Log "Summary" 'STEP'
 if ($script:OverallFailed) {
     Write-Log "Some updates failed or were skipped; review the log above" 'WARN'
     exit 1
 } else {
-    Write-Log "All updates completed successfully" 'INFO'
+    Write-Log "All updates completed successfully" 'OK'
     exit 0
 }

@@ -1,7 +1,7 @@
 ﻿# Pester 5 static tests for Scripts/Update-Components.bat.
 # Runtime behavior is verified manually; these tests pin the standing
 # contract: no self-elevation, no execution-policy bypass, argument
-# forwarding, and the log skeleton. Never executes the script.
+# forwarding, live streaming, and the log skeleton. Never executes the script.
 
 BeforeAll {
     $script:BatPath = Join-Path $PSScriptRoot '..\Scripts\Update-Components.bat'
@@ -36,6 +36,12 @@ Describe 'Update-Components.bat log skeleton' {
 
     It 'Forwards arguments to Tools/Update-Components.ps1' {
         $script:Text | Should -Match 'Tools\\Update-Components\.ps1'
-        $script:Text | Should -Match '-File "%SCRIPT%" %\*'
+        $script:Text | Should -Match '-File "%SCRIPT%" -LogPath "%LOG%" %\*'
+    }
+
+    It 'Streams updater output live instead of buffering it to a scratch file' {
+        $script:Text | Should -Not -Match '>\s*"%OUT%"'
+        $script:Text | Should -Not -Match 'type\s+"%OUT%"'
+        $script:Text | Should -Match '-LogPath\s+"%LOG%"'
     }
 }

@@ -26,17 +26,13 @@ if not exist "%INDEX%" >>"%INDEX%" echo Script: Update-Components - Dir: %LOGDIR
 echo Index: %INDEX%
 >>"%LOG%" echo Index: %INDEX%
 set "EXITCODE=0"
-set "OUT=%TEMP%\uc_out_%RANDOM%.tmp"
 set "SCRIPT=%~dp0..\Tools\Update-Components.ps1"
 echo.
 echo. >> "%LOG%"
 echo ^> Update-Components.ps1 %*
 >>"%LOG%" echo ^> Update-Components.ps1 %*
-"%PSEXE%" -NoProfile -File "%SCRIPT%" %* > "%OUT%" 2>&1
+"%PSEXE%" -NoProfile -File "%SCRIPT%" -LogPath "%LOG%" %*
 set "EXITCODE=%ERRORLEVEL%"
-type "%OUT%"
-type "%OUT%" >> "%LOG%" 2>&1
-del "%OUT%" >nul 2>&1
 echo.
 echo. >> "%LOG%"
 echo Exit code: %EXITCODE%
