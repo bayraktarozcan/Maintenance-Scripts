@@ -80,4 +80,28 @@ Describe 'LineEndings gate' {
         $code = $LASTEXITCODE
         $code | Should -Be 0
     }
+
+    It 'keeps the two line-ending declarations in agreement' {
+        $output = & $script:PsExe -NoProfile -File $script:Check -Root $script:Root 2>&1
+        $code = $LASTEXITCODE
+        $code | Should -Be 0
+        ($output -join "`n") | Should -Not -Match 'DECL MISMATCH'
+    }
+
+    It 'fails on a planted declaration disagreement' {
+        $logDir = Join-Path $script:Root 'Logs'
+        if (-not (Test-Path -LiteralPath $logDir)) { $null = New-Item -ItemType Directory -Path $logDir -Force }
+        $declDir = Join-Path $logDir ('decl-' + [guid]::NewGuid().ToString('N'))
+        $null = New-Item -ItemType Directory -Path $declDir -Force
+        try {
+            [IO.File]::WriteAllText((Join-Path $declDir '.gitattributes'), "*.py text eol=lf`n", (New-Object Text.UTF8Encoding($false)))
+            [IO.File]::WriteAllText((Join-Path $declDir '.editorconfig'), "[*]`nend_of_line = crlf`n", (New-Object Text.UTF8Encoding($false)))
+            $output = & $script:PsExe -NoProfile -File $script:Check -Root $declDir 2>&1
+            $code = $LASTEXITCODE
+            $code | Should -Be 1
+            ($output -join "`n") | Should -Match 'DECL MISMATCH \*.py'
+        } finally {
+            Remove-Item -LiteralPath $declDir -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
 }
