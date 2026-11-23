@@ -583,8 +583,7 @@ function Set-Plan {
         if ($Target)  { $idx.Target  = $Target }
         if ($Details) { $idx.Details = $Details }
     }
-    # Announce each component the moment its check finishes. The plan table at
-    # the end of phase 1 stays the complete record; this is the live progress line.
+    # Announce each component as its check ends; this is the only per-component line.
     $detail = if ($Details) { " ($Details)" } else { '' }
     $range = if ($Current -or $Target) { " [$Current -> $Target]" } else { '' }
     $liveLevel = if ($Action -eq 'Update available') { 'UPDATE' } else { 'INFO' }
@@ -651,6 +650,9 @@ function Show-PlanItems {
     # Package names are written where they are detected, not again in a
     # closing table. The JSON report still carries the full Items array.
     $row = @($script:Plan | Where-Object { $_.Component -eq $Component }) | Select-Object -First 1
+    # @($null) is a one-element array: without this guard an unknown component
+    # or an empty Items array would emit a blank "      - " line.
+    if (-not $row -or -not $row.Items) { return }
     foreach ($item in @($row.Items)) { Write-Log "      - $item" }
 }
 

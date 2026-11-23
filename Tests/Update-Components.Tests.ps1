@@ -1,7 +1,8 @@
 ﻿# Pester 5 static tests for Tools/Update-Components.ps1.
 # Runtime behavior is verified manually; these tests pin the standing
 # contract: no self-elevation, no execution-policy bypass, UTF-8 BOM logging,
-# -Check mode, two-phase Plan/Result tables, Python/Node runtime updates via winget,
+# -Check mode, two phases with one live line per component and a closing total,
+# Python/Node runtime updates via winget,
 # robust winget table parsing (--upgrade-available + fixed-width + honest Unknown status),
 # Python winget ID resolution (Get-PythonWingetId/Resolve-PythonWingetPackage),
 # pip JSON fallback text parsing, npm post-update recheck, and command patterns.
@@ -233,8 +234,45 @@ Describe 'Update-Components two-phase tables' {
         $script:Text | Should -Match 'Write-Log "    \$\(\$Component\): \$\(\$Status\) \[\$after\]\$detail" \$rowLevel'
         $script:Text | Should -Match '\$planned = @\(\$script:Plan \| Where-Object \{ \$_.Component -eq \$Component -and \$_.Action -eq ''Update available'' \}\)'
         $script:Text | Should -Match 'if \(\$planned\.Count -eq 0\) \{ return \}'
-        $script:Text | Should -Match 'live progress line'
+        $script:Text | Should -Match 'only per-component line'
         $script:Text | Should -Match 'Everything else was already shown in phase 1; repeating it is noise'
+    }
+
+    It 'Emits item lines only for a component that has items' {
+        $tokens = $null; $errors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput($script:Text, [ref]$tokens, [ref]$errors)
+        $errors | Should -BeNullOrEmpty
+        $wanted = @('Write-Log', 'Show-PlanItems')
+        $funcs = @($ast.FindAll({ param($n)
+            $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $wanted -contains $n.Name
+        }, $true))
+        $funcs.Count | Should -Be 2
+        $snippet = ($funcs | ForEach-Object { $_.Extent.Text }) -join "`n"
+
+        $savedLog = Get-Item -Path 'Function:\Write-Log' -ErrorAction SilentlyContinue
+        $savedPlan = Get-Variable -Name Plan -Scope Script -ErrorAction SilentlyContinue
+        try {
+            Invoke-Expression $snippet
+            function Write-Log { param([string]$Message, [string]$Level = 'INFO') [void]$script:CapturedItems.Add($Message) }
+            $script:CapturedItems = New-Object System.Collections.ArrayList
+            $script:Plan = @(
+                @{ Component = 'pip packages' }
+                @{ Component = 'pipx'; Items = @('ggshield 1.56.1') }
+            )
+
+            Show-PlanItems -Component 'pip packages'
+            $script:CapturedItems.Count | Should -Be 0
+            Show-PlanItems -Component 'unknown component'
+            $script:CapturedItems.Count | Should -Be 0
+            Show-PlanItems -Component 'pipx'
+            $script:CapturedItems.Count | Should -Be 1
+            $script:CapturedItems[0] | Should -BeExactly '      - ggshield 1.56.1'
+        } finally {
+            if ($null -ne $savedLog) { Set-Item -Path 'Function:\Write-Log' -Value $savedLog.ScriptBlock -Force }
+            else { Remove-Item -Path 'Function:\Write-Log' -ErrorAction SilentlyContinue }
+            if ($null -ne $savedPlan) { Set-Variable -Name Plan -Scope Script -Value $savedPlan.Value -Force }
+            else { Remove-Variable -Name Plan -Scope Script -ErrorAction SilentlyContinue }
+        }
     }
 }
 

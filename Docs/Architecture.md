@@ -65,14 +65,14 @@ Repair-specific logging:
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
   This script has network activity (delegated to `winget`).
 - `Update-Components.bat` (launcher for `Tools/Update-Components.ps1`): resolves the PowerShell engine, sets up logging, forwards any arguments (including `-Check`), then calls the PS script which runs a two-phase update:
-  1. **Detection phase**: checks `winget` for Python/Node.js runtime updates, `pip`/`npm` for package manager self-updates, `pip list --outdated --format=json` and `npm outdated -g --json` for global packages, and `pipx list --json` + `pip index versions` for pipx itself and pipx-managed packages. Builds a plan table.
-  2. **Execution phase**: applies updates and builds a result table. Runs entirely in user scope; never self-elevates. Supports `-Check` dry-run mode that shows the plan and exits.
+  1. **Detection phase**: checks `winget` for Python/Node.js runtime updates, `pip`/`npm` for package manager self-updates, `pip list --outdated --format=json` and `npm outdated -g --json` for global packages, and `pipx list --json` + `pip index versions` for pipx itself and pipx-managed packages. Prints one live line per component and closes with a total.
+  2. **Execution phase**: applies updates and prints one live line per planned component, then closes with a total. Runs entirely in user scope; never self-elevates. Supports `-Check` dry-run mode that shows the plan lines and total, then exits.
   Output streams live: the launcher passes `-LogPath`, the updater appends every line to the log as it prints it, and console colors mark steps (cyan), update-available rows (magenta), successes (green), warnings (yellow), and errors (red). Phase 1 closes with the number of updates found and their component names; phase 2 closes with how many planned component updates were applied.
   Network activity: `winget list --id`, `pip`/`npm`/`pipx` registry queries.
 
 ### Component Updater Engine
 
-`Tools/Update-Components.ps1` implements a two-phase update pipeline with structured logging and plan/result tables:
+`Tools/Update-Components.ps1` implements a two-phase update pipeline with structured logging, one live line per component, and a closing total per phase. The full plan/result data remains in the collectors and the JSON report:
 
 **Phase 1 — Detection (Plan)**:
 - Python runtime: `winget list --id Python.Python.X.Y --exact` → available version
@@ -97,8 +97,8 @@ Repair-specific logging:
 **Conventions**:
 - UTF-8 BOM logs under `Logs/Update-Components/` with `index.txt` ledger. The launcher stamps the BOM; the updater appends plain UTF-8 without a second one, so colors stay console-only and the log stays diffable.
 - No elevation; all commands run in user scope
-- `-Check` mode: runs Phase 1 only, shows plan, exits 0
-- The result collector is a fixed twelve-row shape (`$script:ResultComponentNames` is its single source of truth). `Assert-ResultCollector` checks that shape and non-empty `Component`/`Status` fields before every `Set-Result` and before rendering; a violation throws and the run exits nonzero instead of printing an empty `Results` table. A violation terminates before `Show-ResultTable` and before the JSON report is written, so `-ReportPath` produces no file in that failure mode: the `[ResultCollector]` error line and the nonzero exit code are the CI signal. Command exit codes are held in `$commandExit`, never `$result`, because PowerShell variable names are case-insensitive and a script-scope `$result` would rebind `$script:Result`.
+- `-Check` mode: runs Phase 1 only, prints the component lines and total, exits 0
+- The result collector is a fixed twelve-row shape (`$script:ResultComponentNames` is its single source of truth). `Assert-ResultCollector` checks that shape and non-empty `Component`/`Status` fields before every `Set-Result` and before the final total; a violation throws and the run exits nonzero rather than reporting a misleading total. A violation terminates before the final total and before the JSON report is written, so `-ReportPath` produces no file in that failure mode: the `[ResultCollector]` error line and the nonzero exit code are the CI signal. Command exit codes are held in `$commandExit`, never `$result`, because PowerShell variable names are case-insensitive and a script-scope `$result` would rebind `$script:Result`.
 - Winget "already up to date" negative exit codes treated as success
 - npm warning exit codes (1 with `npm warn` output) treated as success
 - `-ReportPath <file>` writes a UTF-8 JSON report (`schemaVersion` 1) with `mode`, `executionCompleted`, `host`, `plan`, `result`, `success`, and `exitCode`; `-Check -ReportPath ...` writes a check-mode report without applying changes
@@ -182,14 +182,14 @@ kapsar:
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
   Ağ etkinliği olan betiklerden biridir (`winget`'e delege edilir).
 - `Update-Components.bat` (`Tools/Update-Components.ps1` başlatıcısı): PowerShell motorunu çözümler, günlüklemeyi kurar, bağımsız değişkenleri (`-Check` dâhil) iletir, PS betiğini çağırır. PS betiği iki aşamalı güncelleme çalıştırır:
-  1. **Tespit aşaması**: Python/Node.js çalışma zamanı güncellemeleri için `winget list --id`, pip/npm için paket yöneticisi kendini-güncelleme, `pip list --outdated --format=json` ve `npm outdated -g --json` ile global paketler, `pipx list --json` + `pip index versions` ile pipx kendi kendine ve pipx yönetimli paketler. Plan tablosu oluşturur.
-  2. **Yürütme aşaması**: Güncellemeleri uygular ve sonuç tablosu oluşturur. Tamamen kullanıcı kapsamında koşur; asla kendini yükseltmez. `-Check` kuru çalıştırma (dry-run) modu planı gösterip çıkar.
+  1. **Tespit aşaması**: Python/Node.js çalışma zamanı güncellemeleri için `winget list --id`, pip/npm için paket yöneticisi kendini-güncelleme, `pip list --outdated --format=json` ve `npm outdated -g --json` ile global paketler, `pipx list --json` + `pip index versions` ile pipx kendi kendine ve pipx yönetimli paketler. Her bileşen için tek canlı satır yazıp faz toplamıyla kapanır.
+  2. **Yürütme aşaması**: Güncellemeleri uygular, planlanan her bileşen için tek canlı satır yazıp faz toplamıyla kapanır. Tamamen kullanıcı kapsamında koşur; asla kendini yükseltmez. `-Check` kuru çalıştırma (dry-run) modu bileşen satırlarını ve toplamı gösterip çıkar.
   Çıktı canlı akar: başlatıcı `-LogPath` iletir, güncelleyici her satırı bastığı anda günlüğe ekler; konsol renkleri adımları (camgöbeği), güncelleme bulunan satırları (macenta), başarıları (yeşil), uyarıları (sarı) ve hataları (kırmızı) işaretler. 1/2 aşaması bulunan güncelleme sayısı ve bileşen adlarıyla, 2/2 aşaması planlanan bileşen güncellemelerinden kaçının uygulandığıyla kapanır.
   Ağ etkinliği: `winget list --id`, `pip`/`npm`/`pipx` kayıt sorguları.
 
 ### Bileşen Güncelleyici Motoru
 
-`Tools/Update-Components.ps1` yapılandırılmış günlükleme ve plan/sonuç tabloları ile iki aşamalı güncelleme işlem hattı uygular:
+`Tools/Update-Components.ps1` yapılandırılmış günlükleme, bileşen başına tek canlı satır ve faz başına kapanış toplamı ile iki aşamalı güncelleme işlem hattı uygular. Tam plan/sonuç verisi toplayıcılarda ve JSON raporunda kalır:
 
 **Aşama 1 — Tespit (Plan)**:
 - Python çalışma zamanı: `winget list --id Python.Python.X.Y --exact` → mevcut sürüm
@@ -214,8 +214,8 @@ kapsar:
 **Kurallar**:
 - `Logs/Update-Components/` altına UTF-8 BOM'lu günlükler ve `index.txt` defteri. BOM'u başlatıcı damgalar; güncelleyici ikinci bir BOM eklemeden düz UTF-8 yazar, böylece renkler yalnızca konsolda kalır ve günlük karşılaştırılabilir olur.
 - Yükseltme yok; tüm komutlar kullanıcı kapsamında koşur
-- `-Check` modu: sadece Aşama 1 çalışır, plan gösterilir, 0 ile çıkar
-- Sonuç toplayıcı sabit on iki satırlık bir yapıdır (`$script:ResultComponentNames` tek doğruluk kaynağıdır). `Assert-ResultCollector` bu yapıyı ve boş olmayan `Component`/`Status` alanlarını her `Set-Result` çağrısından önce ve çizimden önce denetler; ihlal durumunda hata verilir ve çalışma, boş `Results` tablosu basmak yerine sıfırdan farklı kodla çıkar. İhlal, `Show-ResultTable` ve JSON raporundan önce sonlandırır; bu hata modunda `-ReportPath` dosya üretmez, CI sinyali `[ResultCollector]` hata satırı ve sıfırdan farklı çıkış kodudur. Komut çıkış kodları `$commandExit` içinde tutulur, asla `$result` içinde değil; çünkü PowerShell değişken adları büyük/küçük harfe duyarsızdır ve betik kapsamındaki bir `$result`, `$script:Result` dosyasını yeniden bağlar.
+- `-Check` modu: sadece Aşama 1 çalışır, bileşen satırları ve toplam gösterilir, 0 ile çıkar
+- Sonuç toplayıcı sabit on iki satırlık bir yapıdır (`$script:ResultComponentNames` tek doğruluk kaynağıdır). `Assert-ResultCollector` bu yapıyı ve boş olmayan `Component`/`Status` alanlarını her `Set-Result` çağrısından önce ve son toplamdan önce denetler; ihlal durumunda hata verilir ve çalışma yanıltıcı bir toplam basmak yerine sıfırdan farklı kodla çıkar. İhlal, son toplam ve JSON raporundan önce sonlandırır; bu hata modunda `-ReportPath` dosya üretmez, CI sinyali `[ResultCollector]` hata satırı ve sıfırdan farklı çıkış kodudur. Komut çıkış kodları `$commandExit` içinde tutulur, asla `$result` içinde değil; çünkü PowerShell değişken adları büyük/küçük harfe duyarsızdır ve betik kapsamındaki bir `$result`, `$script:Result` dosyasını yeniden bağlar.
 - Winget "zaten güncel" negatif çıkış kodları başarı sayılır
 - npm uyarı çıkış kodları (1 + `npm warn` çıktısı) başarı sayılır
 - `-ReportPath <dosya>` UTF-8 JSON raporu (`schemaVersion` 1) yazar: `mode`, `executionCompleted`, `host`, `plan`, `result`, `success`, `exitCode`; `-Check -ReportPath ...` değişiklik uygulamadan check modu raporu yazar
