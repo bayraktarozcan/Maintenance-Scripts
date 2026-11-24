@@ -105,7 +105,7 @@ Repair-specific logging:
 - Prints `Downloading: <component>...` (cyan) before each package-manager call (`Run-Command`), because child output is buffered to a string and would otherwise leave the screen silent during a long download; the raw command stays on the dim DEBUG line. `-Check` mode runs no installers and prints no download line.
 - Prints a live result line only for components that had a planned update (`Set-Result`), using the same status colors as phase 1. Components that were already up to date were shown in phase 1 and are not printed again. No closing result table repeats those lines.
 - Closes the phase with `2/2 X of Y component update(s) applied successfully`, counting only planned rows that ended `Updated` or `Up to date`; a partial or error row lowers the count and the line is yellow.
-- Overall failure tracking; exits 0 on full success, 1 otherwise
+- Overall failure tracking; the summary reports `All operations completed successfully` on success and `Some operations failed or were skipped` otherwise. The wording is operation-based because an empty plan has no updates to report. Exits 0 on full success, 1 otherwise
 
 **Conventions**:
 - UTF-8 BOM logs under `Logs/Update-Components/` with `index.txt` ledger. The launcher stamps the BOM; the updater appends plain UTF-8 without a second one, so colors stay console-only and the log stays diffable.
@@ -235,7 +235,7 @@ kapsar:
 - Her paket yöneticisi çağrısından önce `Downloading: <bileşen>...` (camgöbeği) satırı yazı (`Run-Command`); alt komut çıktısı bir diziye tamponlandığı için bu satır olmasa uzun indirme boyunca ekran sessiz kalır. Ham komut sönük DEBUG satırında kalır. `-Check` kipinde kurulum çalışmadığı için indirme satırı basılmaz.
 - Yalnızca planlanmış güncellemesi olan bileşenler için canlı sonuç satırı yazı (`Set-Result`); 1/2'de zaten görülen güncel bileşenler tekrar basılmaz. Sonunda aynı satırları tekrarlayan sonuç tablosu yok.
 - Aşamayı `2/2 X of Y component update(s) applied successfully` satırıyla kapatır; yalnızca `Updated` veya `Up to date` ile biten plan satırlarını sayar; kısmi veya hatalı satır sayıyı düşürür ve satır sarı olur.
-- Genel hata takibi; tam başarıda 0, aksi halde 1 ile çıkar
+- Genel hata takibi; özet başarıda `All operations completed successfully`, aksi halde `Some operations failed or were skipped` satırını basar. Plan boşken bildirilecek güncelleme olmadığı için ifade işlem odaklıdır. Tam başarıda 0, aksi halde 1 ile çıkar
 
 **Kurallar**:
 - `Logs/Update-Components/` altına UTF-8 BOM'lu günlükler ve `index.txt` defteri. BOM'u başlatıcı damgalar; güncelleyici ikinci bir BOM eklemeden düz UTF-8 yazar, böylece renkler yalnızca konsolda kalır ve günlük karşılaştırılabilir olur.

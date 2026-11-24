@@ -367,6 +367,14 @@ Describe 'Update-Components logging and structure' {
         $script:Text | Should -Match '\$script:OverallFailed'
     }
 
+    It 'Describes the run in the summary, not only updates' {
+        $script:Text | Should -Match 'Write-Log "All operations completed successfully" ''OK'''
+        $script:Text | Should -Match 'Write-Log "Some operations failed or were skipped; review the log above" ''WARN'''
+        $script:Text | Should -Not -Match 'All updates completed successfully'
+        $script:Text | Should -Not -Match 'Some updates failed or were skipped'
+        $script:Text | Should -Match 'An empty plan has no updates to report, so describe the run itself'
+    }
+
 }
 
 Describe 'Update-Components winget table parsing fixtures' {

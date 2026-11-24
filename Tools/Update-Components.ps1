@@ -1204,9 +1204,10 @@ Write-UpdateComponentsReport -ExecutionCompleted:$true | Out-Null
 
 Write-Log "Summary" 'STEP'
 if ($script:OverallFailed) {
-    Write-Log "Some updates failed or were skipped; review the log above" 'WARN'
+    Write-Log "Some operations failed or were skipped; review the log above" 'WARN'
     exit 1
 } else {
-    Write-Log "All updates completed successfully" 'OK'
+    # An empty plan has no updates to report, so describe the run itself.
+    Write-Log "All operations completed successfully" 'OK'
     exit 0
 }
