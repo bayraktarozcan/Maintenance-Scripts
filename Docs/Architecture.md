@@ -31,6 +31,14 @@ Repair-specific logging:
    so a caller or scheduled task can detect failure. Launchers with several
    steps exit 1 when any step returned a nonzero code. `Update-Components.bat`
    invokes the updater directly, so the captured code is the updater's own.
+6. Show the exit prompt with `pause` directly. `pause` already prints
+   `Press any key to continue . . .` itself, so no key-drain loop
+   (`KeyAvailable`/`ReadKey`) runs first. The message therefore appears
+   immediately and a single press exits. All five launchers follow this rule.
+   For download steps (`Update-Components` and `WinGet-Upgrade`), print a
+   visible `Downloading: ...` line to both console and log before each
+   installer; the output is buffered, so without it the screen stays silent
+   for the whole download.
 
 ### Per-Script Pipelines
 
@@ -148,7 +156,6 @@ kapsar:
    adımı olan başlatıcı, herhangi bir adım sıfırdan farklı döndüğünde 1 ile
    çıkar. `Update-Components.bat` güncelleyiciyi doğrudan çağırdığı için
    yakalanan kod güncelleyicinin kendi kodudur.
-
 6. Çıkış isteğini doğrudan `pause` ile göster; `pause` kendiliğinden
    `Press any key to continue . . .` mesajını bastığından önce bir tuş
    temizleme (`KeyAvailable`/`ReadKey`) döngüsü çalıştırılmaz. Böylece mesaj
