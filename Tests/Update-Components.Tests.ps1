@@ -6,6 +6,8 @@
 # robust winget table parsing (--upgrade-available + fixed-width + honest Unknown status),
 # Python winget ID resolution (Get-PythonWingetId/Resolve-PythonWingetPackage),
 # pip JSON fallback text parsing, npm post-update recheck, and command patterns.
+# pipx is tracked as the tool and its managed packages separately, one line
+# per package with its from and to versions, never through upgrade-all.
 # Never executes the script or package managers.
 
 BeforeAll {
@@ -218,10 +220,10 @@ Describe 'Update-Components two-phase tables' {
     It 'Prints detected package names once, where they are found' {
         $script:Text | Should -Match 'Write-Log "      - \$item"'
         $script:Text | Should -Match 'Show-PlanItems -Component ''pip packages'''
-        $script:Text | Should -Match 'Show-PlanItems -Component ''pipx'''
+        $script:Text | Should -Match 'Show-PlanItems -Component ''pipx packages'''
         $script:Text | Should -Match 'Show-PlanItems -Component ''npm packages'''
         $script:Text | Should -Match '\$planRow\.Items = @\(\$outdated'
-        $script:Text | Should -Match '\$planRow\.Items = \$pipxInstalledNames'
+        $script:Text | Should -Match '\$planRow\.Items = @\(\$pipxOutdatedPkgs'
         $script:Text | Should -Match '\$planRow\.Items = @\(\$npmOutdated'
     }
 
@@ -298,14 +300,14 @@ Describe 'Update-Components two-phase tables' {
             $script:CapturedItems = New-Object System.Collections.ArrayList
             $script:Plan = @(
                 @{ Component = 'pip packages' }
-                @{ Component = 'pipx'; Items = @('ggshield 1.56.1') }
+                @{ Component = 'pipx packages'; Items = @('ggshield 1.56.1') }
             )
 
             Show-PlanItems -Component 'pip packages'
             $script:CapturedItems.Count | Should -Be 0
             Show-PlanItems -Component 'unknown component'
             $script:CapturedItems.Count | Should -Be 0
-            Show-PlanItems -Component 'pipx'
+            Show-PlanItems -Component 'pipx packages'
             $script:CapturedItems.Count | Should -Be 1
             $script:CapturedItems[0] | Should -BeExactly '      - ggshield 1.56.1'
         } finally {
@@ -317,6 +319,70 @@ Describe 'Update-Components two-phase tables' {
     }
 }
 
+Describe 'Update-Components pipx reporting' {
+    It 'Keeps pipx itself and pipx-managed packages in separate rows' {
+        $script:Text | Should -Match "@\{ Component = 'pipx';\s+Action = 'Skip'"
+        $script:Text | Should -Match "@\{ Component = 'pipx packages';\s+Action = 'Skip'"
+        $script:Text | Should -Match "@\{ Component = 'pipx';\s+Status = 'Skipped'"
+        $script:Text | Should -Match "@\{ Component = 'pipx packages';\s+Status = 'Skipped'"
+    }
+
+    It 'Plans the tool with real versions and its packages with per-package items' {
+        $script:Text | Should -Match 'Set-Plan ''pipx'' ''Update available'' \$pipxCurrent \$pipxLatest'
+        $script:Text | Should -Match 'Set-Plan ''pipx packages'' ''Update available'''
+        $script:Text | Should -Match '\$planRow\.Items = @\(\$pipxOutdatedPkgs \| ForEach-Object'
+        $script:Text | Should -Match '\$planRow\.Details = \$planRow\.Items -join'
+        $script:Text | Should -Match "Show-PlanItems -Component 'pipx packages'"
+        $script:Text | Should -Not -Match 'package\(s\) \+ pipx'
+    }
+
+    It 'Upgrades pipx itself and every outdated package by name' {
+        $script:Text | Should -Not -Match 'upgrade-all'
+        $script:Text | Should -Match 'Run-Command ''py'' @\(''-m'', ''pipx'', ''upgrade'', ''pipx''\)'
+        $script:Text | Should -Match 'Run-Command ''py'' @\(''-m'', ''pipx'', ''upgrade'', \$pkg\.name\)'
+        $script:Text | Should -Match 'Upgrading \$\(\$pkg\.name\)'
+        $script:Text | Should -Match '\$pipxPkgDetails \+= "\$\(\$pkg\.name\)'
+    }
+
+    It 'Reports the tool and its packages as separate results' {
+        $script:Text | Should -Match 'Set-Result ''pipx'' \$status \$pipxRow\.Current \$pipxAfter'
+        $script:Text | Should -Match 'Set-Result ''pipx packages'' \$status'
+    }
+
+    It 'Renders a single version when current and target match' {
+        $tokens = $null; $errors = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput($script:Text, [ref]$tokens, [ref]$errors)
+        $errors | Should -BeNullOrEmpty
+        $func = @($ast.FindAll({ param($n)
+            $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Set-Plan'
+        }, $true))[0]
+        $func | Should -Not -BeNullOrEmpty
+
+        $savedLog = Get-Item -Path 'Function:\Write-Log' -ErrorAction SilentlyContinue
+        $savedPlan = Get-Variable -Name Plan -Scope Script -ErrorAction SilentlyContinue
+        try {
+            Invoke-Expression $func.Extent.Text
+            function Write-Log { param([string]$Message, [string]$Level = 'INFO') [void]$script:CapturedPlan.Add($Message) }
+            $script:Plan = @(@{ Component = 'pipx'; Action = 'Skip'; Current = ''; Target = ''; Details = '' })
+            $cases = @(
+                @{ Action = 'Up to date';       Current = '1.19.1'; Target = '1.19.1'; Expected = '    pipx: Up to date [1.19.1]' }
+                @{ Action = 'Update available'; Current = '1.19.1'; Target = '1.20.0'; Expected = '    pipx: Update available [1.19.1 -> 1.20.0]' }
+                @{ Action = 'Unknown';          Current = '1.19.1'; Target = '';       Expected = '    pipx: Unknown [1.19.1]' }
+            )
+            foreach ($case in $cases) {
+                $script:CapturedPlan = New-Object System.Collections.ArrayList
+                Set-Plan 'pipx' $case.Action $case.Current $case.Target
+                $script:CapturedPlan.Count | Should -Be 1
+                $script:CapturedPlan[0] | Should -BeExactly $case.Expected
+            }
+        } finally {
+            if ($null -ne $savedLog) { Set-Item -Path 'Function:\Write-Log' -Value $savedLog.ScriptBlock -Force }
+            else { Remove-Item -Path 'Function:\Write-Log' -ErrorAction SilentlyContinue }
+            if ($null -ne $savedPlan) { Set-Variable -Name Plan -Scope Script -Value $savedPlan.Value -Force }
+            else { Remove-Variable -Name Plan -Scope Script -ErrorAction SilentlyContinue }
+        }
+    }
+}
 Describe 'Update-Components logging and structure' {
     It 'Defines Write-Log helper with timestamp and level' {
         $script:Text | Should -Match 'function Write-Log'

@@ -76,7 +76,7 @@ Repair-specific logging:
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
   This script has network activity (delegated to `winget`).
 - `Update-Components.bat` (launcher for `Tools/Update-Components.ps1`): resolves the PowerShell engine, sets up logging, forwards any arguments (including `-Check`), then calls the PS script which runs a two-phase update:
-  1. **Detection phase**: checks `winget` for Python/Node.js runtime updates, `pip`/`npm` for package manager self-updates, `pip list --outdated --format=json` and `npm outdated -g --json` for global packages, and `pipx list --json` + `pip index versions` for pipx itself and pipx-managed packages. Prints one live line per component and closes with a total.
+  1. **Detection phase**: checks `winget` for Python/Node.js runtime updates, `pip`/`npm` for package manager self-updates, `pip list --outdated --format=json` and `npm outdated -g --json` for global packages, `pipx --version` for pipx itself and `pipx list --json` + `pip index versions` for its managed packages. pipx and its packages are separate components; each outdated package is shown with both versions on its own line. Prints one live line per component and closes with a total.
   2. **Execution phase**: applies updates and prints one live line per planned component, then closes with a total. Runs entirely in user scope; never self-elevates. Supports `-Check` dry-run mode that shows the plan lines and total, then exits.
   Output streams live: the launcher passes `-LogPath`, the updater appends every line to the log as it prints it, and console colors mark steps (cyan), update-available rows (magenta), successes (green), warnings (yellow), and errors (red). Phase 1 closes with the number of updates found and their component names; phase 2 closes with how many planned component updates were applied.
   Network activity: `winget list --id`, `pip`/`npm`/`pipx` registry queries.
@@ -89,7 +89,8 @@ Repair-specific logging:
 - Python runtime: `winget list --id Python.Python.X.Y --exact` → available version
 - pip self: `pip install --upgrade --dry-run --ignore-installed --report` → JSON report for target version
 - pip packages: `pip list --outdated --format=json` → array of `{name, version, latest_version}`
-- pipx: `pipx list --json` → pipx itself and installed packages; `pip index versions <pkg>` → latest version; pipx packages live in isolated venvs and are invisible to `pip list --outdated`
+- pipx itself: `pipx --version` → current version; `pip index versions pipx` → latest version. Its own plan/result row is separate from the packages it manages
+- pipx packages: `pipx list --json` → installed packages; `pip index versions <pkg>` → latest version; each outdated package is listed as `name current -> latest` and printed on its own indented line. pipx packages live in isolated venvs and are invisible to `pip list --outdated`
 - Node.js runtime: `winget list --id OpenJS.NodeJS.LTS --exact` → available version
 - npm self: `npm view npm@latest version` → latest version
 - npm packages: `npm outdated -g --json` → array of `{name, current, wanted, latest}`
@@ -100,7 +101,7 @@ Repair-specific logging:
 
 **Phase 2 — Execution (Result)**:
 - Prints `2/2 Applying...` only when the plan has at least one `Update available` row. With an empty plan the phase is just the closing total; no misleading "applying" header and no extra blank line.
-- Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements` for runtimes, host tools, and PowerShell 7; `Update-Module Pester -Force` for Pester; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; and `npm install --global <pkg>@<latest>` for outdated globals
+- Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements` for runtimes, host tools, and PowerShell 7; `Update-Module Pester -Force` for Pester; `pip install --upgrade <pkg>`; `pipx upgrade pipx` for pipx itself and one `pipx upgrade <name>` call per outdated managed package (never `upgrade-all`, so a failed package is named and the successful ones stay applied); `npm install --global npm@latest`; and `npm install --global <pkg>@<latest>` for outdated globals
 - Tracks before/after versions per component
 - Prints `Downloading: <component>...` (cyan) before each package-manager call (`Run-Command`), because child output is buffered to a string and would otherwise leave the screen silent during a long download; the raw command stays on the dim DEBUG line. `-Check` mode runs no installers and prints no download line.
 - Prints a live result line only for components that had a planned update (`Set-Result`), using the same status colors as phase 1. Components that were already up to date were shown in phase 1 and are not printed again. No closing result table repeats those lines.
@@ -111,7 +112,7 @@ Repair-specific logging:
 - UTF-8 BOM logs under `Logs/Update-Components/` with `index.txt` ledger. The launcher stamps the BOM; the updater appends plain UTF-8 without a second one, so colors stay console-only and the log stays diffable.
 - No elevation; all commands run in user scope
 - `-Check` mode: runs Phase 1 only, prints the component lines and total, exits 0
-- The result collector is a fixed twelve-row shape (`$script:ResultComponentNames` is its single source of truth). `Assert-ResultCollector` checks that shape and non-empty `Component`/`Status` fields before every `Set-Result` and before the final total; a violation throws and the run exits nonzero rather than reporting a misleading total. A violation terminates before the final total and before the JSON report is written, so `-ReportPath` produces no file in that failure mode: the `[ResultCollector]` error line and the nonzero exit code are the CI signal. Command exit codes are held in `$commandExit`, never `$result`, because PowerShell variable names are case-insensitive and a script-scope `$result` would rebind `$script:Result`.
+- The result collector is a fixed thirteen-row shape (`$script:ResultComponentNames` is its single source of truth). `Assert-ResultCollector` checks that shape and non-empty `Component`/`Status` fields before every `Set-Result` and before the final total; a violation throws and the run exits nonzero rather than reporting a misleading total. A violation terminates before the final total and before the JSON report is written, so `-ReportPath` produces no file in that failure mode: the `[ResultCollector]` error line and the nonzero exit code are the CI signal. Command exit codes are held in `$commandExit`, never `$result`, because PowerShell variable names are case-insensitive and a script-scope `$result` would rebind `$script:Result`.
 - Winget "already up to date" negative exit codes treated as success
 - npm warning exit codes (1 with `npm warn` output) treated as success
 - `-ReportPath <file>` writes a UTF-8 JSON report (`schemaVersion` 1) with `mode`, `executionCompleted`, `host`, `plan`, `result`, `success`, and `exitCode`; `-Check -ReportPath ...` writes a check-mode report without applying changes
@@ -206,7 +207,7 @@ kapsar:
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
   Ağ etkinliği olan betiklerden biridir (`winget`'e delege edilir).
 - `Update-Components.bat` (`Tools/Update-Components.ps1` başlatıcısı): PowerShell motorunu çözümler, günlüklemeyi kurar, bağımsız değişkenleri (`-Check` dâhil) iletir, PS betiğini çağırır. PS betiği iki aşamalı güncelleme çalıştırır:
-  1. **Tespit aşaması**: Python/Node.js çalışma zamanı güncellemeleri için `winget list --id`, pip/npm için paket yöneticisi kendini-güncelleme, `pip list --outdated --format=json` ve `npm outdated -g --json` ile global paketler, `pipx list --json` + `pip index versions` ile pipx kendi kendine ve pipx yönetimli paketler. Her bileşen için tek canlı satır yazıp faz toplamıyla kapanır.
+  1. **Tespit aşaması**: Python/Node.js çalışma zamanı güncellemeleri için `winget list --id`, pip/npm için paket yöneticisi kendini-güncelleme, `pip list --outdated --format=json` ve `npm outdated -g --json` ile global paketler, pipx'in kendisi için `pipx --version`, yönettiği paketler için `pipx list --json` + `pip index versions`. pipx ve paketleri ayrı bileşenlerdir; eski her paket kendi satırında iki sürümüyle gösterilir. Her bileşen için tek canlı satır yazıp faz toplamıyla kapanır.
   2. **Yürütme aşaması**: Güncellemeleri uygular, planlanan her bileşen için tek canlı satır yazıp faz toplamıyla kapanır. Tamamen kullanıcı kapsamında koşur; asla kendini yükseltmez. `-Check` kuru çalıştırma (dry-run) modu bileşen satırlarını ve toplamı gösterip çıkar.
   Çıktı canlı akar: başlatıcı `-LogPath` iletir, güncelleyici her satırı bastığı anda günlüğe ekler; konsol renkleri adımları (camgöbeği), güncelleme bulunan satırları (macenta), başarıları (yeşil), uyarıları (sarı) ve hataları (kırmızı) işaretler. 1/2 aşaması bulunan güncelleme sayısı ve bileşen adlarıyla, 2/2 aşaması planlanan bileşen güncellemelerinden kaçının uygulandığıyla kapanır.
   Ağ etkinliği: `winget list --id`, `pip`/`npm`/`pipx` kayıt sorguları.
@@ -219,7 +220,8 @@ kapsar:
 - Python çalışma zamanı: `winget list --id Python.Python.X.Y --exact` → mevcut sürüm
 - pip kendisi: `pip install --upgrade --dry-run --ignore-installed --report` → JSON raporu hedef sürüm için
 - pip paketleri: `pip list --outdated --format=json` → `{name, version, latest_version}` dizisi
-- pipx: `pipx list --json` → pipx kendi kendine ve yüklü paketler; `pip index versions <pkg>` → en son sürüm; pipx paketleri izole ortamda yaşadığı için `pip list --outdated`'a görünmez
+- pipx kendisi: `pipx --version` → mevcut sürüm; `pip index versions pipx` → en son sürüm. Kendi plan/sonuç satırı yönettiği paketlerden ayrıdır
+- pipx paketleri: `pipx list --json` → yüklü paketler; `pip index versions <pkg>` → en son sürüm; eski her paket `ad mevcut -> en son` biçiminde kendi girintili satırında yazılır. pipx paketleri izole ortamda yaşadığı için `pip list --outdated`'a görünmez
 - Node.js çalışma zamanı: `winget list --id OpenJS.NodeJS.LTS --exact` → mevcut sürüm
 - npm kendisi: `npm view npm@latest version` → en son sürüm
 - npm paketleri: `npm outdated -g --json` → `{name, current, wanted, latest}` dizisi
@@ -230,7 +232,7 @@ kapsar:
 
 **Aşama 2 — Yürütme (Sonuç)**:
 - `2/2 Applying...` başlığını yalnızca planda en az bir `Update available` satırı varsa basar. Plan boşsa faz yalnızca kapanış toplamıdır; yanıltıcı "uygulanıyor" başlığı ve ek boş satır yoktur.
-- Plan başına güncellemeleri uygular: çalışma zamanları, ana makine araçları ve PowerShell 7 için `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`; Pester için `Update-Module Pester -Force`; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; eski kalan global paketler için `npm install --global <pkg>@<latest>`
+- Plan başına güncellemeleri uygular: çalışma zamanları, ana makine araçları ve PowerShell 7 için `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`; Pester için `Update-Module Pester -Force`; `pip install --upgrade <pkg>`; pipx'in kendisi için `pipx upgrade pipx`, yönetilen her eski paket için birer `pipx upgrade <ad>` çağrısı (`upgrade-all` kullanılmaz; böylece başarısız paket adıyla belirtilir, başaranlar uygulanmış kalır); `npm install --global npm@latest`; eski kalan global paketler için `npm install --global <pkg>@<latest>`
 - Bileşen başına önceki/sonraki sürümleri takip eder
 - Her paket yöneticisi çağrısından önce `Downloading: <bileşen>...` (camgöbeği) satırı yazı (`Run-Command`); alt komut çıktısı bir diziye tamponlandığı için bu satır olmasa uzun indirme boyunca ekran sessiz kalır. Ham komut sönük DEBUG satırında kalır. `-Check` kipinde kurulum çalışmadığı için indirme satırı basılmaz.
 - Yalnızca planlanmış güncellemesi olan bileşenler için canlı sonuç satırı yazı (`Set-Result`); 1/2'de zaten görülen güncel bileşenler tekrar basılmaz. Sonunda aynı satırları tekrarlayan sonuç tablosu yok.
@@ -241,7 +243,7 @@ kapsar:
 - `Logs/Update-Components/` altına UTF-8 BOM'lu günlükler ve `index.txt` defteri. BOM'u başlatıcı damgalar; güncelleyici ikinci bir BOM eklemeden düz UTF-8 yazar, böylece renkler yalnızca konsolda kalır ve günlük karşılaştırılabilir olur.
 - Yükseltme yok; tüm komutlar kullanıcı kapsamında koşur
 - `-Check` modu: sadece Aşama 1 çalışır, bileşen satırları ve toplam gösterilir, 0 ile çıkar
-- Sonuç toplayıcı sabit on iki satırlık bir yapıdır (`$script:ResultComponentNames` tek doğruluk kaynağıdır). `Assert-ResultCollector` bu yapıyı ve boş olmayan `Component`/`Status` alanlarını her `Set-Result` çağrısından önce ve son toplamdan önce denetler; ihlal durumunda hata verilir ve çalışma yanıltıcı bir toplam basmak yerine sıfırdan farklı kodla çıkar. İhlal, son toplam ve JSON raporundan önce sonlandırır; bu hata modunda `-ReportPath` dosya üretmez, CI sinyali `[ResultCollector]` hata satırı ve sıfırdan farklı çıkış kodudur. Komut çıkış kodları `$commandExit` içinde tutulur, asla `$result` içinde değil; çünkü PowerShell değişken adları büyük/küçük harfe duyarsızdır ve betik kapsamındaki bir `$result`, `$script:Result` dosyasını yeniden bağlar.
+- Sonuç toplayıcı sabit on üç satırlık bir yapıdır (`$script:ResultComponentNames` tek doğruluk kaynağıdır). `Assert-ResultCollector` bu yapıyı ve boş olmayan `Component`/`Status` alanlarını her `Set-Result` çağrısından önce ve son toplamdan önce denetler; ihlal durumunda hata verilir ve çalışma yanıltıcı bir toplam basmak yerine sıfırdan farklı kodla çıkar. İhlal, son toplam ve JSON raporundan önce sonlandırır; bu hata modunda `-ReportPath` dosya üretmez, CI sinyali `[ResultCollector]` hata satırı ve sıfırdan farklı çıkış kodudur. Komut çıkış kodları `$commandExit` içinde tutulur, asla `$result` içinde değil; çünkü PowerShell değişken adları büyük/küçük harfe duyarsızdır ve betik kapsamındaki bir `$result`, `$script:Result` dosyasını yeniden bağlar.
 - Winget "zaten güncel" negatif çıkış kodları başarı sayılır
 - npm uyarı çıkış kodları (1 + `npm warn` çıktısı) başarı sayılır
 - `-ReportPath <dosya>` UTF-8 JSON raporu (`schemaVersion` 1) yazar: `mode`, `executionCompleted`, `host`, `plan`, `result`, `success`, `exitCode`; `-Check -ReportPath ...` değişiklik uygulamadan check modu raporu yazar
