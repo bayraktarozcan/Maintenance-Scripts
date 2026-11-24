@@ -31,6 +31,8 @@ echo.
 echo. >> "%LOG%"
 echo ^> (1/2) winget source update
 >>"%LOG%" echo ^> (1/2) winget source update
+echo Downloading: winget source metadata...
+>>"%LOG%" echo Downloading: winget source metadata...
 winget source update > "%OUT%" 2>&1
 set "S1_RC=%ERRORLEVEL%"
 if not "%S1_RC%"=="0" set "EXITCODE=1"
@@ -42,6 +44,8 @@ echo.
 echo. >> "%LOG%"
 echo ^> (2/2) winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements
 >>"%LOG%" echo ^> (2/2) winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements
+echo Downloading: available winget packages...
+>>"%LOG%" echo Downloading: available winget packages...
 winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements > "%OUT%" 2>&1
 set "S2_RC=%ERRORLEVEL%"
 if not "%S2_RC%"=="0" set "EXITCODE=1"
@@ -61,6 +65,5 @@ echo Log: %LOG%
 >>"%LOG%" echo Log: %LOG%
 echo.
 >>"%LOG%" echo.
-"%PSEXE%" -NoProfile -Command "try { while ($Host.UI.RawUI.KeyAvailable) { $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') } } catch { }" >nul 2>&1
 pause
 exit /b %EXITCODE%

@@ -21,6 +21,17 @@ Describe 'WinGet-Upgrade static hygiene' {
     It 'Keeps the established upgrade flags' {
         $script:Text | Should -Match '--include-unknown --accept-source-agreements --accept-package-agreements'
     }
+
+    It 'Announces each download before the winget command runs' {
+        $source = [regex]::Match($script:Text, 'echo Downloading: winget source metadata\.\.\.')
+        $upgrade = [regex]::Match($script:Text, 'echo Downloading: available winget packages\.\.\.')
+        $source.Success | Should -BeTrue
+        $upgrade.Success | Should -BeTrue
+        $script:Text.IndexOf('winget source update > "%OUT%"') | Should -BeGreaterThan $source.Index
+        $script:Text.IndexOf('winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements > "%OUT%"') | Should -BeGreaterThan $upgrade.Index
+        $script:Text | Should -Match '>>"%LOG%" echo Downloading: winget source metadata\.\.\.'
+        $script:Text | Should -Match '>>"%LOG%" echo Downloading: available winget packages\.\.\.'
+    }
 }
 
 Describe 'WinGet-Upgrade log skeleton' {

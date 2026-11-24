@@ -127,6 +127,14 @@ Describe 'Batch static checks' {
             $lines[-1] | Should -Match '^(if not defined NOPAUSE )?pause$'
         }
     }
+    It 'Shows the exit prompt without draining the first key press' -ForEach $script:BatFiles {
+        $text = [IO.File]::ReadAllText($_.FullName)
+        # KeyAvailable + ReadKey before pause swallowed the first press, so a
+        # second press was needed to exit. Every launcher must show the prompt
+        # immediately and exit on one press.
+        $text | Should -Not -Match 'KeyAvailable'
+        $text | Should -Not -Match 'ReadKey'
+    }
     It 'Publishes the child exit code' -ForEach $script:BatFiles {
         $text = [IO.File]::ReadAllText($_.FullName)
         $text | Should -Match 'set "(EXITCODE|S\d+_RC)=%ERRORLEVEL%"'

@@ -149,6 +149,15 @@ kapsar:
    çıkar. `Update-Components.bat` güncelleyiciyi doğrudan çağırdığı için
    yakalanan kod güncelleyicinin kendi kodudur.
 
+6. Çıkış isteğini doğrudan `pause` ile göster; `pause` kendiliğinden
+   `Press any key to continue . . .` mesajını bastığından önce bir tuş
+   temizleme (`KeyAvailable`/`ReadKey`) döngüsü çalıştırılmaz. Böylece mesaj
+   hemen görünür ve tek tuşla çıkılır. Beş başlatıcı da bu kuralı izler.
+   İndirme yapan adımlarda (`Update-Components` ve `WinGet-Upgrade`) her
+   indirme komutundan önce görünür bir `Downloading: ...` satırı hem ekrana
+   hem günlüğe yazılır; çıktı tamponlandığı için bu satır olmasa kullanıcı
+   uzun indirme boyunca sessiz bir ekran görür.
+
 ### Betik Başına Hatlar
 
 - `Repair-Windows.bat` (9 adım, yönetici ister): açılışta iki kiş sunar:
