@@ -252,6 +252,33 @@ Describe 'Update-Components two-phase tables' {
         $script:Text | Should -Match 'Everything else was already shown in phase 1; repeating it is noise'
     }
 
+    It 'Guards the phase 2 header on a non-empty plan' {
+        $script:Text | Should -Match '\$plannedCount = @\(\$script:Plan \| Where-Object \{ \$_\.Action -eq ''Update available'' \}\)\.Count'
+        $script:Text | Should -Match 'if \(\$plannedCount -gt 0\) \{ Write-Log "" \}'
+    }
+
+    It 'Emits the Applying header only when updates were planned' {
+        $match = [regex]::Match($script:Text, '(?s)if \(\$plannedCount -gt 0\) \{\s+Write-Log "2/2 Applying\.\.\." ''STEP''\s+\}')
+        $match.Success | Should -BeTrue
+        $savedLog = Get-Item -Path 'Function:\Write-Log' -ErrorAction SilentlyContinue
+        try {
+            function Write-Log { param([string]$Message, [string]$Level = 'INFO') [void]$script:Captured.Add($Message) }
+            foreach ($count in @(0, 1)) {
+                $script:Captured = New-Object System.Collections.ArrayList
+                $plannedCount = $count
+                Invoke-Expression $match.Value
+                if ($count -eq 0) {
+                    $script:Captured.Count | Should -Be 0
+                } else {
+                    $script:Captured | Should -Contain '2/2 Applying...'
+                }
+            }
+        } finally {
+            if ($null -ne $savedLog) { Set-Item -Path 'Function:\Write-Log' -Value $savedLog.ScriptBlock -Force }
+            else { Remove-Item -Path 'Function:\Write-Log' -ErrorAction SilentlyContinue }
+        }
+    }
+
     It 'Emits item lines only for a component that has items' {
         $tokens = $null; $errors = $null
         $ast = [System.Management.Automation.Language.Parser]::ParseInput($script:Text, [ref]$tokens, [ref]$errors)

@@ -135,6 +135,14 @@ Describe 'Batch static checks' {
         $text | Should -Not -Match 'KeyAvailable'
         $text | Should -Not -Match 'ReadKey'
     }
+    It 'Prints a completion line between a single step and its exit code' {
+        $dns = [System.IO.File]::ReadAllText((Join-Path (Join-Path $PSScriptRoot '..\Scripts') 'Clear-DnsClientCache.bat'))
+        $dns | Should -Match 'echo Clear-DnsClientCache step finished\.'
+        $dns | Should -Match '>>"%LOG%" echo Clear-DnsClientCache step finished\.'
+        $done = $dns.IndexOf('echo Clear-DnsClientCache step finished.')
+        $done | Should -BeGreaterThan $dns.IndexOf('type "%OUT%"')
+        $done | Should -BeLessThan $dns.IndexOf('echo Exit code: %EXITCODE%')
+    }
     It 'Publishes the child exit code' -ForEach $script:BatFiles {
         $text = [IO.File]::ReadAllText($_.FullName)
         $text | Should -Match 'set "(EXITCODE|S\d+_RC)=%ERRORLEVEL%"'

@@ -37,6 +37,8 @@ echo ^> Clear-DnsClientCache
 set "EXITCODE=%ERRORLEVEL%"
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
+echo Clear-DnsClientCache step finished.
+>>"%LOG%" echo Clear-DnsClientCache step finished.
 echo.
 echo. >> "%LOG%"
 del "%OUT%" >nul 2>&1

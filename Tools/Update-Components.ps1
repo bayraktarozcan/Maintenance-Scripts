@@ -965,7 +965,12 @@ if ($Check) {
 # ============================================================
 # PHASE 2: EXECUTION — Apply updates and build RESULTS
 # ============================================================
-Write-Log "2/2 Applying..." 'STEP'
+# Only claim an execution phase when there is something to apply.
+# With an empty plan the closing total below is the whole phase.
+$plannedCount = @($script:Plan | Where-Object { $_.Action -eq 'Update available' }).Count
+if ($plannedCount -gt 0) {
+    Write-Log "2/2 Applying..." 'STEP'
+}
 
 $script:OverallFailed = $false
 
@@ -1190,7 +1195,7 @@ if ($pesterRow.Action -eq 'Update available') {
 # FINAL: closing count; per-component lines were already streamed.
 # ============================================================
 Assert-ResultCollector -Where 'final'
-Write-Log ""
+if ($plannedCount -gt 0) { Write-Log "" }
 Show-PhaseTotals -PlanRows $script:Plan -ResultRows $script:Result
 Write-Log ""
 

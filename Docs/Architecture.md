@@ -35,10 +35,13 @@ Repair-specific logging:
    `Press any key to continue . . .` itself, so no key-drain loop
    (`KeyAvailable`/`ReadKey`) runs first. The message therefore appears
    immediately and a single press exits. All five launchers follow this rule.
-   For download steps (`Update-Components` and `WinGet-Upgrade`), print a
-   visible `Downloading: ...` line to both console and log before each
-   installer; the output is buffered, so without it the screen stays silent
-   for the whole download.
+   For download steps, print a visible progress line to both console and log
+   before the command: `Downloading: ...` in `Update-Components` and for the
+   winget source refresh, or `Checking for available winget packages...` for
+   `winget upgrade --all`, since that command may find nothing. The buffered
+   output would otherwise leave the screen silent. Report the real result
+   afterwards: `Update-Components` uses the phase total, `WinGet-Upgrade`
+   prints `No updates available` or `Updates applied` from the captured output.
 
 ### Per-Script Pipelines
 
@@ -68,7 +71,7 @@ Repair-specific logging:
 - `Reset-Windows-Update.bat` (13 steps, needs admin): stop `wuauserv`,
   `bits`, `msiserver`, `cryptSvc`; delete `SoftwareDistribution` and
   `catroot2` contents; restart the services; `UsoClient StartScan`.
-- `Clear-DnsClientCache.bat` (1 step): `Clear-DnsClientCache`.
+- `Clear-DnsClientCache.bat` (1 step): `Clear-DnsClientCache`. It prints `Clear-DnsClientCache step finished.` after the cmdlet output and before the exit-code line, so a step with no output is still acknowledged.
 - `WinGet-Upgrade.bat` (2 steps): `winget source update`, then
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
   This script has network activity (delegated to `winget`).
@@ -96,6 +99,7 @@ Repair-specific logging:
 - Closes the phase with `1/2 Found N update(s): ...`, naming every component whose action is `Update available`; the actionable component lines and the closing line are magenta.
 
 **Phase 2 — Execution (Result)**:
+- Prints `2/2 Applying...` only when the plan has at least one `Update available` row. With an empty plan the phase is just the closing total; no misleading "applying" header and no extra blank line.
 - Applies updates per plan: `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements` for runtimes, host tools, and PowerShell 7; `Update-Module Pester -Force` for Pester; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; and `npm install --global <pkg>@<latest>` for outdated globals
 - Tracks before/after versions per component
 - Prints `Downloading: <component>...` (cyan) before each package-manager call (`Run-Command`), because child output is buffered to a string and would otherwise leave the screen silent during a long download; the raw command stays on the dim DEBUG line. `-Check` mode runs no installers and prints no download line.
@@ -160,10 +164,13 @@ kapsar:
    `Press any key to continue . . .` mesajını bastığından önce bir tuş
    temizleme (`KeyAvailable`/`ReadKey`) döngüsü çalıştırılmaz. Böylece mesaj
    hemen görünür ve tek tuşla çıkılır. Beş başlatıcı da bu kuralı izler.
-   İndirme yapan adımlarda (`Update-Components` ve `WinGet-Upgrade`) her
-   indirme komutundan önce görünür bir `Downloading: ...` satırı hem ekrana
-   hem günlüğe yazılır; çıktı tamponlandığı için bu satır olmasa kullanıcı
-   uzun indirme boyunca sessiz bir ekran görür.
+   İndirme adımlarında komuttan önce görünür bir ilerleme satırı hem ekrana
+   hem günlüğe yazılır: `Update-Components` ve winget kaynak yenilemesi için
+   `Downloading: ...`, `winget upgrade --all` için ise `Checking for available
+   winget packages...`; çünkü bu komut güncelleme bulamayabilir. Tamponlanan
+   çıktı olmasa ekran uzun süre sessiz kalır. Gerçek sonuç komuttan sonra
+   bildirilir: `Update-Components` faz toplamını, `WinGet-Upgrade` yakalanan
+   çıktıya göre `No updates available` veya `Updates applied` satırını basar.
 
 ### Betik Başına Hatlar
 
@@ -194,7 +201,7 @@ kapsar:
   `bits`, `msiserver`, `cryptSvc` servislerini durdurma;
   `SoftwareDistribution` ve `catroot2` içeriklerini silme; servisleri
   yeniden başlatma; `UsoClient StartScan`.
-- `Clear-DnsClientCache.bat` (1 adım): `Clear-DnsClientCache`.
+- `Clear-DnsClientCache.bat` (1 adım): `Clear-DnsClientCache`. Cmdlet çıktısından sonra, çıkış kodu satırından önce `Clear-DnsClientCache step finished.` satırını basar; çıktı üretilmeyen bir adım da görünür şekilde onaylanır.
 - `WinGet-Upgrade.bat` (2 adım): `winget source update`, sonra
   `winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements`.
   Ağ etkinliği olan betiklerden biridir (`winget`'e delege edilir).
@@ -222,6 +229,7 @@ kapsar:
 - Aşamayı `1/2 Found N update(s): ...` satırıyla kapatır ve eylemi `Update available` olan her bileşeni adıyla sayar; eylem gerektiren bileşen satırları ve kapanış satırı macentadır.
 
 **Aşama 2 — Yürütme (Sonuç)**:
+- `2/2 Applying...` başlığını yalnızca planda en az bir `Update available` satırı varsa basar. Plan boşsa faz yalnızca kapanış toplamıdır; yanıltıcı "uygulanıyor" başlığı ve ek boş satır yoktur.
 - Plan başına güncellemeleri uygular: çalışma zamanları, ana makine araçları ve PowerShell 7 için `winget upgrade --id ... --exact --accept-source-agreements --accept-package-agreements`; Pester için `Update-Module Pester -Force`; `pip install --upgrade <pkg>`; `pipx upgrade pipx` + `pipx upgrade-all`; `npm install --global npm@latest`; eski kalan global paketler için `npm install --global <pkg>@<latest>`
 - Bileşen başına önceki/sonraki sürümleri takip eder
 - Her paket yöneticisi çağrısından önce `Downloading: <bileşen>...` (camgöbeği) satırı yazı (`Run-Command`); alt komut çıktısı bir diziye tamponlandığı için bu satır olmasa uzun indirme boyunca ekran sessiz kalır. Ham komut sönük DEBUG satırında kalır. `-Check` kipinde kurulum çalışmadığı için indirme satırı basılmaz.

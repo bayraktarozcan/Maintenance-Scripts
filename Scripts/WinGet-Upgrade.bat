@@ -44,13 +44,19 @@ echo.
 echo. >> "%LOG%"
 echo ^> (2/2) winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements
 >>"%LOG%" echo ^> (2/2) winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements
-echo Downloading: available winget packages...
->>"%LOG%" echo Downloading: available winget packages...
+echo Checking for available winget packages...
+>>"%LOG%" echo Checking for available winget packages...
 winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements > "%OUT%" 2>&1
 set "S2_RC=%ERRORLEVEL%"
 if not "%S2_RC%"=="0" set "EXITCODE=1"
 type "%OUT%"
 type "%OUT%" >> "%LOG%" 2>&1
+set "WUG_RESULT=Updates applied"
+if not "%S2_RC%"=="0" set "WUG_RESULT=winget upgrade did not complete"
+findstr /i /c:"No installed package found" /c:"No available upgrade" /c:"No applicable update" /c:"No new version available" "%OUT%" >nul 2>&1
+if not errorlevel 1 set "WUG_RESULT=No updates available"
+echo %WUG_RESULT%
+>>"%LOG%" echo %WUG_RESULT%
 echo.
 echo. >> "%LOG%"
 del "%OUT%" >nul 2>&1

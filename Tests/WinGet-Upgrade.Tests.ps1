@@ -22,15 +22,27 @@ Describe 'WinGet-Upgrade static hygiene' {
         $script:Text | Should -Match '--include-unknown --accept-source-agreements --accept-package-agreements'
     }
 
-    It 'Announces each download before the winget command runs' {
+    It 'Announces each network step before the winget command runs' {
         $source = [regex]::Match($script:Text, 'echo Downloading: winget source metadata\.\.\.')
-        $upgrade = [regex]::Match($script:Text, 'echo Downloading: available winget packages\.\.\.')
+        $upgrade = [regex]::Match($script:Text, 'echo Checking for available winget packages\.\.\.')
         $source.Success | Should -BeTrue
         $upgrade.Success | Should -BeTrue
         $script:Text.IndexOf('winget source update > "%OUT%"') | Should -BeGreaterThan $source.Index
         $script:Text.IndexOf('winget upgrade --all --include-unknown --accept-source-agreements --accept-package-agreements > "%OUT%"') | Should -BeGreaterThan $upgrade.Index
         $script:Text | Should -Match '>>"%LOG%" echo Downloading: winget source metadata\.\.\.'
-        $script:Text | Should -Match '>>"%LOG%" echo Downloading: available winget packages\.\.\.'
+        $script:Text | Should -Match '>>"%LOG%" echo Checking for available winget packages\.\.\.'
+    }
+
+    It 'Reports the real upgrade result instead of claiming a download with no updates' {
+        $script:Text | Should -Not -Match 'Downloading: available winget packages'
+        $script:Text | Should -Match 'set "WUG_RESULT=Updates applied"'
+        $script:Text | Should -Match 'if not errorlevel 1 set "WUG_RESULT=No updates available"'
+        foreach ($pattern in @('No installed package found', 'No available upgrade', 'No applicable update', 'No new version available')) {
+            $script:Text | Should -Match ([regex]::Escape('/c:"' + $pattern + '"'))
+        }
+        $result = $script:Text.IndexOf('echo %WUG_RESULT%')
+        $result | Should -BeGreaterThan $script:Text.IndexOf('type "%OUT%"')
+        $script:Text | Should -Match '>>"%LOG%" echo %WUG_RESULT%'
     }
 }
 
